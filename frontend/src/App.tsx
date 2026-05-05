@@ -92,9 +92,16 @@ function App() {
           <h1>天天象棋</h1>
           <div className="game-info">
             {gameMode === 'online' && (
-              <span className={`connection-status ${onlineGame.connectionStatus}`}>
-                {onlineGame.connectionStatus === 'connected' ? '已连接' : '连接中...'}
-              </span>
+              <>
+                <span className={`connection-status ${onlineGame.connectionStatus}`}>
+                  {onlineGame.connectionStatus === 'connected' ? '已连接' : '连接中...'}
+                </span>
+                {onlineGame.playerSide && (
+                  <span className="player-side-indicator">
+                    你是: {onlineGame.playerSide === Side.RED ? '红方' : '黑方'}
+                  </span>
+                )}
+              </>
             )}
             {gameState && (
               <span className="turn-indicator">

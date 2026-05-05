@@ -122,15 +122,20 @@ export class GameServer {
     player.gameId = targetGameId!;
     player.side = game.redPlayer === player.playerId ? Side.RED : Side.BLACK;
 
-    this.broadcastToGame(targetGameId!, {
-      type: MessageType.GAME_STATE,
-      payload: {
-        game: this.sanitizeGameState(game),
-        yourSide: player.side,
-      },
-      timestamp: Date.now(),
-      gameId: targetGameId!,
-    });
+    for (const p of this.players.values()) {
+      if (p.gameId === targetGameId) {
+        const yourSide = game.redPlayer === p.playerId ? Side.RED : Side.BLACK;
+        this.sendToPlayer(p, {
+          type: MessageType.GAME_STATE,
+          payload: {
+            game: this.sanitizeGameState(game),
+            yourSide,
+          },
+          timestamp: Date.now(),
+          gameId: targetGameId!,
+        });
+      }
+    }
   }
 
   private handleMakeMove(player: ConnectedPlayer, message: GameMessage): void {
@@ -150,15 +155,21 @@ export class GameServer {
 
     const game = result.game!;
 
-    this.broadcastToGame(player.gameId, {
-      type: MessageType.GAME_STATE,
-      payload: {
-        game: this.sanitizeGameState(game),
-        lastMove: { from, to },
-      },
-      timestamp: Date.now(),
-      gameId: player.gameId,
-    });
+    for (const p of this.players.values()) {
+      if (p.gameId === player.gameId) {
+        const yourSide = game.redPlayer === p.playerId ? Side.RED : Side.BLACK;
+        this.sendToPlayer(p, {
+          type: MessageType.GAME_STATE,
+          payload: {
+            game: this.sanitizeGameState(game),
+            yourSide,
+            lastMove: { from, to },
+          },
+          timestamp: Date.now(),
+          gameId: player.gameId,
+        });
+      }
+    }
 
     if (game.status === GameStatus.FINISHED) {
       this.broadcastToGame(player.gameId, {

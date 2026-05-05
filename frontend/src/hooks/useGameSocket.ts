@@ -5,6 +5,7 @@ import {
   MessageType,
   Side,
   Position,
+  GameStatus,
 } from '@shared/types';
 
 interface UseGameSocketReturn {
@@ -115,9 +116,9 @@ export function useGameSocket(): UseGameSocketReturn {
           if (!prev) return null;
           return {
             ...prev,
-            status: 'finished',
+            status: GameStatus.FINISHED,
             winner: gameOverPayload.winner,
-          } as GameState;
+          };
         });
         break;
         

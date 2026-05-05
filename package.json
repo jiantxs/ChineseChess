@@ -10,7 +10,7 @@
     "build": "npm run build:frontend && npm run build:backend",
     "build:frontend": "cd frontend && vite build",
     "build:backend": "tsc -p backend/tsconfig.json",
-    "start": "node backend/dist/index.js",
+    "start": "node backend/dist/backend/src/index.js",
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
   },

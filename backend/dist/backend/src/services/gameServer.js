@@ -90,15 +90,20 @@ class GameServer {
         }
         player.gameId = targetGameId;
         player.side = game.redPlayer === player.playerId ? types_1.Side.RED : types_1.Side.BLACK;
-        this.broadcastToGame(targetGameId, {
-            type: types_1.MessageType.GAME_STATE,
-            payload: {
-                game: this.sanitizeGameState(game),
-                yourSide: player.side,
-            },
-            timestamp: Date.now(),
-            gameId: targetGameId,
-        });
+        for (const p of this.players.values()) {
+            if (p.gameId === targetGameId) {
+                const yourSide = game.redPlayer === p.playerId ? types_1.Side.RED : types_1.Side.BLACK;
+                this.sendToPlayer(p, {
+                    type: types_1.MessageType.GAME_STATE,
+                    payload: {
+                        game: this.sanitizeGameState(game),
+                        yourSide,
+                    },
+                    timestamp: Date.now(),
+                    gameId: targetGameId,
+                });
+            }
+        }
     }
     handleMakeMove(player, message) {
         if (!player.gameId) {
@@ -112,15 +117,21 @@ class GameServer {
             return;
         }
         const game = result.game;
-        this.broadcastToGame(player.gameId, {
-            type: types_1.MessageType.GAME_STATE,
-            payload: {
-                game: this.sanitizeGameState(game),
-                lastMove: { from, to },
-            },
-            timestamp: Date.now(),
-            gameId: player.gameId,
-        });
+        for (const p of this.players.values()) {
+            if (p.gameId === player.gameId) {
+                const yourSide = game.redPlayer === p.playerId ? types_1.Side.RED : types_1.Side.BLACK;
+                this.sendToPlayer(p, {
+                    type: types_1.MessageType.GAME_STATE,
+                    payload: {
+                        game: this.sanitizeGameState(game),
+                        yourSide,
+                        lastMove: { from, to },
+                    },
+                    timestamp: Date.now(),
+                    gameId: player.gameId,
+                });
+            }
+        }
         if (game.status === types_1.GameStatus.FINISHED) {
             this.broadcastToGame(player.gameId, {
                 type: types_1.MessageType.GAME_OVER,
