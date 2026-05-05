@@ -1,0 +1,157 @@
+.app {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.menu-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+}
+
+.game-title {
+  font-size: 48px;
+  font-weight: bold;
+  color: #c41e3a;
+  margin-bottom: 40px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'KaiTi', 'STKaiti', serif;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-btn {
+  padding: 16px 32px;
+  font-size: 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.menu-btn.primary {
+  background: linear-gradient(135deg, #c41e3a, #a01729);
+  color: white;
+}
+
+.menu-btn.secondary {
+  background: linear-gradient(135deg, #4a5568, #2d3748);
+  color: white;
+}
+
+.join-section {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.join-input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.join-input:focus {
+  border-color: #c41e3a;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.game-header {
+  text-align: center;
+  color: white;
+}
+
+.game-header h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  font-family: 'KaiTi', 'STKaiti', serif;
+}
+
+.game-info {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.connection-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.connection-status.connected {
+  background: #48bb78;
+  color: white;
+}
+
+.connection-status.connecting {
+  background: #ed8936;
+  color: white;
+}
+
+.turn-indicator {
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 14px;
+}
+
+.game-board-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.error-message {
+  color: #fc8181;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .game-title {
+    font-size: 36px;
+  }
+  
+  .menu-container {
+    padding: 40px 24px;
+  }
+  
+  .join-section {
+    flex-direction: column;
+  }
+}
