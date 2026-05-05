@@ -4,14 +4,13 @@ import path from 'path';
 import { createServer } from 'http';
 import { chessConfig } from '../../chess.config';
 import { GameServer } from './services/gameServer';
-import gameRoutes, { setGameManager } from './routes/game';
+import gameRoutes from './routes/game';
 import { GameManager } from './services/gameManager';
 
 const app = express();
 const server = createServer(app);
 
 const gameManager = new GameManager();
-setGameManager(gameManager);
 
 app.use(express.json());
 app.use(
