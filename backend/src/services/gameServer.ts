@@ -10,6 +10,7 @@ import {
 } from '../../../shared/types';
 import { GameManager } from './gameManager';
 import { chessConfig } from '../../../chess.config';
+import { logWebSocketEvent, errorLogger } from './logger';
 
 interface ConnectedPlayer {
   ws: WebSocket;
@@ -54,16 +55,26 @@ export class GameServer {
 
       this.players.set(playerId, player);
 
+      logWebSocketEvent('connection', playerId);
+
       ws.on('message', (data: RawData) => {
         try {
           const message: GameMessage = JSON.parse(data.toString());
+          logWebSocketEvent('message', playerId, message.gameId, {
+            messageType: message.type,
+          });
           this.handleMessage(player, message);
         } catch (error) {
+          errorLogger.error('websocket_message_parse_error', {
+            playerId,
+            error: error instanceof Error ? error.message : String(error),
+          });
           this.sendError(player, 'Invalid message format');
         }
       });
 
       ws.on('close', () => {
+        logWebSocketEvent('disconnect', playerId, player.gameId);
         this.handleDisconnect(player);
       });
 
@@ -108,7 +119,7 @@ export class GameServer {
 
     let targetGameId = gameId;
     if (!targetGameId) {
-      const newGame = this.gameManager.createGame();
+      const newGame = this.gameManager.createGame(player.playerId);
       targetGameId = newGame.id;
     }
 
@@ -121,6 +132,11 @@ export class GameServer {
 
     player.gameId = targetGameId!;
     player.side = game.redPlayer === player.playerId ? Side.RED : Side.BLACK;
+
+    logWebSocketEvent('join_game', player.playerId, targetGameId, {
+      side: player.side,
+      isNewGame: !gameId,
+    });
 
     for (const p of this.players.values()) {
       if (p.gameId === targetGameId) {
@@ -155,6 +171,12 @@ export class GameServer {
 
     const game = result.game!;
 
+    logWebSocketEvent('make_move', player.playerId, player.gameId, {
+      moveNumber: game.moves.length,
+      from,
+      to,
+    });
+
     for (const p of this.players.values()) {
       if (p.gameId === player.gameId) {
         const yourSide = game.redPlayer === p.playerId ? Side.RED : Side.BLACK;
@@ -172,6 +194,10 @@ export class GameServer {
     }
 
     if (game.status === GameStatus.FINISHED) {
+      logWebSocketEvent('game_over', player.playerId, player.gameId, {
+        winner: game.winner,
+        reason: 'general_captured',
+      });
       this.broadcastToGame(player.gameId, {
         type: MessageType.GAME_OVER,
         payload: {
@@ -244,6 +270,10 @@ export class GameServer {
         if (!reconnected || !reconnected.gameId) {
           const game = this.gameManager.leaveGame(player.gameId!, player.playerId);
           if (game) {
+            logWebSocketEvent('game_over_disconnect', player.playerId, player.gameId!, {
+              winner: game.winner,
+              reason: 'player_disconnect',
+            });
             this.broadcastToGame(player.gameId!, {
               type: MessageType.GAME_OVER,
               payload: {

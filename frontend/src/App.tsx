@@ -94,7 +94,11 @@ function App() {
             {gameMode === 'online' && (
               <>
                 <span className={`connection-status ${onlineGame.connectionStatus}`}>
-                  {onlineGame.connectionStatus === 'connected' ? '已连接' : '连接中...'}
+                  {onlineGame.connectionStatus === 'connected'
+                    ? '已连接'
+                    : onlineGame.connectionStatus === 'connecting'
+                    ? '连接中...'
+                    : '未连接'}
                 </span>
                 {onlineGame.playerSide && (
                   <span className="player-side-indicator">

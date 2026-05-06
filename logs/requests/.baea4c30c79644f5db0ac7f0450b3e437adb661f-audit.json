@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/project/chess/logs/requests/.baea4c30c79644f5db0ac7f0450b3e437adb661f-audit.json",
+    "files": [
+        {
+            "date": 1778043240442,
+            "name": "/project/chess/logs/requests/request-2026-05-06.log",
+            "hash": "196c05fb6eab86fd299f0b844c4341560967b41dbdc7b4526f044f3f6c16b7bf"
+        }
+    ],
+    "hashType": "sha256"
+}

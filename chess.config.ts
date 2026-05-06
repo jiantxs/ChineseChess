@@ -27,6 +27,13 @@ export interface ChessConfig {
     svgPath: string;
     staticPath: string;
   };
+  log: {
+    level: string;
+    requestLogDir: string;
+    errorLogDir: string;
+    gameLogDir: string;
+    maxFiles: string;
+  };
 }
 
 export const defaultConfig: ChessConfig = {
@@ -57,6 +64,13 @@ export const defaultConfig: ChessConfig = {
   assets: {
     svgPath: '/assets/svg',
     staticPath: '/public',
+  },
+  log: {
+    level: process.env.LOG_LEVEL || 'info',
+    requestLogDir: 'logs/requests',
+    errorLogDir: 'logs/errors',
+    gameLogDir: 'logs/games',
+    maxFiles: '30d',
   },
 };
 

@@ -5,6 +5,7 @@ const ws_1 = require("ws");
 const url_1 = require("url");
 const types_1 = require("../../../shared/types");
 const chess_config_1 = require("../../../chess.config");
+const logger_1 = require("./logger");
 class GameServer {
     constructor(server, gameManager) {
         this.players = new Map();
@@ -31,16 +32,25 @@ class GameServer {
                 isAlive: true,
             };
             this.players.set(playerId, player);
+            (0, logger_1.logWebSocketEvent)('connection', playerId);
             ws.on('message', (data) => {
                 try {
                     const message = JSON.parse(data.toString());
+                    (0, logger_1.logWebSocketEvent)('message', playerId, message.gameId, {
+                        messageType: message.type,
+                    });
                     this.handleMessage(player, message);
                 }
                 catch (error) {
+                    logger_1.errorLogger.error('websocket_message_parse_error', {
+                        playerId,
+                        error: error instanceof Error ? error.message : String(error),
+                    });
                     this.sendError(player, 'Invalid message format');
                 }
             });
             ws.on('close', () => {
+                (0, logger_1.logWebSocketEvent)('disconnect', playerId, player.gameId);
                 this.handleDisconnect(player);
             });
             ws.on('pong', () => {
@@ -80,7 +90,7 @@ class GameServer {
         const { gameId, side } = message.payload;
         let targetGameId = gameId;
         if (!targetGameId) {
-            const newGame = this.gameManager.createGame();
+            const newGame = this.gameManager.createGame(player.playerId);
             targetGameId = newGame.id;
         }
         const game = this.gameManager.joinGame(targetGameId, player.playerId, side);
@@ -90,6 +100,10 @@ class GameServer {
         }
         player.gameId = targetGameId;
         player.side = game.redPlayer === player.playerId ? types_1.Side.RED : types_1.Side.BLACK;
+        (0, logger_1.logWebSocketEvent)('join_game', player.playerId, targetGameId, {
+            side: player.side,
+            isNewGame: !gameId,
+        });
         for (const p of this.players.values()) {
             if (p.gameId === targetGameId) {
                 const yourSide = game.redPlayer === p.playerId ? types_1.Side.RED : types_1.Side.BLACK;
@@ -117,6 +131,11 @@ class GameServer {
             return;
         }
         const game = result.game;
+        (0, logger_1.logWebSocketEvent)('make_move', player.playerId, player.gameId, {
+            moveNumber: game.moves.length,
+            from,
+            to,
+        });
         for (const p of this.players.values()) {
             if (p.gameId === player.gameId) {
                 const yourSide = game.redPlayer === p.playerId ? types_1.Side.RED : types_1.Side.BLACK;
@@ -133,6 +152,10 @@ class GameServer {
             }
         }
         if (game.status === types_1.GameStatus.FINISHED) {
+            (0, logger_1.logWebSocketEvent)('game_over', player.playerId, player.gameId, {
+                winner: game.winner,
+                reason: 'general_captured',
+            });
             this.broadcastToGame(player.gameId, {
                 type: types_1.MessageType.GAME_OVER,
                 payload: {
@@ -196,6 +219,10 @@ class GameServer {
                 if (!reconnected || !reconnected.gameId) {
                     const game = this.gameManager.leaveGame(player.gameId, player.playerId);
                     if (game) {
+                        (0, logger_1.logWebSocketEvent)('game_over_disconnect', player.playerId, player.gameId, {
+                            winner: game.winner,
+                            reason: 'player_disconnect',
+                        });
                         this.broadcastToGame(player.gameId, {
                             type: types_1.MessageType.GAME_OVER,
                             payload: {

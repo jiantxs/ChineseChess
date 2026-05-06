@@ -39,8 +39,11 @@ function loadPieceImages(): Promise<void> {
     return new Promise<void>((resolve) => {
       const img = new Image();
       img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = `/assets/svg/${name}.svg`;
+      img.onerror = () => {
+        console.error(`Failed to load piece image: ${name}`);
+        resolve();
+      };
+      img.src = `./assets/svg/${name}.svg`;
       PIECE_IMAGES[name] = img;
     });
   });

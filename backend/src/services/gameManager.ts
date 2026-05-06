@@ -11,12 +11,19 @@ import {
   BOARD_COLS,
 } from '../../../shared/types';
 import { isValidMove, isGeneralCaptured } from '../../../shared/gameLogic';
+import { GameLogger } from './gameLogger';
+import { chessConfig } from '../../../chess.config';
 
 export class GameManager {
   private games: Map<string, GameState> = new Map();
   private playerGames: Map<string, string> = new Map();
+  private gameLogger: GameLogger;
 
-  createGame(): GameState {
+  constructor() {
+    this.gameLogger = new GameLogger(chessConfig.log.gameLogDir);
+  }
+
+  createGame(redPlayer: string): GameState {
     const gameId = uuidv4();
     const board = this.createInitialBoard();
 
@@ -31,6 +38,7 @@ export class GameManager {
     };
 
     this.games.set(gameId, game);
+    this.gameLogger.startGame(gameId, redPlayer);
     return game;
   }
 
@@ -66,6 +74,8 @@ export class GameManager {
     }
 
     this.playerGames.set(playerId, gameId);
+
+    this.gameLogger.playerJoined(gameId, playerId, side);
 
     if (game.redPlayer && game.blackPlayer) {
       game.status = GameStatus.PLAYING;
@@ -124,10 +134,13 @@ export class GameManager {
     game.currentTurn = isRedTurn ? Side.BLACK : Side.RED;
     game.lastMoveTime = Date.now();
 
+    this.gameLogger.recordMove(gameId, move, game.moves.length, playerId, piece.side);
+
     const generalStatus = isGeneralCaptured(game.board);
     if (generalStatus.captured) {
       game.status = GameStatus.FINISHED;
       game.winner = generalStatus.winner;
+      this.gameLogger.finishGame(gameId, generalStatus.winner, 'general_captured');
     }
 
     return { success: true, game };
@@ -137,7 +150,8 @@ export class GameManager {
     const game = this.games.get(gameId);
     if (!game) return null;
 
-    if (game.redPlayer === playerId) {
+    const wasRedPlayer = game.redPlayer === playerId;
+    if (wasRedPlayer) {
       game.redPlayer = undefined;
     } else if (game.blackPlayer === playerId) {
       game.blackPlayer = undefined;
@@ -147,7 +161,8 @@ export class GameManager {
 
     if (game.status === GameStatus.PLAYING) {
       game.status = GameStatus.ABORTED;
-      game.winner = game.redPlayer === playerId ? Side.BLACK : Side.RED;
+      game.winner = wasRedPlayer ? Side.BLACK : Side.RED;
+      this.gameLogger.abortGame(gameId, game.winner, 'player_disconnect');
     }
 
     if (!game.redPlayer && !game.blackPlayer) {

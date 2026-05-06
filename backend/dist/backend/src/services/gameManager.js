@@ -4,12 +4,15 @@ exports.GameManager = void 0;
 const uuid_1 = require("uuid");
 const types_1 = require("../../../shared/types");
 const gameLogic_1 = require("../../../shared/gameLogic");
+const gameLogger_1 = require("./gameLogger");
+const chess_config_1 = require("../../../chess.config");
 class GameManager {
     constructor() {
         this.games = new Map();
         this.playerGames = new Map();
+        this.gameLogger = new gameLogger_1.GameLogger(chess_config_1.chessConfig.log.gameLogDir);
     }
-    createGame() {
+    createGame(redPlayer) {
         const gameId = (0, uuid_1.v4)();
         const board = this.createInitialBoard();
         const game = {
@@ -22,6 +25,7 @@ class GameManager {
             createdAt: Date.now(),
         };
         this.games.set(gameId, game);
+        this.gameLogger.startGame(gameId, redPlayer);
         return game;
     }
     getGame(gameId) {
@@ -55,6 +59,7 @@ class GameManager {
             game.blackPlayer = playerId;
         }
         this.playerGames.set(playerId, gameId);
+        this.gameLogger.playerJoined(gameId, playerId, side);
         if (game.redPlayer && game.blackPlayer) {
             game.status = types_1.GameStatus.PLAYING;
         }
@@ -95,10 +100,12 @@ class GameManager {
         game.moves.push(move);
         game.currentTurn = isRedTurn ? types_1.Side.BLACK : types_1.Side.RED;
         game.lastMoveTime = Date.now();
+        this.gameLogger.recordMove(gameId, move, game.moves.length, playerId, piece.side);
         const generalStatus = (0, gameLogic_1.isGeneralCaptured)(game.board);
         if (generalStatus.captured) {
             game.status = types_1.GameStatus.FINISHED;
             game.winner = generalStatus.winner;
+            this.gameLogger.finishGame(gameId, generalStatus.winner, 'general_captured');
         }
         return { success: true, game };
     }
@@ -106,7 +113,8 @@ class GameManager {
         const game = this.games.get(gameId);
         if (!game)
             return null;
-        if (game.redPlayer === playerId) {
+        const wasRedPlayer = game.redPlayer === playerId;
+        if (wasRedPlayer) {
             game.redPlayer = undefined;
         }
         else if (game.blackPlayer === playerId) {
@@ -115,7 +123,8 @@ class GameManager {
         this.playerGames.delete(playerId);
         if (game.status === types_1.GameStatus.PLAYING) {
             game.status = types_1.GameStatus.ABORTED;
-            game.winner = game.redPlayer === playerId ? types_1.Side.BLACK : types_1.Side.RED;
+            game.winner = wasRedPlayer ? types_1.Side.BLACK : types_1.Side.RED;
+            this.gameLogger.abortGame(gameId, game.winner, 'player_disconnect');
         }
         if (!game.redPlayer && !game.blackPlayer) {
             this.games.delete(gameId);

@@ -6,6 +6,7 @@ import { chessConfig } from '../../chess.config';
 import { GameServer } from './services/gameServer';
 import gameRoutes from './routes/game';
 import { GameManager } from './services/gameManager';
+import { requestLogMiddleware } from './services/logger';
 
 const app = express();
 const server = createServer(app);
@@ -13,6 +14,7 @@ const server = createServer(app);
 const gameManager = new GameManager();
 
 app.use(express.json());
+app.use(requestLogMiddleware());
 app.use(
   session({
     secret: chessConfig.server.sessionSecret,

@@ -27,6 +27,13 @@ export interface ChessConfig {
         svgPath: string;
         staticPath: string;
     };
+    log: {
+        level: string;
+        requestLogDir: string;
+        errorLogDir: string;
+        gameLogDir: string;
+        maxFiles: string;
+    };
 }
 export declare const defaultConfig: ChessConfig;
 export declare const chessConfig: ChessConfig;

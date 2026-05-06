@@ -2,7 +2,9 @@ import { GameState, Side, Position } from '../../../shared/types';
 export declare class GameManager {
     private games;
     private playerGames;
-    createGame(): GameState;
+    private gameLogger;
+    constructor();
+    createGame(redPlayer: string): GameState;
     getGame(gameId: string): GameState | undefined;
     joinGame(gameId: string, playerId: string, side?: Side): GameState | null;
     makeMove(gameId: string, playerId: string, from: Position, to: Position): {

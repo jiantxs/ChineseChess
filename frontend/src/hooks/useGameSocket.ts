@@ -27,7 +27,8 @@ export function useGameSocket(): UseGameSocketReturn {
   
   const wsRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string>('');
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const connectPromiseRef = useRef<Promise<void> | null>(null);
+  const isConnectingRef = useRef(false);
 
   const getPlayerId = useCallback(async (): Promise<string> => {
     if (playerIdRef.current) return playerIdRef.current;
@@ -47,49 +48,72 @@ export function useGameSocket(): UseGameSocketReturn {
     }
   }, []);
 
-  const connect = useCallback(async () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
-    
+  const connect = useCallback(async (): Promise<void> => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    if (isConnectingRef.current && connectPromiseRef.current) {
+      return connectPromiseRef.current;
+    }
+
+    isConnectingRef.current = true;
     setConnectionStatus('connecting');
     setError(null);
     
+    const connectPromise = new Promise<void>(async (resolve, reject) => {
+      try {
+        const playerId = await getPlayerId();
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws?playerId=${playerId}`;
+        
+        const ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          setConnectionStatus('connected');
+          setError(null);
+          isConnectingRef.current = false;
+          resolve();
+        };
+        
+        ws.onmessage = (event) => {
+          try {
+            const message: GameMessage = JSON.parse(event.data);
+            handleMessage(message);
+          } catch (err) {
+            console.error('Failed to parse message:', err);
+          }
+        };
+        
+        ws.onclose = () => {
+          setConnectionStatus('disconnected');
+          wsRef.current = null;
+          isConnectingRef.current = false;
+        };
+        
+        ws.onerror = (err) => {
+          setError('Connection error');
+          setConnectionStatus('disconnected');
+          isConnectingRef.current = false;
+          wsRef.current = null;
+          reject(err);
+        };
+        
+        wsRef.current = ws;
+      } catch (err) {
+        setError('Failed to connect');
+        setConnectionStatus('disconnected');
+        isConnectingRef.current = false;
+        reject(err);
+      }
+    });
+
+    connectPromiseRef.current = connectPromise;
+    
     try {
-      const playerId = await getPlayerId();
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws?playerId=${playerId}`;
-      
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        setConnectionStatus('connected');
-        setError(null);
-      };
-      
-      ws.onmessage = (event) => {
-        try {
-          const message: GameMessage = JSON.parse(event.data);
-          handleMessage(message);
-        } catch (err) {
-          console.error('Failed to parse message:', err);
-        }
-      };
-      
-      ws.onclose = () => {
-        setConnectionStatus('disconnected');
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, 3000);
-      };
-      
-      ws.onerror = () => {
-        setError('Connection error');
-        setConnectionStatus('disconnected');
-      };
-      
-      wsRef.current = ws;
-    } catch (err) {
-      setError('Failed to connect');
-      setConnectionStatus('disconnected');
+      await connectPromise;
+    } finally {
+      connectPromiseRef.current = null;
     }
   }, [getPlayerId]);
 
@@ -146,26 +170,32 @@ export function useGameSocket(): UseGameSocketReturn {
     }
   }, []);
 
-  const createGame = useCallback(() => {
-    connect();
-    setTimeout(() => {
+  const createGame = useCallback(async () => {
+    try {
+      await connect();
       sendMessage({
         type: MessageType.JOIN_GAME,
         payload: {},
         gameId: '',
       });
-    }, 500);
+    } catch (err) {
+      console.error('Failed to create game:', err);
+      setError('Failed to create game');
+    }
   }, [connect, sendMessage]);
 
-  const joinGame = useCallback((gameId: string) => {
-    connect();
-    setTimeout(() => {
+  const joinGame = useCallback(async (gameId: string) => {
+    try {
+      await connect();
       sendMessage({
         type: MessageType.JOIN_GAME,
         payload: { gameId },
         gameId,
       });
-    }, 500);
+    } catch (err) {
+      console.error('Failed to join game:', err);
+      setError('Failed to join game');
+    }
   }, [connect, sendMessage]);
 
   const makeMove = useCallback((from: Position, to: Position) => {
@@ -183,22 +213,19 @@ export function useGameSocket(): UseGameSocketReturn {
       wsRef.current.close();
       wsRef.current = null;
     }
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
     setGameState(null);
     setPlayerSide(null);
     setConnectionStatus('disconnected');
     setError(null);
+    playerIdRef.current = '';
+    isConnectingRef.current = false;
+    connectPromiseRef.current = null;
   }, []);
 
   useEffect(() => {
     return () => {
       if (wsRef.current) {
         wsRef.current.close();
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
       }
     };
   }, []);

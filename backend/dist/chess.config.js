@@ -30,6 +30,13 @@ exports.defaultConfig = {
         svgPath: '/assets/svg',
         staticPath: '/public',
     },
+    log: {
+        level: process.env.LOG_LEVEL || 'info',
+        requestLogDir: 'logs/requests',
+        errorLogDir: 'logs/errors',
+        gameLogDir: 'logs/games',
+        maxFiles: '30d',
+    },
 };
 function loadConfig() {
     const config = { ...exports.defaultConfig };
