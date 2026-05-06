@@ -30,7 +30,7 @@ app.use((0, express_session_1.default)({
 app.use('/api/game', game_1.default);
 app.use('/admin', admin_1.default);
 app.locals.gameManager = gameManager;
-const publicPath = path_1.default.resolve(__dirname, './public');
+const publicPath = path_1.default.resolve(__dirname, '../node_modules/@chess/frontend/dist');
 app.use(express_1.default.static(publicPath));
 app.get('*', (req, res) => {
     res.sendFile(path_1.default.join(publicPath, 'index.html'));

@@ -33,7 +33,7 @@ app.use('/admin', adminRoutes);
 
 app.locals.gameManager = gameManager;
 
-const publicPath = path.resolve(__dirname, './public');
+const publicPath = path.resolve(__dirname, '../node_modules/@chess/frontend/dist');
 app.use(express.static(publicPath));
 
 app.get('*', (req, res) => {

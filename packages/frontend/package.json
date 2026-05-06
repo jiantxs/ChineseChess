@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist": "./dist/"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --build && vite build",
