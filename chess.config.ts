@@ -34,6 +34,9 @@ export interface ChessConfig {
     gameLogDir: string;
     maxFiles: string;
   };
+  admin: {
+    password: string;
+  };
 }
 
 export const defaultConfig: ChessConfig = {
@@ -71,6 +74,9 @@ export const defaultConfig: ChessConfig = {
     errorLogDir: 'logs/errors',
     gameLogDir: 'logs/games',
     maxFiles: '30d',
+  },
+  admin: {
+    password: process.env.ADMIN_PASSWORD || 'admin123',
   },
 };
 

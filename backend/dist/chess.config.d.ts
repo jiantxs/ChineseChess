@@ -34,6 +34,9 @@ export interface ChessConfig {
         gameLogDir: string;
         maxFiles: string;
     };
+    admin: {
+        password: string;
+    };
 }
 export declare const defaultConfig: ChessConfig;
 export declare const chessConfig: ChessConfig;

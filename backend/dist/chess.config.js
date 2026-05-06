@@ -37,6 +37,9 @@ exports.defaultConfig = {
         gameLogDir: 'logs/games',
         maxFiles: '30d',
     },
+    admin: {
+        password: process.env.ADMIN_PASSWORD || 'admin123',
+    },
 };
 function loadConfig() {
     const config = { ...exports.defaultConfig };

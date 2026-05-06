@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import { chessConfig } from '../../chess.config';
 import { GameServer } from './services/gameServer';
 import gameRoutes from './routes/game';
+import adminRoutes from './routes/admin';
 import { GameManager } from './services/gameManager';
 import { requestLogMiddleware } from './services/logger';
 
@@ -28,6 +29,9 @@ app.use(
 );
 
 app.use('/api/game', gameRoutes);
+app.use('/admin', adminRoutes);
+
+app.locals.gameManager = gameManager;
 
 const publicPath = path.resolve(__dirname, '../public');
 app.use(express.static(publicPath));

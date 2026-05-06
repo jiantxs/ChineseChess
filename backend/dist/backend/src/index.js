@@ -10,6 +10,7 @@ const http_1 = require("http");
 const chess_config_1 = require("../../chess.config");
 const gameServer_1 = require("./services/gameServer");
 const game_1 = __importDefault(require("./routes/game"));
+const admin_1 = __importDefault(require("./routes/admin"));
 const gameManager_1 = require("./services/gameManager");
 const logger_1 = require("./services/logger");
 const app = (0, express_1.default)();
@@ -27,6 +28,8 @@ app.use((0, express_session_1.default)({
     },
 }));
 app.use('/api/game', game_1.default);
+app.use('/admin', admin_1.default);
+app.locals.gameManager = gameManager;
 const publicPath = path_1.default.resolve(__dirname, '../public');
 app.use(express_1.default.static(publicPath));
 app.get('*', (req, res) => {
