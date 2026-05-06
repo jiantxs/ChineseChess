@@ -1,44 +1,21 @@
 {
-  "name": "chinese-chess",
+  "name": "@chess/monorepo",
   "version": "1.0.0",
-  "description": "Chinese Chess (Xiangqi) web application with online multiplayer",
   "private": true,
+  "type": "module",
+  "description": "Chinese Chess (Xiangqi) pnpm workspace monorepo",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "ts-node-dev --respawn --transpile-only backend/src/index.ts",
-    "dev:frontend": "cd frontend && vite",
-    "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd frontend && vite build",
-    "build:backend": "tsc -p backend/tsconfig.json",
-    "start": "node backend/dist/backend/src/index.js",
-    "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "uuid": "^9.0.1",
-    "winston": "^3.19.0",
-    "winston-daily-rotate-file": "^5.0.0",
-    "ws": "^8.16.0"
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev:backend": "pnpm --filter @chess/backend dev",
+    "dev:frontend": "pnpm --filter @chess/frontend dev",
+    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "build:backend": "pnpm --filter @chess/backend build",
+    "build:frontend": "pnpm --filter @chess/frontend build",
+    "start": "pnpm --filter @chess/backend start",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/express-session": "^1.17.10",
-    "@types/node": "^20.10.5",
-    "@types/uuid": "^9.0.7",
-    "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "concurrently": "^8.2.2",
-    "eslint": "^8.56.0",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10"
+    "concurrently": "^8.2.2"
   }
 }
