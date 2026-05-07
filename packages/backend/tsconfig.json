@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "CommonJS",
+    "module": "NodeNext",
     "lib": ["ES2022"],
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "declaration": true,
     "declarationMap": true,
@@ -16,14 +16,13 @@
     "resolveJsonModule": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "../..",
     "paths": {
-      "@chess/core": ["packages/core/src"],
-      "@chess/core/*": ["packages/core/src/*"],
-      "@chess/config": ["packages/config/src"],
-      "@chess/config/*": ["packages/config/src/*"],
-      "@chess/logger": ["packages/logger/src"],
-      "@chess/logger/*": ["packages/logger/src/*"]
+      "@chess/core": ["../core/src"],
+      "@chess/core/*": ["../core/src/*"],
+      "@chess/config": ["../config/src"],
+      "@chess/config/*": ["../config/src/*"],
+      "@chess/logger": ["../logger/src"],
+      "@chess/logger/*": ["../logger/src/*"]
     }
   },
   "include": ["src"],

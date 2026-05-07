@@ -1,10 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { chessConfig } from '@chess/config';
 import { GameManager } from '@chess/core';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;

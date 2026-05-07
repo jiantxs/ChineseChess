@@ -3,10 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "../..",
     "paths": {
-      "@chess/config": ["packages/config/src"],
-      "@chess/config/*": ["packages/config/src/*"]
+      "@chess/config": ["../config/src"],
+      "@chess/config/*": ["../config/src/*"]
     }
   },
   "include": ["src"],

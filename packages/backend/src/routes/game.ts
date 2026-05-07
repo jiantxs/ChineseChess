@@ -1,7 +1,8 @@
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 router.post('/player-id', (req, res) => {
   const playerId = uuidv4();

@@ -17,6 +17,7 @@
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
+    "@types/node": "^20.19.39",
     "concurrently": "^8.2.2"
   }
 }
