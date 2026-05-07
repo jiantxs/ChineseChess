@@ -76,6 +76,19 @@
   border-color: #c41e3a;
 }
 
+.admin-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.menu-btn.admin {
+  background: linear-gradient(135deg, #718096, #4a5568);
+  color: white;
+  text-decoration: none;
+  display: inline-block;
+}
+
 .game-container {
   display: flex;
   flex-direction: column;

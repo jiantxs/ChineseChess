@@ -78,6 +78,11 @@ function App() {
                 加入房间
               </button>
             </div>
+            <div className="admin-section">
+              <a href="/admin" className="menu-btn admin">
+                管理
+              </a>
+            </div>
           </div>
           {error && <div className="error-message">{error}</div>}
         </div>
