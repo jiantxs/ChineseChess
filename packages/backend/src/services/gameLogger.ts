@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { Move, Side, Position, GameStatus } from '@chess/core';
+import { chessConfig } from '@chess/config';
+import { logGameEvent } from '@chess/logger';
 
 export interface MoveRecord {
   moveNumber: number;
@@ -30,8 +32,8 @@ export class GameLogger {
   private activeGames: Map<string, GameRecord> = new Map();
   private logDir: string;
 
-  constructor(logDir: string = 'logs/games') {
-    this.logDir = path.resolve(process.cwd(), logDir);
+  constructor(logDir: string = path.join(chessConfig.log.monorepoRoot, 'logs', 'games')) {
+    this.logDir = logDir;
     this.ensureDirectories();
   }
 
@@ -55,9 +57,10 @@ export class GameLogger {
       redPlayer,
       moves: [],
     };
-    
+
     this.activeGames.set(gameId, record);
     this.saveGameRecord(gameId);
+    logGameEvent(gameId, 'game_started', redPlayer);
   }
 
   playerJoined(gameId: string, playerId: string, side: Side): void {
@@ -76,6 +79,7 @@ export class GameLogger {
     }
 
     this.saveGameRecord(gameId);
+    logGameEvent(gameId, 'player_joined', playerId, { side });
   }
 
   recordMove(
@@ -101,6 +105,12 @@ export class GameLogger {
 
     record.moves.push(moveRecord);
     this.saveGameRecord(gameId);
+    logGameEvent(gameId, 'move_recorded', playerId, {
+      moveNumber,
+      from: move.from,
+      to: move.to,
+      pieceType: move.piece.type,
+    });
   }
 
   finishGame(gameId: string, winner?: Side, reason?: string): void {
@@ -114,6 +124,7 @@ export class GameLogger {
 
     this.saveGameRecord(gameId);
     this.archiveGame(gameId);
+    logGameEvent(gameId, 'game_finished', record.redPlayer || '', { winner, reason });
   }
 
   abortGame(gameId: string, winner?: Side, reason?: string): void {
@@ -127,6 +138,7 @@ export class GameLogger {
 
     this.saveGameRecord(gameId);
     this.archiveGame(gameId);
+    logGameEvent(gameId, 'game_aborted', record.redPlayer || '', { winner, reason });
   }
 
   private saveGameRecord(gameId: string): void {

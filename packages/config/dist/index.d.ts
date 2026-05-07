@@ -33,6 +33,7 @@ export interface ChessConfig {
         errorLogDir: string;
         gameLogDir: string;
         maxFiles: string;
+        monorepoRoot: string;
     };
     admin: {
         password: string;

@@ -10,7 +10,7 @@ import {
   GameManager,
 } from '@chess/core';
 import { chessConfig } from '@chess/config';
-import { logWebSocketEvent, errorLogger } from './logger';
+import { logWebSocketEvent, logError } from './logger';
 
 interface ConnectedPlayer {
   ws: WebSocket;
@@ -65,10 +65,7 @@ export class GameServer {
           });
           this.handleMessage(player, message);
         } catch (error) {
-          errorLogger.error('websocket_message_parse_error', {
-            playerId,
-            error: error instanceof Error ? error.message : String(error),
-          });
+          logError('websocket_message_parse_error', error as Error, { playerId });
           this.sendError(player, 'Invalid message format');
         }
       });

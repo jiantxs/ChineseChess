@@ -1,3 +1,22 @@
+import fs from 'fs';
+import path from 'path';
+
+function detectMonorepoRoot(fromDir: string): string {
+  let current = fromDir;
+  const maxDepth = 10;
+  for (let i = 0; i < maxDepth; i++) {
+    if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml'))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return path.resolve(fromDir, '../..');
+}
+
+const monorepoRoot = detectMonorepoRoot(path.resolve(__dirname, '..'));
+
 export interface ChessConfig {
   server: {
     port: number;
@@ -33,6 +52,7 @@ export interface ChessConfig {
     errorLogDir: string;
     gameLogDir: string;
     maxFiles: string;
+    monorepoRoot: string;
   };
   admin: {
     password: string;
@@ -70,10 +90,11 @@ export const defaultConfig: ChessConfig = {
   },
   log: {
     level: process.env.LOG_LEVEL || 'info',
-    requestLogDir: 'logs/requests',
-    errorLogDir: 'logs/errors',
-    gameLogDir: 'logs/games',
+    requestLogDir: path.join(monorepoRoot, 'logs', 'requests'),
+    errorLogDir: path.join(monorepoRoot, 'logs', 'errors'),
+    gameLogDir: path.join(monorepoRoot, 'logs', 'games'),
     maxFiles: '30d',
+    monorepoRoot,
   },
   admin: {
     password: process.env.ADMIN_PASSWORD || 'admin123',
