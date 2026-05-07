@@ -45,14 +45,6 @@ export declare enum GameStatus {
     FINISHED = "finished",
     ABORTED = "aborted"
 }
-export interface Player {
-    id: string;
-    sessionId: string;
-    nickname: string;
-    side?: Side;
-    connected: boolean;
-    lastPing: number;
-}
 export interface GameMessage {
     type: MessageType;
     payload: unknown;

@@ -89,7 +89,7 @@ class GameServer {
         const { gameId, side } = message.payload;
         let targetGameId = gameId;
         if (!targetGameId) {
-            const newGame = this.gameManager.createGame(player.playerId);
+            const newGame = this.gameManager.createGame();
             targetGameId = newGame.id;
         }
         const game = this.gameManager.joinGame(targetGameId, player.playerId, side);
@@ -124,6 +124,14 @@ class GameServer {
             return;
         }
         const { from, to } = message.payload;
+        if (!from || !to ||
+            typeof from.row !== 'number' || typeof from.col !== 'number' ||
+            typeof to.row !== 'number' || typeof to.col !== 'number' ||
+            from.row < 0 || from.row > 9 || from.col < 0 || from.col > 8 ||
+            to.row < 0 || to.row > 9 || to.col < 0 || to.col > 8) {
+            this.sendError(player, 'Invalid coordinates');
+            return;
+        }
         const result = this.gameManager.makeMove(player.gameId, player.playerId, from, to);
         if (!result.success) {
             this.sendError(player, result.error || 'Move failed');
@@ -203,6 +211,10 @@ class GameServer {
         this.sendError(player, 'AI not yet implemented');
     }
     handleDisconnect(player) {
+        if (player.reconnectTimeout) {
+            clearTimeout(player.reconnectTimeout);
+            player.reconnectTimeout = undefined;
+        }
         if (player.gameId) {
             this.broadcastToGame(player.gameId, {
                 type: core_1.MessageType.PLAYER_DISCONNECTED,
@@ -213,7 +225,7 @@ class GameServer {
                 timestamp: Date.now(),
                 gameId: player.gameId,
             });
-            setTimeout(() => {
+            player.reconnectTimeout = setTimeout(() => {
                 const reconnected = this.players.get(player.playerId);
                 if (!reconnected || !reconnected.gameId) {
                     const game = this.gameManager.leaveGame(player.gameId, player.playerId);
@@ -233,6 +245,7 @@ class GameServer {
                         });
                     }
                 }
+                player.reconnectTimeout = undefined;
             }, config_1.chessConfig.game.reconnectTimeoutMs);
         }
         this.players.delete(player.playerId);

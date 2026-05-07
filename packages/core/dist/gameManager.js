@@ -7,7 +7,7 @@ const gameLogic_1 = require("./gameLogic");
 class GameManager {
     games = new Map();
     playerGames = new Map();
-    createGame(redPlayer) {
+    createGame() {
         const gameId = (0, uuid_1.v4)();
         const board = this.createInitialBoard();
         const game = {

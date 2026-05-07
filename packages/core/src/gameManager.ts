@@ -7,7 +7,7 @@ export class GameManager {
   private games: Map<string, GameState> = new Map();
   private playerGames: Map<string, string> = new Map();
 
-  createGame(redPlayer: string): GameState {
+  createGame(): GameState {
     const gameId = uuidv4();
     const board = this.createInitialBoard();
 

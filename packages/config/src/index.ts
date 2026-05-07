@@ -93,7 +93,7 @@ export const defaultConfig: ChessConfig = {
     requestLogDir: path.join(monorepoRoot, 'logs', 'requests'),
     errorLogDir: path.join(monorepoRoot, 'logs', 'errors'),
     gameLogDir: path.join(monorepoRoot, 'logs', 'games'),
-    maxFiles: '30d',
+    maxFiles: '30',
     monorepoRoot,
   },
   admin: {
@@ -104,12 +104,15 @@ export const defaultConfig: ChessConfig = {
 function loadConfig(): ChessConfig {
   const config = { ...defaultConfig };
   if (process.env.PORT) {
-    config.server.port = parseInt(process.env.PORT, 10);
+    const port = parseInt(process.env.PORT, 10);
+    if (!isNaN(port) && port > 0 && port <= 65535) {
+      config.server.port = port;
+    }
   }
   if (process.env.NODE_ENV === 'production') {
     config.ai.enabled = process.env.ENABLE_AI === 'true';
   }
-  return config;
+  return Object.freeze(config);
 }
 
 export const chessConfig = loadConfig();

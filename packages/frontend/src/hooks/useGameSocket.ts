@@ -227,6 +227,8 @@ export function useGameSocket(): UseGameSocketReturn {
       if (wsRef.current) {
         wsRef.current.close();
       }
+      isConnectingRef.current = false;
+      connectPromiseRef.current = null;
     };
   }, []);
 

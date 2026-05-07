@@ -13,16 +13,12 @@ import {
 
 interface UseLocalGameReturn {
   gameState: GameState | null;
-  selectedPiece: Position | null;
-  validMoves: Position[];
   makeMove: (from: Position, to: Position) => void;
   resetGame: () => void;
 }
 
 export function useLocalGame(): UseLocalGameReturn {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
-  const [validMoves, setValidMoves] = useState<Position[]>([]);
 
   const initializeGame = useCallback(() => {
     const board = Array(BOARD_ROWS).fill(null).map(() => Array(BOARD_COLS).fill(null));
@@ -38,8 +34,6 @@ export function useLocalGame(): UseLocalGameReturn {
       lastMoveTime: Date.now(),
       createdAt: Date.now(),
     });
-    setSelectedPiece(null);
-    setValidMoves([]);
   }, []);
 
   useEffect(() => {
@@ -57,7 +51,7 @@ export function useLocalGame(): UseLocalGameReturn {
 
     const newBoard = gameState.board.map(row => [...row]);
     const capturedPiece = newBoard[to.row][to.col];
-    
+
     newBoard[to.row][to.col] = { ...movingPiece, position: to };
     newBoard[from.row][from.col] = null;
 
@@ -81,9 +75,6 @@ export function useLocalGame(): UseLocalGameReturn {
         lastMoveTime: Date.now(),
       };
     });
-
-    setSelectedPiece(null);
-    setValidMoves([]);
   }, [gameState]);
 
   const resetGame = useCallback(() => {
@@ -92,8 +83,6 @@ export function useLocalGame(): UseLocalGameReturn {
 
   return {
     gameState,
-    selectedPiece,
-    validMoves,
     makeMove,
     resetGame,
   };

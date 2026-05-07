@@ -3,7 +3,7 @@ import { Side } from './types';
 export declare class GameManager {
     private games;
     private playerGames;
-    createGame(redPlayer: string): GameState;
+    createGame(): GameState;
     getGame(gameId: string): GameState | undefined;
     joinGame(gameId: string, playerId: string, side?: Side): GameState | null;
     makeMove(gameId: string, playerId: string, from: Position, to: Position): {

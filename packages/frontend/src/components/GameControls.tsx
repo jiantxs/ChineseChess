@@ -38,11 +38,11 @@ export default function GameControls({ gameState, onReset, gameMode }: GameContr
         <div className="room-info">
           <div className="room-label">房间号</div>
           <div className="room-id">{gameState.id}</div>
-          <button 
+          <button
             className="copy-btn"
             onClick={() => {
               navigator.clipboard.writeText(gameState.id);
-              alert('房间号已复制到剪贴板');
+              console.info('Room ID copied to clipboard');
             }}
           >
             复制

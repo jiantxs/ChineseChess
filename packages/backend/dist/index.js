@@ -25,10 +25,16 @@ app.use((0, express_session_1.default)({
     cookie: {
         maxAge: config_1.chessConfig.server.sessionMaxAgeMs,
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'strict',
     },
 }));
 app.use('/api/game', game_1.default);
 app.use('/admin', admin_1.default);
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+});
 app.locals.gameManager = gameManager;
 const publicPath = path_1.default.resolve(__dirname, '../node_modules/@chess/frontend/dist');
 app.use(express_1.default.static(publicPath));

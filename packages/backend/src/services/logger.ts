@@ -2,19 +2,18 @@ import {
   requestLogger,
   errorLogger,
   globalEventLogger,
-  logWebSocketEvent as wsEvent,
   logHttpRequest,
   logError,
   logEvent,
   logGameEvent,
   logSystemEvent,
 } from '@chess/logger';
+import type express from 'express';
 
 export {
   requestLogger,
   errorLogger,
   globalEventLogger,
-  logWebSocketEvent,
   logHttpRequest,
   logError,
   logEvent,
@@ -43,6 +42,8 @@ function logWebSocketEvent(
   });
 }
 
+export { logWebSocketEvent };
+
 export function requestLogMiddleware(): express.RequestHandler {
   return (req, res, next) => {
     const start = Date.now();
@@ -65,5 +66,3 @@ export function requestLogMiddleware(): express.RequestHandler {
     next();
   };
 }
-
-import express from 'express';

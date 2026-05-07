@@ -24,12 +24,19 @@ app.use(
     cookie: {
       maxAge: chessConfig.server.sessionMaxAgeMs,
       secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'strict',
     },
   })
 );
 
 app.use('/api/game', gameRoutes);
 app.use('/admin', adminRoutes);
+
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 app.locals.gameManager = gameManager;
 

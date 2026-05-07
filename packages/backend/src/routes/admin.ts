@@ -30,11 +30,14 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
 
 function readLogFiles(logDir: string, date: string): string[] {
   const files: string[] = [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return files;
+  }
   const logPath = path.resolve(process.cwd(), logDir);
-  
+
   if (!fs.existsSync(logPath)) return files;
 
-  const logFile = path.join(logPath, `${logDir.split('/').pop()}-${date}.log`);
+  const logFile = path.join(logPath, `request-${date}.log`);
   if (fs.existsSync(logFile)) {
     const content = fs.readFileSync(logFile, 'utf-8');
     files.push(...content.split('\n').filter(line => line.trim()));
@@ -46,7 +49,7 @@ function readLogFiles(logDir: string, date: string): string[] {
 function readGameFiles(gameDir: string): any[] {
   const games: any[] = [];
   const gamePath = path.resolve(process.cwd(), gameDir);
-  
+
   if (!fs.existsSync(gamePath)) return games;
 
   const files = fs.readdirSync(gamePath);
@@ -56,7 +59,8 @@ function readGameFiles(gameDir: string): any[] {
         const content = fs.readFileSync(path.join(gamePath, file), 'utf-8');
         const game = JSON.parse(content);
         games.push(game);
-      } catch {
+      } catch (err) {
+        console.error(`Failed to read game file ${file}:`, err);
       }
     }
   }
@@ -65,15 +69,23 @@ function readGameFiles(gameDir: string): any[] {
 }
 
 router.get('/api/logs/requests', requireAuth, (req: Request, res: Response) => {
-  const date = req.query.date as string || new Date().toISOString().split('T')[0];
-  const logs = readLogFiles(chessConfig.log.requestLogDir, date);
-  res.json({ date, count: logs.length, logs: logs.slice(-100) });
+  const dateParam = req.query.date as string || new Date().toISOString().split('T')[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    return;
+  }
+  const logs = readLogFiles(chessConfig.log.requestLogDir, dateParam);
+  res.json({ date: dateParam, count: logs.length, logs: logs.slice(-100) });
 });
 
 router.get('/api/logs/errors', requireAuth, (req: Request, res: Response) => {
-  const date = req.query.date as string || new Date().toISOString().split('T')[0];
-  const logs = readLogFiles(chessConfig.log.errorLogDir, date);
-  res.json({ date, count: logs.length, logs: logs.slice(-100) });
+  const dateParam = req.query.date as string || new Date().toISOString().split('T')[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    return;
+  }
+  const logs = readLogFiles(chessConfig.log.errorLogDir, dateParam);
+  res.json({ date: dateParam, count: logs.length, logs: logs.slice(-100) });
 });
 
 router.get('/api/games/active', requireAuth, (req: Request, res: Response) => {
