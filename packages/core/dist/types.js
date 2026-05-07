@@ -36,6 +36,8 @@ var MessageType;
     MessageType["PING"] = "ping";
     MessageType["PONG"] = "pong";
     MessageType["AI_MOVE"] = "ai_move";
+    MessageType["GET_VALID_MOVES"] = "get_valid_moves";
+    MessageType["VALID_MOVES"] = "valid_moves";
 })(MessageType || (exports.MessageType = MessageType = {}));
 exports.BOARD_ROWS = 10;
 exports.BOARD_COLS = 9;

@@ -43,6 +43,7 @@ export interface GameState {
   blackPlayer?: string;
   lastMoveTime: number;
   createdAt: number;
+  localGame?: boolean;
 }
 
 export enum GameStatus {
@@ -71,6 +72,8 @@ export enum MessageType {
   PING = 'ping',
   PONG = 'pong',
   AI_MOVE = 'ai_move',
+  GET_VALID_MOVES = 'get_valid_moves',
+  VALID_MOVES = 'valid_moves',
 }
 
 export const BOARD_ROWS = 10;

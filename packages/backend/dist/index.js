@@ -15,7 +15,6 @@ const core_1 = require("@chess/core");
 const logger_1 = require("./services/logger");
 const app = (0, express_1.default)();
 const server = (0, http_1.createServer)(app);
-const gameManager = new core_1.GameManager();
 app.use(express_1.default.json());
 app.use((0, logger_1.requestLogMiddleware)());
 app.use((0, express_session_1.default)({
@@ -35,13 +34,13 @@ app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
-app.locals.gameManager = gameManager;
+app.locals.gameManager = core_1.gameManager;
 const publicPath = path_1.default.resolve(__dirname, '../node_modules/@chess/frontend/dist');
 app.use(express_1.default.static(publicPath));
 app.get('*', (req, res) => {
     res.sendFile(path_1.default.join(publicPath, 'index.html'));
 });
-const gameServer = new gameServer_1.GameServer(server, gameManager);
+const gameServer = new gameServer_1.GameServer(server, core_1.gameManager);
 const PORT = config_1.chessConfig.server.port;
 const HOST = config_1.chessConfig.server.host;
 server.listen(PORT, HOST, () => {

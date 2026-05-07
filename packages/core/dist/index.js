@@ -14,9 +14,10 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameManager = void 0;
+exports.GameManager = exports.gameManager = void 0;
 __exportStar(require("./types"), exports);
 __exportStar(require("./gameLogic"), exports);
-var gameManager_1 = require("./gameManager");
+const gameManager_1 = require("./gameManager");
+Object.defineProperty(exports, "gameManager", { enumerable: true, get: function () { return gameManager_1.gameManager; } });
 Object.defineProperty(exports, "GameManager", { enumerable: true, get: function () { return gameManager_1.GameManager; } });
 //# sourceMappingURL=index.js.map

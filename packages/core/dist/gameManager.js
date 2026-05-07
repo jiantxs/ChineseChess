@@ -1,13 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameManager = void 0;
+exports.gameManager = exports.GameManager = void 0;
 const uuid_1 = require("uuid");
 const types_1 = require("./types");
 const gameLogic_1 = require("./gameLogic");
 class GameManager {
+    static instance;
     games = new Map();
     playerGames = new Map();
-    createGame() {
+    constructor() { }
+    static getInstance() {
+        if (!GameManager.instance) {
+            GameManager.instance = new GameManager();
+        }
+        return GameManager.instance;
+    }
+    createGame(local = false) {
+        for (const [gameId, game] of this.games.entries()) {
+            if (game.status === types_1.GameStatus.PLAYING || game.status === types_1.GameStatus.WAITING) {
+                game.status = types_1.GameStatus.FINISHED;
+                game.winner = game.redPlayer ? types_1.Side.RED : types_1.Side.BLACK;
+                if (game.redPlayer)
+                    this.playerGames.delete(game.redPlayer);
+                if (game.blackPlayer)
+                    this.playerGames.delete(game.blackPlayer);
+            }
+        }
         const gameId = (0, uuid_1.v4)();
         const board = this.createInitialBoard();
         const game = {
@@ -15,9 +33,10 @@ class GameManager {
             board,
             currentTurn: types_1.Side.RED,
             moves: [],
-            status: types_1.GameStatus.WAITING,
+            status: local ? types_1.GameStatus.PLAYING : types_1.GameStatus.WAITING,
             lastMoveTime: Date.now(),
             createdAt: Date.now(),
+            localGame: local,
         };
         this.games.set(gameId, game);
         return game;
@@ -29,8 +48,16 @@ class GameManager {
         const game = this.games.get(gameId);
         if (!game)
             return null;
-        if (game.status !== types_1.GameStatus.WAITING) {
+        if (game.status !== types_1.GameStatus.WAITING && !game.localGame) {
             return null;
+        }
+        // For local games, assign both sides to the same playerId
+        if (game.localGame) {
+            game.redPlayer = playerId;
+            game.blackPlayer = playerId;
+            this.playerGames.set(playerId, gameId);
+            game.status = types_1.GameStatus.PLAYING;
+            return game;
         }
         if (side === types_1.Side.RED && game.redPlayer) {
             return null;
@@ -67,9 +94,11 @@ class GameManager {
             return { success: false, error: 'Game is not in progress' };
         }
         const isRedTurn = game.currentTurn === types_1.Side.RED;
-        const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
-        if (expectedPlayer !== playerId) {
-            return { success: false, error: 'Not your turn' };
+        if (!game.localGame) {
+            const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
+            if (expectedPlayer !== playerId) {
+                return { success: false, error: 'Not your turn' };
+            }
         }
         const piece = game.board[from.row][from.col];
         if (!piece) {
@@ -128,6 +157,25 @@ class GameManager {
             return undefined;
         return this.games.get(gameId);
     }
+    getValidMoves(gameId, playerId, position) {
+        const game = this.games.get(gameId);
+        if (!game)
+            return [];
+        const piece = game.board[position.row][position.col];
+        if (!piece)
+            return [];
+        // For local games, both players can control any piece
+        // For online games, only the player whose turn it is can move
+        if (!game.localGame) {
+            const isRedTurn = game.currentTurn === types_1.Side.RED;
+            const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
+            if (expectedPlayer !== playerId)
+                return [];
+        }
+        if (piece.side !== game.currentTurn)
+            return [];
+        return (0, gameLogic_1.getValidMoves)(game.board, piece);
+    }
     createInitialBoard() {
         const board = Array(types_1.BOARD_ROWS)
             .fill(null)
@@ -159,4 +207,5 @@ class GameManager {
     }
 }
 exports.GameManager = GameManager;
+exports.gameManager = GameManager.getInstance();
 //# sourceMappingURL=gameManager.js.map

@@ -7,7 +7,6 @@ import {
   GameStatus,
   BOARD_ROWS,
   BOARD_COLS,
-  getValidMoves,
 } from '@chess/core';
 import './ChessBoard.css';
 
@@ -238,11 +237,16 @@ export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: 
     if (piece) {
       const isMyTurn = gameState.currentTurn === piece.side;
       const canControl = gameMode === 'local' || playerSide === piece.side;
-      
+
       if (isMyTurn && canControl) {
         setSelectedPiece(pos);
-        const moves = getValidMoves(gameState.board, piece);
-        setValidMoves(moves);
+        const allPositions: Position[] = [];
+        for (let row = 0; row < BOARD_ROWS; row++) {
+          for (let col = 0; col < BOARD_COLS; col++) {
+            allPositions.push({ row, col });
+          }
+        }
+        setValidMoves(allPositions);
       } else {
         setSelectedPiece(null);
         setValidMoves([]);

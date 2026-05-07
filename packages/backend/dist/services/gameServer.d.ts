@@ -13,6 +13,7 @@ export declare class GameServer {
     private handleLeaveGame;
     private handlePing;
     private handleAIMove;
+    private handleGetValidMoves;
     private handleDisconnect;
     private sendToPlayer;
     private broadcastToGame;

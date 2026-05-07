@@ -13,7 +13,7 @@ interface UseGameSocketReturn {
   playerSide: Side | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected';
   error: string | null;
-  createGame: () => void;
+  createGame: (local?: boolean) => void;
   joinGame: (gameId: string) => void;
   makeMove: (from: Position, to: Position) => void;
   resetGame: () => void;
@@ -150,7 +150,10 @@ export function useGameSocket(): UseGameSocketReturn {
         const errorPayload = message.payload as { error: string };
         setError(errorPayload.error);
         break;
-        
+
+      case MessageType.VALID_MOVES:
+        break;
+
       case MessageType.PONG:
         break;
         
@@ -170,12 +173,12 @@ export function useGameSocket(): UseGameSocketReturn {
     }
   }, []);
 
-  const createGame = useCallback(async () => {
+  const createGame = useCallback(async (local: boolean = false) => {
     try {
       await connect();
       sendMessage({
         type: MessageType.JOIN_GAME,
-        payload: {},
+        payload: { local },
         gameId: '',
       });
     } catch (err) {

@@ -107,18 +107,24 @@ export class GameServer {
       case MessageType.AI_MOVE:
         this.handleAIMove(player, message);
         break;
+      case MessageType.GET_VALID_MOVES:
+        this.handleGetValidMoves(player, message);
+        break;
       default:
         this.sendError(player, 'Unknown message type');
     }
   }
 
   private handleJoinGame(player: ConnectedPlayer, message: GameMessage): void {
-    const { gameId, side } = message.payload as { gameId?: string; side?: Side };
+    const { gameId, side, local } = message.payload as { gameId?: string; side?: Side; local?: boolean };
 
     let targetGameId = gameId;
+    let isNewGame = false;
+
     if (!targetGameId) {
-      const newGame = this.gameManager.createGame();
+      const newGame = this.gameManager.createGame(local || false);
       targetGameId = newGame.id;
+      isNewGame = true;
     }
 
     const game = this.gameManager.joinGame(targetGameId!, player.playerId, side);
@@ -133,7 +139,8 @@ export class GameServer {
 
     logWebSocketEvent('join_game', player.playerId, targetGameId, {
       side: player.side,
-      isNewGame: !gameId,
+      isNewGame,
+      local: local || false,
     });
 
     for (const p of this.players.values()) {
@@ -260,6 +267,33 @@ export class GameServer {
     this.sendError(player, 'AI not yet implemented');
   }
 
+  private handleGetValidMoves(player: ConnectedPlayer, message: GameMessage): void {
+    if (!player.gameId) {
+      this.sendError(player, 'Not in a game');
+      return;
+    }
+
+    const { position } = message.payload as { position: Position };
+
+    if (!position || typeof position.row !== 'number' || typeof position.col !== 'number') {
+      this.sendError(player, 'Invalid position');
+      return;
+    }
+
+    const validMoves = this.gameManager.getValidMoves(
+      player.gameId,
+      player.playerId,
+      position
+    );
+
+    this.sendToPlayer(player, {
+      type: MessageType.VALID_MOVES,
+      payload: { moves: validMoves },
+      timestamp: Date.now(),
+      gameId: player.gameId,
+    });
+  }
+
   private handleDisconnect(player: ConnectedPlayer): void {
     if (player.reconnectTimeout) {
       clearTimeout(player.reconnectTimeout);
@@ -339,6 +373,7 @@ export class GameServer {
       blackPlayer: game.blackPlayer ? true : false,
       lastMoveTime: game.lastMoveTime,
       createdAt: game.createdAt,
+      localGame: game.localGame || false,
     };
   }
 

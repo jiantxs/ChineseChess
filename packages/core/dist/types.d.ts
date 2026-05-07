@@ -38,6 +38,7 @@ export interface GameState {
     blackPlayer?: string;
     lastMoveTime: number;
     createdAt: number;
+    localGame?: boolean;
 }
 export declare enum GameStatus {
     WAITING = "waiting",
@@ -62,7 +63,9 @@ export declare enum MessageType {
     ERROR = "error",
     PING = "ping",
     PONG = "pong",
-    AI_MOVE = "ai_move"
+    AI_MOVE = "ai_move",
+    GET_VALID_MOVES = "get_valid_moves",
+    VALID_MOVES = "valid_moves"
 }
 export declare const BOARD_ROWS = 10;
 export declare const BOARD_COLS = 9;

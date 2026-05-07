@@ -81,16 +81,21 @@ class GameServer {
             case core_1.MessageType.AI_MOVE:
                 this.handleAIMove(player, message);
                 break;
+            case core_1.MessageType.GET_VALID_MOVES:
+                this.handleGetValidMoves(player, message);
+                break;
             default:
                 this.sendError(player, 'Unknown message type');
         }
     }
     handleJoinGame(player, message) {
-        const { gameId, side } = message.payload;
+        const { gameId, side, local } = message.payload;
         let targetGameId = gameId;
+        let isNewGame = false;
         if (!targetGameId) {
-            const newGame = this.gameManager.createGame();
+            const newGame = this.gameManager.createGame(local || false);
             targetGameId = newGame.id;
+            isNewGame = true;
         }
         const game = this.gameManager.joinGame(targetGameId, player.playerId, side);
         if (!game) {
@@ -101,7 +106,8 @@ class GameServer {
         player.side = game.redPlayer === player.playerId ? core_1.Side.RED : core_1.Side.BLACK;
         (0, logger_1.logWebSocketEvent)('join_game', player.playerId, targetGameId, {
             side: player.side,
-            isNewGame: !gameId,
+            isNewGame,
+            local: local || false,
         });
         for (const p of this.players.values()) {
             if (p.gameId === targetGameId) {
@@ -210,6 +216,24 @@ class GameServer {
         }
         this.sendError(player, 'AI not yet implemented');
     }
+    handleGetValidMoves(player, message) {
+        if (!player.gameId) {
+            this.sendError(player, 'Not in a game');
+            return;
+        }
+        const { position } = message.payload;
+        if (!position || typeof position.row !== 'number' || typeof position.col !== 'number') {
+            this.sendError(player, 'Invalid position');
+            return;
+        }
+        const validMoves = this.gameManager.getValidMoves(player.gameId, player.playerId, position);
+        this.sendToPlayer(player, {
+            type: core_1.MessageType.VALID_MOVES,
+            payload: { moves: validMoves },
+            timestamp: Date.now(),
+            gameId: player.gameId,
+        });
+    }
     handleDisconnect(player) {
         if (player.reconnectTimeout) {
             clearTimeout(player.reconnectTimeout);
@@ -282,6 +306,7 @@ class GameServer {
             blackPlayer: game.blackPlayer ? true : false,
             lastMoveTime: game.lastMoveTime,
             createdAt: game.createdAt,
+            localGame: game.localGame || false,
         };
     }
     startPingInterval() {

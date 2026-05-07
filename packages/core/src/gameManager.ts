@@ -1,13 +1,32 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { GameState, Piece, Move, Position } from './types';
 import { GameStatus, Side, INITIAL_BOARD, BOARD_ROWS, BOARD_COLS } from './types';
-import { isValidMove, isGeneralCaptured } from './gameLogic';
+import { isValidMove, isGeneralCaptured, getValidMoves as getValidMovesLogic } from './gameLogic';
 
 export class GameManager {
+  private static instance: GameManager;
   private games: Map<string, GameState> = new Map();
   private playerGames: Map<string, string> = new Map();
 
-  createGame(): GameState {
+  private constructor() {}
+
+  static getInstance(): GameManager {
+    if (!GameManager.instance) {
+      GameManager.instance = new GameManager();
+    }
+    return GameManager.instance;
+  }
+
+  createGame(local: boolean = false): GameState {
+    for (const [gameId, game] of this.games.entries()) {
+      if (game.status === GameStatus.PLAYING || game.status === GameStatus.WAITING) {
+        game.status = GameStatus.FINISHED;
+        game.winner = game.redPlayer ? Side.RED : Side.BLACK;
+        if (game.redPlayer) this.playerGames.delete(game.redPlayer);
+        if (game.blackPlayer) this.playerGames.delete(game.blackPlayer);
+      }
+    }
+
     const gameId = uuidv4();
     const board = this.createInitialBoard();
 
@@ -16,9 +35,10 @@ export class GameManager {
       board,
       currentTurn: Side.RED,
       moves: [],
-      status: GameStatus.WAITING,
+      status: local ? GameStatus.PLAYING : GameStatus.WAITING,
       lastMoveTime: Date.now(),
       createdAt: Date.now(),
+      localGame: local,
     };
 
     this.games.set(gameId, game);
@@ -33,8 +53,17 @@ export class GameManager {
     const game = this.games.get(gameId);
     if (!game) return null;
 
-    if (game.status !== GameStatus.WAITING) {
+    if (game.status !== GameStatus.WAITING && !game.localGame) {
       return null;
+    }
+
+    // For local games, assign both sides to the same playerId
+    if (game.localGame) {
+      game.redPlayer = playerId;
+      game.blackPlayer = playerId;
+      this.playerGames.set(playerId, gameId);
+      game.status = GameStatus.PLAYING;
+      return game;
     }
 
     if (side === Side.RED && game.redPlayer) {
@@ -81,10 +110,12 @@ export class GameManager {
     }
 
     const isRedTurn = game.currentTurn === Side.RED;
-    const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
 
-    if (expectedPlayer !== playerId) {
-      return { success: false, error: 'Not your turn' };
+    if (!game.localGame) {
+      const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
+      if (expectedPlayer !== playerId) {
+        return { success: false, error: 'Not your turn' };
+      }
     }
 
     const piece = game.board[from.row][from.col];
@@ -156,6 +187,26 @@ export class GameManager {
     return this.games.get(gameId);
   }
 
+  getValidMoves(gameId: string, playerId: string, position: Position): Position[] {
+    const game = this.games.get(gameId);
+    if (!game) return [];
+
+    const piece = game.board[position.row][position.col];
+    if (!piece) return [];
+
+    // For local games, both players can control any piece
+    // For online games, only the player whose turn it is can move
+    if (!game.localGame) {
+      const isRedTurn = game.currentTurn === Side.RED;
+      const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
+      if (expectedPlayer !== playerId) return [];
+    }
+
+    if (piece.side !== game.currentTurn) return [];
+
+    return getValidMovesLogic(game.board, piece);
+  }
+
   private createInitialBoard(): (Piece | null)[][] {
     const board: (Piece | null)[][] = Array(BOARD_ROWS)
       .fill(null)
@@ -190,3 +241,5 @@ export class GameManager {
     return Array.from(this.games.values());
   }
 }
+
+export const gameManager = GameManager.getInstance();

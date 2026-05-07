@@ -6,13 +6,11 @@ import { chessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import gameRoutes from './routes/game';
 import adminRoutes from './routes/admin';
-import { GameManager } from '@chess/core';
+import { gameManager } from '@chess/core';
 import { requestLogMiddleware } from './services/logger';
 
 const app = express();
 const server = createServer(app);
-
-const gameManager = new GameManager();
 
 app.use(express.json());
 app.use(requestLogMiddleware());
