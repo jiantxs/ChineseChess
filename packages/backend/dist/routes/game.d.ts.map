@@ -1,1 +1,1 @@
-{"version":3,"file":"game.d.ts","sourceRoot":"","sources":["../../src/routes/game.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,MAAM,IAAI,aAAa,EAAE,MAAM,SAAS,CAAC;AAGvD,QAAA,MAAM,MAAM,EAAE,aAAwB,CAAC;AAQvC,eAAe,MAAM,CAAC"}
+{"version":3,"file":"game.d.ts","sourceRoot":"","sources":["../../src/routes/game.ts"],"names":[],"mappings":"AAAA;;;;;;;;;GASG;AAGH,OAAO,KAAK,EAAE,MAAM,IAAI,aAAa,EAAE,MAAM,SAAS,CAAC;AAGvD,gDAAgD;AAChD,QAAA,MAAM,MAAM,EAAE,aAAwB,CAAC;AAyBvC,eAAe,MAAM,CAAC"}

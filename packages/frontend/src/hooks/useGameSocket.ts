@@ -1,3 +1,8 @@
+/**
+ * @file WebSocket client hook for online multiplayer
+ * Manages WebSocket connection lifecycle, game state sync, moves, and valid moves.
+ * Session-based player identity via /api/game/player-id
+ */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   GameState,
@@ -8,6 +13,10 @@ import {
   GameStatus,
 } from '@chess/core';
 
+/**
+ * Return type for the useGameSocket hook.
+ * @interface UseGameSocketReturn
+ */
 interface UseGameSocketReturn {
   gameState: GameState | null;
   playerSide: Side | null;

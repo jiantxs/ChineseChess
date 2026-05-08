@@ -7,13 +7,30 @@ import { useBoardController } from './controllers/BoardController';
 import { Side, Position } from '@chess/core';
 import './App.css';
 
+/**
+ * Root React component for Chinese Chess (Xiangqi).
+ *
+ * Provides mode switching between local hot-seat and online multiplayer.
+ * Displays a menu screen with options to start a local game, create an online room,
+ * or join an existing room. Once a game starts, renders the game board(s) and controls.
+ *
+ * @returns The rendered App component.
+ */
 function App() {
+  /** Current game mode: 'local' for hot-seat play, 'online' for multiplayer via WebSocket. */
   const [gameMode, setGameMode] = useState<'local' | 'online'>('local');
+  /** Whether to show the menu screen (true) or the game screen (false). */
   const [showMenu, setShowMenu] = useState(true);
 
   const onlineGame = useGameSocket();
   const localGame = useLocalGame();
 
+  /**
+   * Delegates a move to the active game mode (local or online).
+   *
+   * @param from - The source position of the piece.
+   * @param to - The destination position.
+   */
   const handleMove = useCallback((from: Position, to: Position) => {
     if (gameMode === 'local') {
       localGame.makeMove(from, to);
@@ -22,6 +39,11 @@ function App() {
     }
   }, [gameMode, localGame, onlineGame]);
 
+  /**
+   * Delegates a request for valid moves to the active game mode.
+   *
+   * @param position - The board position to query.
+   */
   const handleGetValidMoves = useCallback((position: Position) => {
     if (gameMode === 'local') {
       localGame.getValidMoves(position);
@@ -42,14 +64,17 @@ function App() {
   const gameState = activeGame.gameState;
   const error = gameMode === 'online' ? onlineGame.error : null;
 
+  // Sync the board controller with the current game state from the active mode.
   useEffect(() => {
     setGameState(gameState);
   }, [gameState, setGameState]);
 
+  // Sync valid moves from the active mode into the board controller.
   useEffect(() => {
     setValidMoves(activeGame.validMoves);
   }, [activeGame.validMoves, setValidMoves]);
 
+  /** Starts a local hot-seat game and hides the menu. */
   const handleStartLocal = useCallback(() => {
     setGameMode('local');
     setShowMenu(false);
@@ -57,6 +82,7 @@ function App() {
     localGame.resetGame();
   }, [localGame, resetSelection]);
 
+  /** Creates a new online room and hides the menu. */
   const handleStartOnline = useCallback(() => {
     setGameMode('online');
     setShowMenu(false);
@@ -64,6 +90,11 @@ function App() {
     onlineGame.createGame();
   }, [onlineGame, resetSelection]);
 
+  /**
+   * Joins an existing online room by ID and hides the menu.
+   *
+   * @param gameId - The room ID to join.
+   */
   const handleJoinGame = useCallback((gameId: string) => {
     setGameMode('online');
     setShowMenu(false);
@@ -71,6 +102,7 @@ function App() {
     onlineGame.joinGame(gameId);
   }, [onlineGame, resetSelection]);
 
+  /** Returns to the menu and resets both local and online game states. */
   const handleReset = useCallback(() => {
     setShowMenu(true);
     resetSelection();

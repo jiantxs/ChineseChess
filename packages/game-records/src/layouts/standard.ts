@@ -1,5 +1,20 @@
+/**
+ * Standard Xiangqi initial board setup.
+ *
+ * Contains 32 pieces: 16 red (r1-r16) and 16 black (b1-b16).
+ * Board orientation: row 0 = black home (bottom), row 9 = red home (top).
+ */
 import { PieceLayout, PieceType, Side } from '@chess/core';
 
+/**
+ * Serialized layout data for the standard Xiangqi setup.
+ *
+ * Structure:
+ * - `name`: Layout identifier ("standard")
+ * - `description`: Human-readable description
+ * - `firstPlayer`: Which side moves first (Side.RED)
+ * - `pieces`: Array of piece definitions with id, type, side, position
+ */
 export const standardLayoutData = {
   name: 'standard',
   description: 'Standard Xiangqi initial setup',
@@ -41,4 +56,8 @@ export const standardLayoutData = {
   ],
 };
 
+/**
+ * PieceLayout instance representing the standard Xiangqi initial board setup.
+ * Created from standardLayoutData via PieceLayout.fromJSON().
+ */
 export const standardLayout = PieceLayout.fromJSON(standardLayoutData);

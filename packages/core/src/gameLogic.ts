@@ -1,5 +1,31 @@
 import { Piece, PieceType, Side, Position, BOARD_ROWS, BOARD_COLS } from './types';
 
+/**
+ * Pure functions for Chinese Chess (Xiangqi) move validation.
+ *
+ * This module contains no side effects - all functions take board state as input
+ * and return computed results based on Xiangqi rules.
+ *
+ * Board coordinate system: row 0 = black home (top), row 9 = red home (bottom)
+ *
+ * Usage:
+ *   - isValidMove: validate if a move is legal for a given piece
+ *   - isGeneralCaptured: check if game is over (a general was captured)
+ *   - getValidMoves: get all valid destinations for a piece
+ *
+ * @module gameLogic
+ */
+
+/**
+ * Validates if a move is legal for a given piece on the current board.
+ * Checks board boundaries, piece collisions, and piece-type-specific rules.
+ *
+ * @param board - 2D array of (Piece | null), representing the current board state
+ * @param piece - The piece to move, must include type and side
+ * @param from - Current position {row, col} of the piece
+ * @param to - Target position {row, col} to move to
+ * @returns true if the move is valid according to Xiangqi rules, false otherwise
+ */
 export function isValidMove(
   board: (Piece | null)[][],
   piece: Piece,
@@ -35,6 +61,18 @@ export function isValidMove(
   }
 }
 
+/**
+ * Validates a General (将/帅) move.
+ * General moves 1 step orthogonally within the palace (rows 0-2 for black, rows 7-9 for red, cols 3-5).
+ * Cannot move out of palace or move more than 1 step.
+ * Cannot move in a way that would expose own general to direct attack (illegal in Xiangqi).
+ *
+ * @param board - Current board state
+ * @param piece - The general piece
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for a General
+ */
 function isValidGeneralMove(
   board: (Piece | null)[][],
   piece: Piece,
@@ -61,6 +99,16 @@ function isValidGeneralMove(
   return !wouldExposeGeneral(board, piece, from, to);
 }
 
+/**
+ * Validates an Advisor (士) move.
+ * Advisor moves 1 step diagonally within the palace (same row/col boundaries as General).
+ * There are 5 advisor positions in each palace forming an X pattern.
+ *
+ * @param piece - The advisor piece
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for an Advisor
+ */
 function isValidAdvisorMove(piece: Piece, from: Position, to: Position): boolean {
   const isRed = piece.side === Side.RED;
   const palaceRowMin = isRed ? 7 : 0;
@@ -78,6 +126,19 @@ function isValidAdvisorMove(piece: Piece, from: Position, to: Position): boolean
   return rowDiff === 1 && colDiff === 1;
 }
 
+/**
+ * Validates an Elephant (象/相) move.
+ * Elephant moves 2 steps orthogonally then 1 step diagonally, forming a jump pattern.
+ * Cannot cross the river: red elephant restricted to rows 5-9, black elephant to rows 0-4.
+ * The "eye" position (intermediate orthogonal cell) must be empty - cannot be blocked.
+ * Represents the minister/counselor piece in Xiangqi.
+ *
+ * @param board - Current board state
+ * @param piece - The elephant piece
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for an Elephant
+ */
 function isValidElephantMove(
   board: (Piece | null)[][],
   piece: Piece,
@@ -102,6 +163,17 @@ function isValidElephantMove(
   return board[eyeRow][eyeCol] === null;
 }
 
+/**
+ * Validates a Horse (马) move.
+ * Horse moves 1 step orthogonally then 1 step diagonally, forming an L-shape.
+ * The "leg" position (the orthogonal cell horse passes through) must be empty.
+ * Can jump over pieces unlike chariot/cannon. L-shape can be 2 rows + 1 col OR 1 row + 2 cols.
+ *
+ * @param board - Current board state
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for a Horse
+ */
 function isValidHorseMove(
   board: (Piece | null)[][],
   from: Position,
@@ -128,6 +200,17 @@ function isValidHorseMove(
   return board[legRow][legCol] === null;
 }
 
+/**
+ * Validates a Chariot (车) move.
+ * Chariot moves any distance orthogonally (like rook in chess) but cannot jump pieces.
+ * Path between from and to must be completely clear of all pieces.
+ * Can capture opponent pieces but must land on them during move.
+ *
+ * @param board - Current board state
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for a Chariot
+ */
 function isValidChariotMove(
   board: (Piece | null)[][],
   from: Position,
@@ -154,6 +237,18 @@ function isValidChariotMove(
   return true;
 }
 
+/**
+ * Validates a Cannon (炮) move.
+ * Cannon moves orthogonally like the Chariot, but captures differently:
+ * - Moving to empty square: path must be completely clear (0 screen pieces)
+ * - Capturing opponent piece: must have exactly 1 screen piece (hurdle) between start and target
+ * The cannon "jumps" over pieces to capture, unlike chariot which cannot jump.
+ *
+ * @param board - Current board state
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for a Cannon
+ */
 function isValidCannonMove(
   board: (Piece | null)[][],
   from: Position,
@@ -187,6 +282,17 @@ function isValidCannonMove(
   }
 }
 
+/**
+ * Validates a Soldier (兵/卒) move.
+ * Before crossing the river (red: rows 5-9, black: rows 0-4): moves 1 step forward only.
+ * After crossing river (red: rows 0-4, black: rows 5-9): can also move 1 step sideways.
+ * Cannot move backward. Red moves toward row 0 (up), black moves toward row 9 (down).
+ *
+ * @param piece - The soldier piece with side information
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move is valid for a Soldier
+ */
 function isValidSoldierMove(
   piece: Piece,
   from: Position,
@@ -213,6 +319,17 @@ function isValidSoldierMove(
   return isRed ? rowDiff === -1 : rowDiff === 1;
 }
 
+/**
+ * Simulates a move and checks if it would expose the moving player's general to direct attack.
+ * In Xiangqi, having generals face each other across an open file is illegal (forbidden check).
+ * This function clones the board, performs the move, then checks if the moving general is in check.
+ *
+ * @param board - Current board state
+ * @param piece - The piece being moved
+ * @param from - Current position
+ * @param to - Target position
+ * @returns true if the move would expose own general to attack (illegal move)
+ */
 function wouldExposeGeneral(
   board: (Piece | null)[][],
   piece: Piece,
@@ -251,6 +368,13 @@ function wouldExposeGeneral(
   return true;
 }
 
+/**
+ * Checks if either general has been captured, determining game over condition.
+ * In Xiangqi, capturing the opponent's general ends the game immediately.
+ *
+ * @param board - Current board state as 2D array of (Piece | null)
+ * @returns Object with captured=true if a general is missing, winner is the surviving side
+ */
 export function isGeneralCaptured(board: (Piece | null)[][]): { captured: boolean; winner?: Side } {
   let redGeneral = false;
   let blackGeneral = false;
@@ -270,6 +394,14 @@ export function isGeneralCaptured(board: (Piece | null)[][]): { captured: boolea
   return { captured: false };
 }
 
+/**
+ * Returns all valid destination positions for a given piece on the current board.
+ * Scans all 90 board positions and returns only those that pass isValidMove validation.
+ *
+ * @param board - Current board state as 2D array of (Piece | null)
+ * @param piece - The piece to get valid moves for, must include position
+ * @returns Array of valid {row, col} positions the piece can move to
+ */
 export function getValidMoves(
   board: (Piece | null)[][],
   piece: Piece

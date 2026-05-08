@@ -6,34 +6,36 @@ Express/WebSocket server handling real-time Chinese Chess multiplayer with REST 
 ## STRUCTURE
 ```
 src/
-├── index.ts              # Entry: Express app + HTTP server, GameManager init
+├── index.ts              # Entry: Express app + HTTP server, session middleware, static files
 ├── routes/
-│   ├── admin.ts         # Admin dashboard API (logs, live games, archived games)
-│   └── game.ts           # POST /api/game/player-id (session-based player ID)
+│   ├── admin.ts         # Admin dashboard API (logs, live games, archived games, Basic auth)
+│   ├── game.ts          # POST /api/game/player-id (session-based player ID)
+│   └── config.ts        # GET /api/config (server config, available layouts)
 └── services/
-    ├── gameServer.ts     # GameServer class, WebSocket on /ws, handles join_game/make_move/disconnect
-    ├── logger.ts         # Winston request/error loggers with daily rotate
-    └── gameLogger.ts     # GameLogger class, JSON game records to logs/games/{active,archive}
+    ├── gameServer.ts    # GameServer class, WebSocket on /ws, 30s ping, 10min cleanup
+    └── logger.ts        # Winston request/error loggers with DailyRotateFile
 ```
 
 ## WHERE TO LOOK
 | Task | Location | Notes |
 |------|----------|-------|
 | Entry point | src/index.ts | Express app, HTTP server, session middleware |
-| WebSocket server | src/services/gameServer.ts | GameServer class, path /ws |
-| Admin REST API | src/routes/admin.ts | Basic auth, logs/games endpoints |
+| WebSocket server | src/services/gameServer.ts | GameServer class, path /ws, handles all message types |
+| Admin REST API | src/routes/admin.ts | Basic auth, logs/games/active/live endpoints |
 | Player ID endpoint | src/routes/game.ts | POST /api/game/player-id |
+| Config endpoint | src/routes/config.ts | GET /api/config with layout info |
 | Request/error logging | src/services/logger.ts | Winston with DailyRotateFile |
-| Game record logging | src/services/gameLogger.ts | JSON records in logs/games/ |
 
 ## CONVENTIONS
 - Express 4 + ws 8.16 WebSocket via `ws` library
 - Session-based player identity via `/api/game/player-id`
-- WebSocket path: `/ws?playerId=xxx`
+- WebSocket path: `/ws?playerId=xxx` (required, 1008 if missing)
 - GameManager imported from `@chess/core`
-- Winston daily rotate logs in `logs/requests/`, `logs/errors/`, `logs/games/`
-- Admin routes require Basic auth (admin/<password from config>)
-- 30s ping interval, 10min cleanup interval
+- Winston daily rotate logs in `logs/requests/`, `logs/errors/`, `logs/events/`
+- Admin routes require Basic auth (`admin:<password from chessConfig>`)
+- 30s ping interval, 10min cleanup interval (1hr game timeout)
+- 30-second reconnect window before forfeit
 
 ## ANTI-PATTERNS
 - **NO test infrastructure** - no jest/vitest config or test scripts
+- Backend tsconfig rootDir is `..` → output at `backend/dist/backend/src/`

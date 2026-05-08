@@ -1,12 +1,23 @@
 import { GameState, GameStatus } from '@chess/core';
 import './GameControls.css';
 
+/** Props for the {@link GameControls} component. */
 interface GameControlsProps {
   gameState: GameState | null;
   onReset: () => void;
   gameMode: 'local' | 'online';
 }
 
+/**
+ * Game controls UI component.
+ *
+ * Displays the current game status (waiting, playing, or game over),
+ * move counter, a reset/return-to-menu button, and room ID with a copy
+ * button in online mode.
+ *
+ * @param props - {@link GameControlsProps}
+ * @returns The rendered GameControls component.
+ */
 export default function GameControls({ gameState, onReset, gameMode }: GameControlsProps) {
   const moveCount = gameState?.moves.length || 0;
   const isGameOver = gameState?.status === GameStatus.FINISHED;

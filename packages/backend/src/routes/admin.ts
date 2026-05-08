@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Admin dashboard API with Basic authentication
+ * @module backend/src/routes/admin
+ *
+ * Provides admin dashboard endpoints for monitoring games, logs, and server health.
+ * All endpoints require Basic authentication (username: admin, password from chessConfig).
+ *
+ * @author Chinese Chess Development Team
+ * @version 1.0.0
+ */
+
 import { Router, Request, Response, NextFunction } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import fs from 'fs';
@@ -5,11 +16,26 @@ import path from 'path';
 import { chessConfig } from '@chess/config';
 import { GameManager } from '@chess/core';
 
+/** Express router for admin endpoints */
 const router: ExpressRouter = Router();
 
+/**
+ * Basic authentication middleware for admin routes
+ * @description Validates Basic auth credentials against configured admin password.
+ *              Returns 401 with WWW-Authenticate header if credentials are missing or invalid.
+ *
+ * @param req - Express request with Authorization header
+ * @param res - Express response
+ * @param next - Express next function
+ *
+ * @example
+ * // Valid request header:
+ * // Authorization: Basic YWRtaW46cGFzc3dvcmQxMjM=
+ * // (base64 encoded "admin:password123")
+ */
 function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Basic ')) {
     res.set('WWW-Authenticate', 'Basic realm="Admin Dashboard"');
     res.status(401).send('Authentication required');
@@ -29,6 +55,20 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
+/**
+ * Read log files for a specific date
+ * @description Reads and parses request/error log files from the specified directory
+ *              for a given date. Returns empty array if date format is invalid or files don't exist.
+ *
+ * @param logDir - Relative path to log directory (e.g., 'logs/requests')
+ * @param date - Date string in YYYY-MM-DD format
+ * @returns Array of log entry strings, filtered to remove empty lines
+ *
+ * @remarks
+ * - Date must be in YYYY-MM-DD format
+ * - Log files are expected to be named: request-YYYY-MM-DD.log
+ * - Returns empty array for invalid date formats or missing files
+ */
 function readLogFiles(logDir: string, date: string): string[] {
   const files: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -47,6 +87,19 @@ function readLogFiles(logDir: string, date: string): string[] {
   return files;
 }
 
+/**
+ * Read archived game JSON files from a directory
+ * @description Reads and parses all .json game files from the specified directory.
+ *              Files are sorted by createdAt timestamp in descending order (newest first).
+ *
+ * @param gameDir - Relative path to game directory (e.g., 'logs/games/active')
+ * @returns Array of parsed game objects, sorted by creation date descending
+ *
+ * @remarks
+ * - Only reads files with .json extension
+ * - Silently skips files that fail to parse
+ * - Sorts games by createdAt field in descending order
+ */
 function readGameFiles(gameDir: string): any[] {
   const games: any[] = [];
   const gamePath = path.resolve(process.cwd(), gameDir);
@@ -69,6 +122,12 @@ function readGameFiles(gameDir: string): any[] {
   return games.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
+/**
+ * Get request logs for a specific date
+ * @route GET /admin/api/logs/requests
+ * @param req.query.date - Optional date in YYYY-MM-DD format (defaults to today)
+ * @returns JSON with date, count, and array of last 100 log entries
+ */
 router.get('/api/logs/requests', requireAuth, (req: Request, res: Response) => {
   const dateParam = req.query.date as string || new Date().toISOString().split('T')[0];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
@@ -79,6 +138,12 @@ router.get('/api/logs/requests', requireAuth, (req: Request, res: Response) => {
   res.json({ date: dateParam, count: logs.length, logs: logs.slice(-100) });
 });
 
+/**
+ * Get error logs for a specific date
+ * @route GET /admin/api/logs/errors
+ * @param req.query.date - Optional date in YYYY-MM-DD format (defaults to today)
+ * @returns JSON with date, count, and array of last 100 error log entries
+ */
 router.get('/api/logs/errors', requireAuth, (req: Request, res: Response) => {
   const dateParam = req.query.date as string || new Date().toISOString().split('T')[0];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
@@ -89,26 +154,44 @@ router.get('/api/logs/errors', requireAuth, (req: Request, res: Response) => {
   res.json({ date: dateParam, count: logs.length, logs: logs.slice(-100) });
 });
 
+/**
+ * Get archived active game files
+ * @route GET /admin/api/games/active
+ * @description Returns games from the active games directory (games that finished but not yet archived)
+ * @returns JSON with count and array of game objects
+ */
 router.get('/api/games/active', requireAuth, (req: Request, res: Response) => {
   const games = readGameFiles(path.join(chessConfig.log.gameLogDir, 'active'));
   res.json({ count: games.length, games });
 });
 
+/**
+ * Get archived game files
+ * @route GET /admin/api/games/archived
+ * @description Returns games from the archive directory (completed games)
+ * @returns JSON with count and array of game objects
+ */
 router.get('/api/games/archived', requireAuth, (req: Request, res: Response) => {
   const games = readGameFiles(path.join(chessConfig.log.gameLogDir, 'archive'));
   res.json({ count: games.length, games });
 });
 
+/**
+ * Get currently active games from GameManager
+ * @route GET /admin/api/games/live
+ * @description Returns live game state for all games currently managed in memory
+ * @returns JSON with count and array of game summaries including id, status, players, moves
+ */
 router.get('/api/games/live', requireAuth, (req: Request, res: Response) => {
   const gameManager = (req.app.locals.gameManager as GameManager);
   if (!gameManager) {
     res.status(500).json({ error: 'Game manager not available' });
     return;
   }
-  
+
   const games = gameManager.getAllGames();
-  res.json({ 
-    count: games.length, 
+  res.json({
+    count: games.length,
     games: games.map(g => ({
       id: g.id,
       status: g.status,
@@ -122,6 +205,13 @@ router.get('/api/games/live', requireAuth, (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Serve admin dashboard HTML page
+ * @route GET /admin
+ * @description Returns a single-page dashboard for monitoring games and logs
+ * @requires Basic authentication
+ * @returns HTML page with tabs for overview, live games, active games, archived games, and logs
+ */
 router.get('/', requireAuth, (req: Request, res: Response) => {
   res.send(`<!DOCTYPE html>
 <html lang="zh-CN">

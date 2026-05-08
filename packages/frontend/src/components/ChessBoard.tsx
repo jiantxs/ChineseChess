@@ -9,13 +9,23 @@ import {
   BOARD_COLS,
 } from '@chess/core';
 
+/** Default piece size in pixels. */
 const PIECE_SIZE = 60;
+/** Default board padding in pixels. */
 const BOARD_PADDING = 35;
+/** Default cell size in pixels. */
 const CELL_SIZE = 55;
 
+/** In-memory cache of loaded piece SVG images, keyed by `{side}-{type}`. */
 const PIECE_IMAGES: Record<string, HTMLImageElement> = {};
+/** Whether all piece images have been loaded. */
 let imagesLoaded = false;
 
+/**
+ * Asynchronously loads all piece SVG images into {@link PIECE_IMAGES}.
+ *
+ * @returns A promise that resolves once all images are loaded (or failed).
+ */
 function loadPieceImages(): Promise<void> {
   if (imagesLoaded) return Promise.resolve();
 
@@ -44,10 +54,17 @@ function loadPieceImages(): Promise<void> {
   });
 }
 
+/**
+ * Returns the image cache key for a given piece.
+ *
+ * @param piece - The piece to look up.
+ * @returns The image name in `{side}-{type}` format.
+ */
 function getPieceImageName(piece: Piece): string {
   return `${piece.side}-${piece.type}`;
 }
 
+/** Configurable dimensions for the chess board canvas. */
 export interface ChessBoardSize {
   width?: number;
   height?: number;
@@ -55,6 +72,7 @@ export interface ChessBoardSize {
   padding?: number;
 }
 
+/** Props for the {@link ChessBoard} component. */
 export interface ChessBoardProps {
   id?: string;
   gameState: GameState | null;
@@ -68,6 +86,15 @@ export interface ChessBoardProps {
   onGetValidMoves?: (position: Position) => void;
 }
 
+/**
+ * Canvas-based Chinese Chess (Xiangqi) board component.
+ *
+ * Renders a 10x9 board with grid lines, palace markings, river labels,
+ * SVG piece images, selection highlights, valid-move dots, and a game-over overlay.
+ *
+ * @param props - {@link ChessBoardProps}
+ * @returns The rendered ChessBoard component.
+ */
 export default function ChessBoard({
   id,
   gameState,
@@ -81,12 +108,18 @@ export default function ChessBoard({
   onGetValidMoves,
 }: ChessBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  /** Internally selected piece position when not controlled externally. */
   const [internalSelectedPiece, setInternalSelectedPiece] = useState<Position | null>(null);
+  /** Internally computed valid moves when not controlled externally. */
   const [internalValidMoves, setInternalValidMoves] = useState<Position[]>([]);
+  /** Whether piece SVG images are ready for rendering. */
   const [imagesReady, setImagesReady] = useState(false);
 
+  /** Effective selected piece: external prop takes precedence over internal state. */
   const selectedPiece = externalSelectedPosition ?? internalSelectedPiece;
+  /** Effective valid moves: external prop takes precedence over internal state. */
   const displayValidMoves = externalValidMoves ?? internalValidMoves;
+  /** Whether the component is operating in external-controlled mode. */
   const isExternalMode = externalValidMoves !== undefined || externalSelectedPosition !== undefined;
 
   const cellSize = size?.cellSize ?? CELL_SIZE;
@@ -96,10 +129,17 @@ export default function ChessBoard({
   const width = size?.width ?? padding * 2 + cellSize * (BOARD_COLS - 1);
   const height = size?.height ?? padding * 2 + cellSize * (BOARD_ROWS - 1);
 
+  // Load piece images on mount.
   useEffect(() => {
     loadPieceImages().then(() => setImagesReady(true));
   }, []);
 
+  /**
+   * Draws the full board state onto the canvas.
+   *
+   * Includes background, grid lines, palace X-markings, river text,
+   * piece images, selection highlight, valid-move dots, and game-over overlay.
+   */
   const drawBoard = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imagesReady) return;
@@ -112,9 +152,11 @@ export default function ChessBoard({
 
     ctx.clearRect(0, 0, width, height);
 
+    // Board background
     ctx.fillStyle = '#f4e4c1';
     ctx.fillRect(0, 0, width, height);
 
+    // Grid lines
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 1.5;
 
@@ -139,6 +181,7 @@ export default function ChessBoard({
       ctx.stroke();
     }
 
+    // Palace X-markings at corners
     ctx.beginPath();
     ctx.moveTo(padding + 3 * cellSize, padding);
     ctx.lineTo(padding + 5 * cellSize, padding + 2 * cellSize);
@@ -150,12 +193,14 @@ export default function ChessBoard({
     ctx.lineTo(padding + 3 * cellSize, padding + 9 * cellSize);
     ctx.stroke();
 
+    // River labels: 楚河 / 汉界
     ctx.font = `${Math.round(cellSize * 0.36)}px KaiTi, STKaiti, serif`;
     ctx.fillStyle = '#666';
     ctx.textAlign = 'center';
     ctx.fillText('楚 河', padding + 2 * cellSize, padding + 4.7 * cellSize);
     ctx.fillText('汉 界', padding + 6 * cellSize, padding + 4.7 * cellSize);
 
+    // Render pieces from gameState.board
     if (gameState?.board) {
       for (let row = 0; row < BOARD_ROWS; row++) {
         for (let col = 0; col < BOARD_COLS; col++) {
@@ -173,6 +218,7 @@ export default function ChessBoard({
       }
     }
 
+    // Selection highlight: gold circle around the selected piece
     if (selectedPiece) {
       const x = padding + selectedPiece.col * cellSize;
       const y = padding + selectedPiece.row * cellSize;
@@ -189,6 +235,7 @@ export default function ChessBoard({
       ctx.fill();
     }
 
+    // Valid move dots: green circles on reachable squares
     if (displayValidMoves.length > 0) {
       ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
       for (const move of displayValidMoves) {
@@ -200,6 +247,7 @@ export default function ChessBoard({
       }
     }
 
+    // Game over overlay: semi-transparent screen with winner announcement
     if (gameState?.status === GameStatus.FINISHED) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(0, 0, width, height);
@@ -216,10 +264,17 @@ export default function ChessBoard({
     }
   }, [gameState, selectedPiece, displayValidMoves, imagesReady, width, height, cellSize, padding, pieceSize]);
 
+  // Redraw the board whenever drawBoard dependencies change.
   useEffect(() => {
     drawBoard();
   }, [drawBoard]);
 
+  /**
+   * Converts a mouse click event to board coordinates.
+   *
+   * @param e - The React mouse event from the canvas.
+   * @returns The corresponding board {@link Position} or null if outside the board.
+   */
   const getPositionFromEvent = useCallback((e: React.MouseEvent<HTMLCanvasElement>): Position | null => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -241,6 +296,14 @@ export default function ChessBoard({
     return null;
   }, [padding, cellSize]);
 
+  /**
+   * Handles canvas clicks: selects a piece or executes a move.
+   *
+   * If an external `onCellClick` handler is provided, it delegates to that.
+   * Otherwise, it manages internal selection state and invokes `onMove` / `onGetValidMoves`.
+   *
+   * @param e - The React mouse event from the canvas.
+   */
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!gameState || gameState.status === GameStatus.FINISHED) {
       return;

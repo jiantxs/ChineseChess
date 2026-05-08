@@ -1,13 +1,40 @@
+/**
+ * @chess/logger - Winston-based logging module
+ *
+ * Provides structured logging for requests, errors, and game events using Winston
+ * with daily rotation file transport. Logs are stored in logs/{requests,errors,events}/
+ *
+ * Usage:
+ *   import { requestLogger, errorLogger, globalEventLogger, logGameEvent } from '@chess/logger';
+ *
+ * Three main loggers:
+ *   - requestLogger: HTTP request logs
+ *   - errorLogger: Error-only logs
+ *   - globalEventLogger: General event logs (all event types)
+ *
+ * @module @chess/logger
+ */
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
 import { chessConfig } from '@chess/config';
 
+/**
+ * Event types for categorized logging
+ * @enum {string}
+ */
 export type EventType = 'GAME' | 'HTTP' | 'WEBSOCKET' | 'SYSTEM' | 'ERROR';
 
 const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
 
+/**
+ * Creates an HTTP request logger with daily rotation file transport.
+ * Logs HTTP requests to logs/requests/request-%DATE%.log
+ * In non-production environments, also outputs to console at debug level.
+ *
+ * @returns Winston logger instance configured for HTTP request logging
+ */
 function createRequestLogger(): winston.Logger {
   return winston.createLogger({
     level: chessConfig.log.level,
@@ -42,6 +69,13 @@ function createRequestLogger(): winston.Logger {
   });
 }
 
+/**
+ * Creates an error-only logger with daily rotation file transport.
+ * Logs errors to logs/errors/error-%DATE%.log
+ * In non-production environments, also outputs to console at error level.
+ *
+ * @returns Winston logger instance configured for error logging
+ */
 function createErrorLogger(): winston.Logger {
   return winston.createLogger({
     level: 'error',
@@ -76,6 +110,13 @@ function createErrorLogger(): winston.Logger {
   });
 }
 
+/**
+ * Creates a general event logger with daily rotation file transport.
+ * Logs events to logs/events/events-%DATE%.log
+ * In non-production environments, also outputs to console at debug level.
+ *
+ * @returns Winston logger instance configured for event logging
+ */
 function createEventLogger(): winston.Logger {
   return winston.createLogger({
     level: chessConfig.log.level,
@@ -104,10 +145,24 @@ function createEventLogger(): winston.Logger {
   });
 }
 
+// Exported loggers - initialized at module load time
+
+/** HTTP request logger - logs to logs/requests/request-%DATE%.log */
 export const requestLogger = createRequestLogger();
+/** Error-only logger - logs to logs/errors/error-%DATE%.log */
 export const errorLogger = createErrorLogger();
+/** General event logger - logs to logs/events/events-%DATE%.log */
 export const globalEventLogger = createEventLogger();
 
+/**
+ * Logs a WebSocket event with player and optional game context.
+ * Logs to both requestLogger and globalEventLogger.
+ *
+ * @param event - The WebSocket event name/type
+ * @param playerId - The player ID associated with the event
+ * @param gameId - Optional game ID associated with the event
+ * @param details - Optional additional metadata to log
+ */
 export function logWebSocketEvent(
   event: string,
   playerId: string,
@@ -129,6 +184,19 @@ export function logWebSocketEvent(
   });
 }
 
+/**
+ * Logs an HTTP request with method, URL, status code, and duration.
+ * Logs to both requestLogger and globalEventLogger.
+ *
+ * @param method - HTTP method (GET, POST, etc.)
+ * @param url - Full URL of the request
+ * @param path - Request path
+ * @param statusCode - HTTP status code
+ * @param duration - Request duration in milliseconds
+ * @param ip - Optional client IP address
+ * @param userAgent - Optional user agent string
+ * @param playerId - Optional player ID associated with the request
+ */
 export function logHttpRequest(
   method: string,
   url: string,
@@ -160,6 +228,14 @@ export function logHttpRequest(
   });
 }
 
+/**
+ * Logs an error with optional stack trace and additional context.
+ * Logs to both errorLogger and globalEventLogger.
+ *
+ * @param message - Error message to log
+ * @param error - Optional Error object to extract message and stack trace from
+ * @param context - Optional additional context metadata
+ */
 export function logError(
   message: string,
   error?: Error,
@@ -179,6 +255,16 @@ export function logError(
   });
 }
 
+/**
+ * Generic event logger with eventType, source, and metadata.
+ * Logs to globalEventLogger with eventType categorization.
+ *
+ * @param eventType - The type of event (GAME, HTTP, WEBSOCKET, SYSTEM, ERROR)
+ * @param source - The source of the event (e.g., 'backend')
+ * @param metadata - Additional metadata to log
+ * @param playerId - Optional player ID
+ * @param gameId - Optional game ID
+ */
 export function logEvent(
   eventType: EventType,
   source: string,
@@ -196,6 +282,15 @@ export function logEvent(
   });
 }
 
+/**
+ * Convenience function for logging game-related events.
+ * Calls logEvent with eventType 'GAME' and source 'backend'.
+ *
+ * @param gameId - The game ID
+ * @param action - The action being logged (e.g., 'move', 'chat')
+ * @param playerId - The player ID associated with the action
+ * @param metadata - Additional metadata to log
+ */
 export function logGameEvent(
   gameId: string,
   action: string,
@@ -205,6 +300,13 @@ export function logGameEvent(
   logEvent('GAME', 'backend', { action, ...metadata }, playerId, gameId);
 }
 
+/**
+ * Convenience function for logging system-related events.
+ * Calls logEvent with eventType 'SYSTEM' and source 'backend'.
+ *
+ * @param message - The system message to log
+ * @param metadata - Additional metadata to log
+ */
 export function logSystemEvent(
   message: string,
   metadata: Record<string, unknown> = {}

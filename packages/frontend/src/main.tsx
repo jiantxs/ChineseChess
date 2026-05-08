@@ -1,3 +1,7 @@
+/**
+ * @file React application entry point
+ * Creates root and renders App component.
+ */
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
