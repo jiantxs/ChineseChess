@@ -125,6 +125,8 @@ function App() {
             gameState={gameState}
             playerSide={gameMode === 'local' ? null : onlineGame.playerSide}
             gameMode={gameMode}
+            validMoves={gameMode === 'online' ? onlineGame.validMoves : localGame.validMoves}
+            onGetValidMoves={gameMode === 'online' ? onlineGame.getValidMoves : localGame.getValidMoves}
             onMove={gameMode === 'local' ? localGame.makeMove : onlineGame.makeMove}
           />
         </div>

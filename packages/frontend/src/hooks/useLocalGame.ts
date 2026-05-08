@@ -4,6 +4,8 @@ import type { GameState, Position } from '@chess/core';
 
 interface UseLocalGameReturn {
   gameState: GameState | null;
+  validMoves: Position[];
+  getValidMoves: (position: Position) => void;
   makeMove: (from: Position, to: Position) => void;
   resetGame: () => void;
 }
@@ -22,6 +24,8 @@ export function useLocalGame(): UseLocalGameReturn {
 
   return {
     gameState: socket.gameState,
+    validMoves: socket.validMoves,
+    getValidMoves: socket.getValidMoves,
     makeMove,
     resetGame,
   };

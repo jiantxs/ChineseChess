@@ -13,9 +13,11 @@ interface UseGameSocketReturn {
   playerSide: Side | null;
   connectionStatus: 'connecting' | 'connected' | 'disconnected';
   error: string | null;
+  validMoves: Position[];
   createGame: (local?: boolean) => void;
   joinGame: (gameId: string) => void;
   makeMove: (from: Position, to: Position) => void;
+  getValidMoves: (position: Position) => void;
   resetGame: () => void;
 }
 
@@ -24,6 +26,7 @@ export function useGameSocket(): UseGameSocketReturn {
   const [playerSide, setPlayerSide] = useState<Side | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [error, setError] = useState<string | null>(null);
+  const [validMoves, setValidMoves] = useState<Position[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string>('');
@@ -151,7 +154,9 @@ export function useGameSocket(): UseGameSocketReturn {
         setError(errorPayload.error);
         break;
 
-      case MessageType.VALID_MOVES:
+case MessageType.VALID_MOVES:
+        const validMovesPayload = message.payload as { moves: Position[] };
+        setValidMoves(validMovesPayload.moves || []);
         break;
 
       case MessageType.PONG:
@@ -211,6 +216,16 @@ export function useGameSocket(): UseGameSocketReturn {
     });
   }, [gameState, sendMessage]);
 
+  const getValidMoves = useCallback((position: Position) => {
+    if (!gameState) return;
+
+    sendMessage({
+      type: MessageType.GET_VALID_MOVES,
+      payload: { position },
+      gameId: gameState.id,
+    });
+  }, [gameState, sendMessage]);
+
   const resetGame = useCallback(() => {
     if (wsRef.current) {
       wsRef.current.close();
@@ -240,9 +255,11 @@ export function useGameSocket(): UseGameSocketReturn {
     playerSide,
     connectionStatus,
     error,
+    validMoves,
     createGame,
     joinGame,
     makeMove,
+    getValidMoves,
     resetGame,
   };
 }

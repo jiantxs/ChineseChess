@@ -5,15 +5,18 @@ import {
   Side,
   Position,
   GameStatus,
-  BOARD_ROWS,
-  BOARD_COLS,
 } from '@chess/core';
+
+const BOARD_ROWS = 10;
+const BOARD_COLS = 9;
 import './ChessBoard.css';
 
 interface ChessBoardProps {
   gameState: GameState | null;
   playerSide: Side | null;
   gameMode: 'local' | 'online';
+  validMoves?: Position[];
+  onGetValidMoves?: (position: Position) => void;
   onMove: (from: Position, to: Position) => void;
 }
 
@@ -56,11 +59,21 @@ function getPieceImageName(piece: Piece): string {
   return `${piece.side}-${piece.type}`;
 }
 
-export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: ChessBoardProps) {
+export default function ChessBoard({
+  gameState,
+  playerSide,
+  gameMode,
+  validMoves: externalValidMoves,
+  onGetValidMoves,
+  onMove,
+}: ChessBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedPiece, setSelectedPiece] = useState<Position | null>(null);
-  const [validMoves, setValidMoves] = useState<Position[]>([]);
+  const [internalValidMoves, setInternalValidMoves] = useState<Position[]>([]);
   const [imagesReady, setImagesReady] = useState(false);
+
+  const displayValidMoves = externalValidMoves ?? internalValidMoves;
+  const isExternalMode = externalValidMoves !== undefined;
 
   useEffect(() => {
     loadPieceImages().then(() => setImagesReady(true));
@@ -158,9 +171,9 @@ export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: 
       ctx.fill();
     }
 
-    if (validMoves.length > 0) {
+    if (displayValidMoves.length > 0) {
       ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
-      for (const move of validMoves) {
+      for (const move of displayValidMoves) {
         const x = BOARD_PADDING + move.col * CELL_SIZE;
         const y = BOARD_PADDING + move.row * CELL_SIZE;
         ctx.beginPath();
@@ -183,7 +196,7 @@ export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: 
       ctx.font = '18px sans-serif';
       ctx.fillText('点击重新开始', width / 2, height / 2 + 50);
     }
-  }, [gameState, selectedPiece, validMoves, imagesReady]);
+  }, [gameState, selectedPiece, displayValidMoves, imagesReady]);
 
   useEffect(() => {
     drawBoard();
@@ -224,12 +237,14 @@ export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: 
     const piece = gameState.board[pos.row][pos.col];
 
     if (selectedPiece) {
-      const isValidMove = validMoves.some(m => m.row === pos.row && m.col === pos.col);
-      
+      const isValidMove = displayValidMoves.some(m => m.row === pos.row && m.col === pos.col);
+
       if (isValidMove) {
         onMove(selectedPiece, pos);
         setSelectedPiece(null);
-        setValidMoves([]);
+        if (!isExternalMode) {
+          setInternalValidMoves([]);
+        }
         return;
       }
     }
@@ -240,22 +255,24 @@ export default function ChessBoard({ gameState, playerSide, gameMode, onMove }: 
 
       if (isMyTurn && canControl) {
         setSelectedPiece(pos);
-        const allPositions: Position[] = [];
-        for (let row = 0; row < BOARD_ROWS; row++) {
-          for (let col = 0; col < BOARD_COLS; col++) {
-            allPositions.push({ row, col });
-          }
+        if (onGetValidMoves) {
+          onGetValidMoves(pos);
+        } else {
+          setInternalValidMoves([]);
         }
-        setValidMoves(allPositions);
       } else {
         setSelectedPiece(null);
-        setValidMoves([]);
+        if (!isExternalMode) {
+          setInternalValidMoves([]);
+        }
       }
     } else {
       setSelectedPiece(null);
-      setValidMoves([]);
+      if (!isExternalMode) {
+        setInternalValidMoves([]);
+      }
     }
-  }, [gameState, selectedPiece, validMoves, gameMode, playerSide, onMove, getPositionFromEvent]);
+  }, [gameState, selectedPiece, displayValidMoves, isExternalMode, gameMode, playerSide, onGetValidMoves, onMove, getPositionFromEvent]);
 
   const width = BOARD_PADDING * 2 + CELL_SIZE * (BOARD_COLS - 1);
   const height = BOARD_PADDING * 2 + CELL_SIZE * (BOARD_ROWS - 1);
