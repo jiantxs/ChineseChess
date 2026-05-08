@@ -12,7 +12,7 @@ import {
 } from '@chess/core';
 import { chessConfig } from '@chess/config';
 import { logWebSocketEvent, logError } from './logger';
-import { getLayout, GameLayoutName, standardLayoutData } from '../gameRecords.js';
+import { getLayout, standardLayoutData } from '@chess/game-records';
 
 interface ConnectedPlayer {
   ws: WebSocket;
@@ -127,7 +127,7 @@ export class GameServer {
       let layout: PieceLayout;
       if (layoutName) {
         try {
-          layout = getLayout(layoutName as GameLayoutName);
+          layout = getLayout(layoutName);
         } catch {
           layout = PieceLayout.fromJSON(standardLayoutData);
         }

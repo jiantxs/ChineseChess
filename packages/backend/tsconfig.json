@@ -21,6 +21,8 @@
       "@chess/core/*": ["../core/src/*"],
       "@chess/config": ["../config/src"],
       "@chess/config/*": ["../config/src/*"],
+      "@chess/game-records": ["../game-records/src"],
+      "@chess/game-records/*": ["../game-records/src/*"],
       "@chess/logger": ["../logger/src"],
       "@chess/logger/*": ["../logger/src/*"]
     }
@@ -29,6 +31,7 @@
   "references": [
     { "path": "../core" },
     { "path": "../config" },
+    { "path": "../game-records" },
     { "path": "../logger" }
   ]
 }

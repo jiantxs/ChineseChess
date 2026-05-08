@@ -1,9 +1,9 @@
-import { Piece, Side, PieceType } from '@chess/core';
+import { PieceLayout, PieceType, Side } from '@chess/core';
 
 export const standardLayoutData = {
   name: 'standard',
   description: 'Standard Xiangqi initial setup',
-  firstPlayer: 'red' as Side,
+  firstPlayer: Side.RED,
   pieces: [
     { id: 'r1', type: PieceType.CHARIOT, side: Side.RED, position: { row: 9, col: 0 } },
     { id: 'r2', type: PieceType.HORSE, side: Side.RED, position: { row: 9, col: 1 } },
@@ -38,5 +38,7 @@ export const standardLayoutData = {
     { id: 'b14', type: PieceType.SOLDIER, side: Side.BLACK, position: { row: 3, col: 4 } },
     { id: 'b15', type: PieceType.SOLDIER, side: Side.BLACK, position: { row: 3, col: 6 } },
     { id: 'b16', type: PieceType.SOLDIER, side: Side.BLACK, position: { row: 3, col: 8 } },
-  ] as Piece[],
+  ],
 };
+
+export const standardLayout = PieceLayout.fromJSON(standardLayoutData);
