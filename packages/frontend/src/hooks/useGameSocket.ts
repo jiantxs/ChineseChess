@@ -209,6 +209,7 @@ case MessageType.VALID_MOVES:
   const makeMove = useCallback((from: Position, to: Position) => {
     if (!gameState) return;
 
+    setValidMoves([]);
     sendMessage({
       type: MessageType.MAKE_MOVE,
       payload: { from, to },
@@ -235,6 +236,7 @@ case MessageType.VALID_MOVES:
     setPlayerSide(null);
     setConnectionStatus('disconnected');
     setError(null);
+    setValidMoves([]);
     playerIdRef.current = '';
     isConnectingRef.current = false;
     connectPromiseRef.current = null;
