@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { chessConfig } from '@chess/config';
 import { getAllLayoutNames, getAllLayouts } from '@chess/game-records';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/config', (req, res) => {
   const layouts = getAllLayouts();
