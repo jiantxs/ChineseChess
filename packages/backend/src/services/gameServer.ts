@@ -8,9 +8,11 @@ import {
   Side,
   GameStatus,
   GameManager,
+  PieceLayout,
 } from '@chess/core';
 import { chessConfig } from '@chess/config';
 import { logWebSocketEvent, logError } from './logger';
+import { getLayout, GameLayoutName, standardLayoutData } from '../gameRecords.js';
 
 interface ConnectedPlayer {
   ws: WebSocket;
@@ -116,13 +118,23 @@ export class GameServer {
   }
 
   private handleJoinGame(player: ConnectedPlayer, message: GameMessage): void {
-    const { gameId, side, local } = message.payload as { gameId?: string; side?: Side; local?: boolean };
+    const { gameId, side, local, layoutName } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string };
 
     let targetGameId = gameId;
     let isNewGame = false;
 
     if (!targetGameId) {
-      const newGame = this.gameManager.createGame(local || false);
+      let layout: PieceLayout;
+      if (layoutName) {
+        try {
+          layout = getLayout(layoutName as GameLayoutName);
+        } catch {
+          layout = PieceLayout.fromJSON(standardLayoutData);
+        }
+      } else {
+        layout = PieceLayout.fromJSON(standardLayoutData);
+      }
+      const newGame = this.gameManager.createGame(layout, local || false);
       targetGameId = newGame.id;
       isNewGame = true;
     }

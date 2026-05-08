@@ -14,7 +14,7 @@ interface UseGameSocketReturn {
   connectionStatus: 'connecting' | 'connected' | 'disconnected';
   error: string | null;
   validMoves: Position[];
-  createGame: (local?: boolean) => void;
+  createGame: (local?: boolean, layoutName?: string) => void;
   joinGame: (gameId: string) => void;
   makeMove: (from: Position, to: Position) => void;
   getValidMoves: (position: Position) => void;
@@ -178,12 +178,16 @@ case MessageType.VALID_MOVES:
     }
   }, []);
 
-  const createGame = useCallback(async (local: boolean = false) => {
+  const createGame = useCallback(async (local: boolean = false, layoutName?: string) => {
     try {
       await connect();
+      const payload: Record<string, unknown> = { local };
+      if (layoutName) {
+        payload.layoutName = layoutName;
+      }
       sendMessage({
         type: MessageType.JOIN_GAME,
-        payload: { local },
+        payload,
         gameId: '',
       });
     } catch (err) {

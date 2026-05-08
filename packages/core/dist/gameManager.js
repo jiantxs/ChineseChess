@@ -4,6 +4,7 @@ exports.gameManager = exports.GameManager = void 0;
 const uuid_1 = require("uuid");
 const types_1 = require("./types");
 const gameLogic_1 = require("./gameLogic");
+const gameLogger_1 = require("./gameLogger");
 class GameManager {
     static instance;
     games = new Map();
@@ -15,7 +16,7 @@ class GameManager {
         }
         return GameManager.instance;
     }
-    createGame(local = false) {
+    createGame(layout, local = false) {
         for (const [gameId, game] of this.games.entries()) {
             if (game.status === types_1.GameStatus.PLAYING || game.status === types_1.GameStatus.WAITING) {
                 game.status = types_1.GameStatus.FINISHED;
@@ -27,11 +28,11 @@ class GameManager {
             }
         }
         const gameId = (0, uuid_1.v4)();
-        const board = this.createInitialBoard();
+        const board = this.buildBoard(layout.getInitialPieces());
         const game = {
             id: gameId,
             board,
-            currentTurn: types_1.Side.RED,
+            currentTurn: layout.getFirstPlayer(),
             moves: [],
             status: local ? types_1.GameStatus.PLAYING : types_1.GameStatus.WAITING,
             lastMoveTime: Date.now(),
@@ -39,6 +40,13 @@ class GameManager {
             localGame: local,
         };
         this.games.set(gameId, game);
+        gameLogger_1.gameLogger.info('Game created', {
+            gameId,
+            layout: layout.getName(),
+            firstPlayer: layout.getFirstPlayer(),
+            local,
+            initialBoard: board.map(row => row.map(p => p ? { id: p.id, type: p.type, side: p.side, position: p.position } : null)),
+        });
         return game;
     }
     getGame(gameId) {
@@ -122,10 +130,26 @@ class GameManager {
         game.moves.push(move);
         game.currentTurn = isRedTurn ? types_1.Side.BLACK : types_1.Side.RED;
         game.lastMoveTime = Date.now();
+        gameLogger_1.gameLogger.info('Move made', {
+            gameId,
+            playerId,
+            moveNumber: game.moves.length,
+            from,
+            to,
+            piece: { type: piece.type, side: piece.side },
+            capturedPiece: capturedPiece ? { type: capturedPiece.type, side: capturedPiece.side } : null,
+            currentTurn: game.currentTurn,
+        });
         const generalStatus = (0, gameLogic_1.isGeneralCaptured)(game.board);
         if (generalStatus.captured) {
             game.status = types_1.GameStatus.FINISHED;
             game.winner = generalStatus.winner;
+            gameLogger_1.gameLogger.info('Game finished', {
+                gameId,
+                winner: generalStatus.winner,
+                reason: 'general_captured',
+                totalMoves: game.moves.length,
+            });
         }
         return { success: true, game };
     }
@@ -144,6 +168,12 @@ class GameManager {
         if (game.status === types_1.GameStatus.PLAYING) {
             game.status = types_1.GameStatus.ABORTED;
             game.winner = wasRedPlayer ? types_1.Side.BLACK : types_1.Side.RED;
+            gameLogger_1.gameLogger.info('Game aborted', {
+                gameId,
+                playerId,
+                winner: game.winner,
+                reason: 'player_left',
+            });
         }
         if (!game.redPlayer && !game.blackPlayer) {
             this.games.delete(gameId);
@@ -176,11 +206,11 @@ class GameManager {
             return [];
         return (0, gameLogic_1.getValidMoves)(game.board, piece);
     }
-    createInitialBoard() {
+    buildBoard(pieces) {
         const board = Array(types_1.BOARD_ROWS)
             .fill(null)
             .map(() => Array(types_1.BOARD_COLS).fill(null));
-        for (const piece of types_1.INITIAL_BOARD) {
+        for (const piece of pieces) {
             board[piece.position.row][piece.position.col] = { ...piece };
         }
         return board;

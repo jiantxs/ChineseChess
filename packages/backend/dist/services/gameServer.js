@@ -6,6 +6,7 @@ const url_1 = require("url");
 const core_1 = require("@chess/core");
 const config_1 = require("@chess/config");
 const logger_1 = require("./logger");
+const gameRecords_js_1 = require("../gameRecords.js");
 class GameServer {
     wss;
     players = new Map();
@@ -89,11 +90,23 @@ class GameServer {
         }
     }
     handleJoinGame(player, message) {
-        const { gameId, side, local } = message.payload;
+        const { gameId, side, local, layoutName } = message.payload;
         let targetGameId = gameId;
         let isNewGame = false;
         if (!targetGameId) {
-            const newGame = this.gameManager.createGame(local || false);
+            let layout;
+            if (layoutName) {
+                try {
+                    layout = (0, gameRecords_js_1.getLayout)(layoutName);
+                }
+                catch {
+                    layout = core_1.PieceLayout.fromJSON(gameRecords_js_1.standardLayoutData);
+                }
+            }
+            else {
+                layout = core_1.PieceLayout.fromJSON(gameRecords_js_1.standardLayoutData);
+            }
+            const newGame = this.gameManager.createGame(layout, local || false);
             targetGameId = newGame.id;
             isNewGame = true;
         }

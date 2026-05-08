@@ -1,49 +1,84 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ChessBoard from './components/ChessBoard';
 import GameControls from './components/GameControls';
 import { useGameSocket } from './hooks/useGameSocket';
 import { useLocalGame } from './hooks/useLocalGame';
-import { Side } from '@chess/core';
+import { useBoardController } from './controllers/BoardController';
+import { Side, Position } from '@chess/core';
 import './App.css';
 
 function App() {
   const [gameMode, setGameMode] = useState<'local' | 'online'>('local');
   const [showMenu, setShowMenu] = useState(true);
-  
+
   const onlineGame = useGameSocket();
   const localGame = useLocalGame();
 
-  const getActiveGame = useCallback(() => {
-    return gameMode === 'local' ? localGame : onlineGame;
+  const handleMove = useCallback((from: Position, to: Position) => {
+    if (gameMode === 'local') {
+      localGame.makeMove(from, to);
+    } else {
+      onlineGame.makeMove(from, to);
+    }
   }, [gameMode, localGame, onlineGame]);
+
+  const handleGetValidMoves = useCallback((position: Position) => {
+    if (gameMode === 'local') {
+      localGame.getValidMoves(position);
+    } else {
+      onlineGame.getValidMoves(position);
+    }
+  }, [gameMode, localGame, onlineGame]);
+
+  const {
+    state: boardState,
+    setGameState,
+    setValidMoves,
+    resetSelection,
+    onBoardClick,
+  } = useBoardController(handleMove, handleGetValidMoves);
+
+  const activeGame = gameMode === 'local' ? localGame : onlineGame;
+  const gameState = activeGame.gameState;
+  const error = gameMode === 'online' ? onlineGame.error : null;
+
+  useEffect(() => {
+    setGameState(gameState);
+  }, [gameState, setGameState]);
+
+  useEffect(() => {
+    setValidMoves(activeGame.validMoves);
+  }, [activeGame.validMoves, setValidMoves]);
 
   const handleStartLocal = useCallback(() => {
     setGameMode('local');
     setShowMenu(false);
+    resetSelection();
     localGame.resetGame();
-  }, [localGame]);
+  }, [localGame, resetSelection]);
 
   const handleStartOnline = useCallback(() => {
     setGameMode('online');
     setShowMenu(false);
+    resetSelection();
     onlineGame.createGame();
-  }, [onlineGame]);
+  }, [onlineGame, resetSelection]);
 
   const handleJoinGame = useCallback((gameId: string) => {
     setGameMode('online');
     setShowMenu(false);
+    resetSelection();
     onlineGame.joinGame(gameId);
-  }, [onlineGame]);
+  }, [onlineGame, resetSelection]);
 
   const handleReset = useCallback(() => {
     setShowMenu(true);
+    resetSelection();
     onlineGame.resetGame();
     localGame.resetGame();
-  }, [onlineGame, localGame]);
+  }, [onlineGame, localGame, resetSelection]);
 
-  const activeGame = getActiveGame();
-  const gameState = activeGame.gameState;
-  const error = gameMode === 'online' ? onlineGame.error : null;
+  const boardSize = { cellSize: 50, padding: 30 };
 
   if (showMenu) {
     return (
@@ -120,14 +155,30 @@ function App() {
           </div>
         </div>
 
-        <div className="game-board-wrapper">
+        <div className="game-boards-wrapper" style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <ChessBoard
+            id="board-primary"
             gameState={gameState}
             playerSide={gameMode === 'local' ? null : onlineGame.playerSide}
             gameMode={gameMode}
-            validMoves={gameMode === 'online' ? onlineGame.validMoves : localGame.validMoves}
-            onGetValidMoves={gameMode === 'online' ? onlineGame.getValidMoves : localGame.getValidMoves}
-            onMove={gameMode === 'local' ? localGame.makeMove : onlineGame.makeMove}
+            validMoves={activeGame.validMoves}
+            selectedPosition={boardState.selectedPosition}
+            size={boardSize}
+            onCellClick={(pos, hasPiece) => {
+              onBoardClick(pos, hasPiece);
+            }}
+          />
+          <ChessBoard
+            id="board-secondary"
+            gameState={gameState}
+            playerSide={gameMode === 'local' ? null : onlineGame.playerSide}
+            gameMode={gameMode}
+            validMoves={activeGame.validMoves}
+            selectedPosition={boardState.selectedPosition}
+            size={boardSize}
+            onCellClick={(pos, hasPiece) => {
+              onBoardClick(pos, hasPiece);
+            }}
           />
         </div>
 

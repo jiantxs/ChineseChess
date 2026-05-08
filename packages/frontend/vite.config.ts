@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@chess/core': path.resolve(__dirname, '../core/src'),
-      '@chess/config': path.resolve(__dirname, '../config/src'),
     },
   },
   build: {

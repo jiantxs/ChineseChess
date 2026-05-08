@@ -18,14 +18,11 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@chess/core": ["../core/src"],
-      "@chess/core/*": ["../core/src/*"],
-      "@chess/config": ["../config/src"],
-      "@chess/config/*": ["../config/src/*"]
+      "@chess/core/*": ["../core/src/*"]
     }
   },
   "include": ["src"],
   "references": [
-    { "path": "../core" },
-    { "path": "../config" }
+    { "path": "../core" }
   ]
 }

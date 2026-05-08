@@ -17,6 +17,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameManager = exports.gameManager = void 0;
 __exportStar(require("./types"), exports);
 __exportStar(require("./gameLogic"), exports);
+__exportStar(require("./pieceLayout"), exports);
+__exportStar(require("./gameLogger"), exports);
 const gameManager_1 = require("./gameManager");
 Object.defineProperty(exports, "gameManager", { enumerable: true, get: function () { return gameManager_1.gameManager; } });
 Object.defineProperty(exports, "GameManager", { enumerable: true, get: function () { return gameManager_1.GameManager; } });

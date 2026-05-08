@@ -10,7 +10,7 @@ interface UseLocalGameReturn {
   resetGame: () => void;
 }
 
-export function useLocalGame(): UseLocalGameReturn {
+export function useLocalGame(layoutName: string = 'standard'): UseLocalGameReturn {
   const socket = useGameSocket();
 
   const makeMove = useCallback((from: Position, to: Position) => {
@@ -19,8 +19,8 @@ export function useLocalGame(): UseLocalGameReturn {
 
   const resetGame = useCallback(() => {
     socket.resetGame();
-    socket.createGame(true);
-  }, [socket]);
+    socket.createGame(true, layoutName);
+  }, [socket, layoutName]);
 
   return {
     gameState: socket.gameState,

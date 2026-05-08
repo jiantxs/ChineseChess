@@ -6,6 +6,7 @@ import { chessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import gameRoutes from './routes/game';
 import adminRoutes from './routes/admin';
+import configRoutes from './routes/config';
 import { gameManager } from '@chess/core';
 import { requestLogMiddleware } from './services/logger';
 
@@ -29,6 +30,7 @@ app.use(
 );
 
 app.use('/api/game', gameRoutes);
+app.use('/api', configRoutes);
 app.use('/admin', adminRoutes);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

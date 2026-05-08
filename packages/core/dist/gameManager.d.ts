@@ -1,12 +1,13 @@
 import type { GameState, Position } from './types';
 import { Side } from './types';
+import { PieceLayout } from './pieceLayout';
 export declare class GameManager {
     private static instance;
     private games;
     private playerGames;
     private constructor();
     static getInstance(): GameManager;
-    createGame(local?: boolean): GameState;
+    createGame(layout: PieceLayout, local?: boolean): GameState;
     getGame(gameId: string): GameState | undefined;
     joinGame(gameId: string, playerId: string, side?: Side): GameState | null;
     makeMove(gameId: string, playerId: string, from: Position, to: Position): {
@@ -17,7 +18,7 @@ export declare class GameManager {
     leaveGame(gameId: string, playerId: string): GameState | null;
     getPlayerGame(playerId: string): GameState | undefined;
     getValidMoves(gameId: string, playerId: string, position: Position): Position[];
-    private createInitialBoard;
+    private buildBoard;
     cleanupInactiveGames(maxAgeMs: number): number;
     getAllGames(): GameState[];
 }

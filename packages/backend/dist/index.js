@@ -11,6 +11,7 @@ const config_1 = require("@chess/config");
 const gameServer_1 = require("./services/gameServer");
 const game_1 = __importDefault(require("./routes/game"));
 const admin_1 = __importDefault(require("./routes/admin"));
+const config_2 = __importDefault(require("./routes/config"));
 const core_1 = require("@chess/core");
 const logger_1 = require("./services/logger");
 const app = (0, express_1.default)();
@@ -29,6 +30,7 @@ app.use((0, express_session_1.default)({
     },
 }));
 app.use('/api/game', game_1.default);
+app.use('/api', config_2.default);
 app.use('/admin', admin_1.default);
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
