@@ -21,6 +21,11 @@ const PIECE_IMAGES: Record<string, HTMLImageElement> = {};
 /** Whether all piece images have been loaded. */
 let imagesLoaded = false;
 
+/** Cached board SVG image. */
+let boardImage: HTMLImageElement | null = null;
+/** Whether board image has been loaded. */
+let boardImageLoaded = false;
+
 /**
  * Asynchronously loads all piece SVG images into {@link PIECE_IMAGES}.
  *
@@ -51,6 +56,29 @@ function loadPieceImages(): Promise<void> {
 
   return Promise.all(promises).then(() => {
     imagesLoaded = true;
+  });
+}
+
+/**
+ * Loads the board SVG image into {@link boardImage}.
+ *
+ * @returns A promise that resolves once the image is loaded (or failed).
+ */
+function loadBoardImage(): Promise<void> {
+  if (boardImageLoaded) return Promise.resolve();
+
+  return new Promise<void>((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      boardImage = img;
+      boardImageLoaded = true;
+      resolve();
+    };
+    img.onerror = () => {
+      console.error('Failed to load board image');
+      resolve();
+    };
+    img.src = './assets/svg/board.svg';
   });
 }
 
@@ -114,6 +142,8 @@ export default function ChessBoard({
   const [internalValidMoves, setInternalValidMoves] = useState<Position[]>([]);
   /** Whether piece SVG images are ready for rendering. */
   const [imagesReady, setImagesReady] = useState(false);
+  /** Whether board SVG image is ready for rendering. */
+  const [boardReady, setBoardReady] = useState(false);
 
   /** Effective selected piece: external prop takes precedence over internal state. */
   const selectedPiece = externalSelectedPosition ?? internalSelectedPiece;
@@ -129,9 +159,15 @@ export default function ChessBoard({
   const width = size?.width ?? padding * 2 + cellSize * (BOARD_COLS - 1);
   const height = size?.height ?? padding * 2 + cellSize * (BOARD_ROWS - 1);
 
-  // Load piece images on mount.
+  // Load piece images and board image on mount.
   useEffect(() => {
-    loadPieceImages().then(() => setImagesReady(true));
+    Promise.all([
+      loadPieceImages(),
+      loadBoardImage(),
+    ]).then(() => {
+      setImagesReady(true);
+      setBoardReady(true);
+    });
   }, []);
 
   /**
@@ -152,53 +188,14 @@ export default function ChessBoard({
 
     ctx.clearRect(0, 0, width, height);
 
-    // Board background
-    ctx.fillStyle = '#f4e4c1';
-    ctx.fillRect(0, 0, width, height);
-
-    // Grid lines
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1.5;
-
-    for (let row = 0; row < BOARD_ROWS; row++) {
-      const y = padding + row * cellSize;
-      ctx.beginPath();
-      ctx.moveTo(padding, y);
-      ctx.lineTo(padding + (BOARD_COLS - 1) * cellSize, y);
-      ctx.stroke();
+    // Draw board background from SVG
+    if (boardImage && boardReady) {
+      ctx.drawImage(boardImage, 0, 0, width, height);
+    } else {
+      // Fallback background if SVG not loaded
+      ctx.fillStyle = '#f4e4c1';
+      ctx.fillRect(0, 0, width, height);
     }
-
-    for (let col = 0; col < BOARD_COLS; col++) {
-      const x = padding + col * cellSize;
-      ctx.beginPath();
-      ctx.moveTo(x, padding);
-      ctx.lineTo(x, padding + 4 * cellSize);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(x, padding + 5 * cellSize);
-      ctx.lineTo(x, padding + (BOARD_ROWS - 1) * cellSize);
-      ctx.stroke();
-    }
-
-    // Palace X-markings at corners
-    ctx.beginPath();
-    ctx.moveTo(padding + 3 * cellSize, padding);
-    ctx.lineTo(padding + 5 * cellSize, padding + 2 * cellSize);
-    ctx.moveTo(padding + 5 * cellSize, padding);
-    ctx.lineTo(padding + 3 * cellSize, padding + 2 * cellSize);
-    ctx.moveTo(padding + 3 * cellSize, padding + 7 * cellSize);
-    ctx.lineTo(padding + 5 * cellSize, padding + 9 * cellSize);
-    ctx.moveTo(padding + 5 * cellSize, padding + 7 * cellSize);
-    ctx.lineTo(padding + 3 * cellSize, padding + 9 * cellSize);
-    ctx.stroke();
-
-    // River labels: 楚河 / 汉界
-    ctx.font = `${Math.round(cellSize * 0.36)}px KaiTi, STKaiti, serif`;
-    ctx.fillStyle = '#666';
-    ctx.textAlign = 'center';
-    ctx.fillText('楚 河', padding + 2 * cellSize, padding + 4.7 * cellSize);
-    ctx.fillText('汉 界', padding + 6 * cellSize, padding + 4.7 * cellSize);
 
     // Render pieces from gameState.board
     if (gameState?.board) {
@@ -262,7 +259,7 @@ export default function ChessBoard({
       ctx.font = `${Math.round(cellSize * 0.33)}px sans-serif`;
       ctx.fillText('点击重新开始', width / 2, height / 2 + cellSize);
     }
-  }, [gameState, selectedPiece, displayValidMoves, imagesReady, width, height, cellSize, padding, pieceSize]);
+  }, [gameState, selectedPiece, displayValidMoves, imagesReady, boardReady, width, height, cellSize, padding, pieceSize]);
 
   // Redraw the board whenever drawBoard dependencies change.
   useEffect(() => {
