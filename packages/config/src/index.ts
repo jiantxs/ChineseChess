@@ -143,15 +143,13 @@ export const defaultConfig: ChessConfig = {
  */
 function loadConfig(): ChessConfig {
   const config = { ...defaultConfig };
-  if (process.env.PORT) {
-    const port = parseInt(process.env.PORT, 10);
+  if (process.env.CCHESSPORT) {
+    const port = parseInt(process.env.CCHESSPORT, 10);
     if (!isNaN(port) && port > 0 && port <= 65535) {
       config.server.port = port;
     }
   }
-  if (process.env.NODE_ENV === 'production') {
-    config.ai.enabled = process.env.ENABLE_AI === 'true';
-  }
+  config.ai.enabled = process.env.ENABLE_AI === 'true';
   return Object.freeze(config);
 }
 

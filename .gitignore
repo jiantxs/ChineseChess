@@ -5,3 +5,4 @@ logs/
 */dist/
 dist/
 *.tsbuildinfo
+packages/backend/public/
