@@ -16,13 +16,6 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "paths": {
-      "@chess/core": ["../core/src"],
-      "@chess/core/*": ["../core/src/*"]
-    }
   },
-  "include": ["src"],
-  "references": [
-    { "path": "../core" }
-  ]
+  "include": ["src"]
 }

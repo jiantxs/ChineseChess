@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
-  <circle cx="30" cy="30" r="28" fill="#f5f5f5" stroke="#c41e3a" stroke-width="2"/>
-  <circle cx="30" cy="30" r="24" fill="none" stroke="#c41e3a" stroke-width="1"/>
-  <text x="30" y="42" font-family="KaiTi, STKaiti, serif" font-size="32" fill="#c41e3a" text-anchor="middle" font-weight="bold">相</text>
+  <!-- 菱形（象） -->
+  <polygon points="30,4 56,30 30,56 4,30" 
+           fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- 内部十字 -->
+  <line x1="30" y1="16" x2="30" y2="44" stroke="#00f0ff" stroke-width="1.5" opacity="0.6"/>
+  <line x1="16" y1="30" x2="44" y2="30" stroke="#00f0ff" stroke-width="1.5" opacity="0.6"/>
 </svg>

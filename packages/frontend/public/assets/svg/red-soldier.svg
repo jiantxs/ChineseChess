@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
-  <circle cx="30" cy="30" r="28" fill="#f5f5f5" stroke="#c41e3a" stroke-width="2"/>
-  <circle cx="30" cy="30" r="24" fill="none" stroke="#c41e3a" stroke-width="1"/>
-  <text x="30" y="42" font-family="KaiTi, STKaiti, serif" font-size="32" fill="#c41e3a" text-anchor="middle" font-weight="bold">兵</text>
+  <!-- 盾牌外形（兵） -->
+  <path d="M30,6 C42,6 52,12 52,22 C52,38 30,54 30,54 C30,54 8,38 8,22 C8,12 18,6 30,6 Z" 
+        fill="none" stroke="#00f0ff" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- 盾牌内部装饰线 -->
+  <path d="M30,14 C36,14 42,18 42,24 C42,34 30,44 30,44 C30,44 18,34 18,24 C18,18 24,14 30,14 Z" 
+        fill="none" stroke="#00f0ff" stroke-width="1.5" opacity="0.6"/>
+  <!-- 中心点 -->
+  <circle cx="30" cy="28" r="4" fill="#00f0ff"/>
 </svg>

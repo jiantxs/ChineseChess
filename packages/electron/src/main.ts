@@ -70,8 +70,8 @@ let mainWindow: BrowserWindow | null = null;
  */
 function createWindow(port: number, prefix: string = ''): void {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 1600,
+    height: 900,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
