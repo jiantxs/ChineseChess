@@ -149,6 +149,9 @@ function loadConfig(): ChessConfig {
       config.server.port = port;
     }
   }
+  if (process.env.CCHESSHOST) {
+    config.server.host = process.env.CCHESSHOST;
+  }
   config.ai.enabled = process.env.ENABLE_AI === 'true';
   return Object.freeze(config);
 }

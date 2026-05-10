@@ -5,4 +5,6 @@ logs/
 */dist/
 dist/
 *.tsbuildinfo
-packages/backend/public/
+backend-dist/
+node-dist/
+winapp/

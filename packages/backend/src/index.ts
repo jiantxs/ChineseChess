@@ -16,7 +16,6 @@ import { createServer } from 'http';
 import { chessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import gameRoutes from './routes/game';
-import adminRoutes from './routes/admin';
 import configRoutes from './routes/config';
 import { gameManager } from '@chess/core';
 import { requestLogMiddleware } from './services/logger';
@@ -64,8 +63,7 @@ app.use('/api/game', gameRoutes);
 /** Mount config routes at /api - returns server configuration and layouts */
 app.use('/api', configRoutes);
 
-/** Mount admin routes at /admin - protected by Basic authentication */
-app.use('/admin', adminRoutes);
+
 
 /**
  * Global error handling middleware

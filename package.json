@@ -15,9 +15,13 @@
     "build:frontend": "pnpm --filter @chess/frontend build",
     "build:config": "pnpm --filter @chess/config build",
     "build:core": "pnpm --filter @chess/core build",
+    "build:electron": "pnpm --filter @chess/electron dist",
     "start": "pnpm --filter @chess/backend start",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron"]
   },
   "devDependencies": {
     "@types/node": "^20.19.39",
