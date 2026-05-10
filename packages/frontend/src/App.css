@@ -1,94 +1,300 @@
+/* ============================================================
+   全局
+   ============================================================ */
 .app {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.menu-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  padding: 60px 40px;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 500px;
   width: 100%;
+  height: 100%;
 }
 
+/* ============================================================
+   菜单专用：纯黑背景 + 线条风
+   ============================================================ */
+.menu-app {
+  background: #000000;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 扫描线效果 */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 255, 170, 0.02) 2px,
+    rgba(0, 255, 170, 0.02) 4px
+  );
+  animation: scanlineMove 8s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* 菜单面板 */
+.menu-container {
+  position: relative;
+  width: 420px;
+  max-width: 90vw;
+  padding: 56px 48px;
+  background: rgba(10, 10, 12, 0.6);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  text-align: center;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+}
+
+/* 四角装饰 */
+.corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: rgba(0, 255, 170, 0.5);
+  pointer-events: none;
+}
+
+.corner-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.corner-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+}
+
+.corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+}
+
+.corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+
+/* 标题 */
 .game-title {
-  font-size: 48px;
-  font-weight: bold;
-  color: #c41e3a;
-  margin-bottom: 40px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: 'KaiTi', 'STKaiti', serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: rgba(0, 255, 170, 0.9);
+  margin: 0 0 24px 0;
+  letter-spacing: 24px;
+  text-indent: 24px;
+  font-family: 'KaiTi', 'STKaiti', 'SimSun', serif;
+  text-shadow:
+    0 0 10px rgba(0, 255, 170, 0.3),
+    0 0 40px rgba(0, 255, 170, 0.1);
+  animation: titlePulse 4s ease-in-out infinite;
 }
 
+@keyframes titlePulse {
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(0, 255, 170, 0.3),
+      0 0 40px rgba(0, 255, 170, 0.1);
+  }
+  50% {
+    text-shadow:
+      0 0 15px rgba(0, 255, 170, 0.5),
+      0 0 60px rgba(0, 255, 170, 0.2);
+  }
+}
+
+.title-char {
+  display: inline-block;
+  animation: charFloat 3s ease-in-out infinite;
+}
+
+.title-char:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes charFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* 分隔线 */
+.menu-divider {
+  width: 60%;
+  height: 1px;
+  margin: 0 auto 32px auto;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 170, 0.4),
+    transparent
+  );
+}
+
+/* 按钮容器 */
 .menu-buttons {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
+/* 菜单按钮 */
 .menu-btn {
-  padding: 16px 32px;
-  font-size: 18px;
+  position: relative;
+  width: 100%;
+  padding: 18px 0;
+  margin-bottom: 4px;
+  background: transparent;
   border: none;
-  border-radius: 12px;
+  color: rgba(160, 170, 180, 0.6);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-indent: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: color 0.4s ease;
+  overflow: hidden;
+  z-index: 1;
 }
 
+.menu-btn:last-child {
+  margin-bottom: 0;
+}
+
+/* 按钮底部线条 */
+.btn-line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width 0.4s ease, left 0.4s ease;
+}
+
+/* 悬停状态 */
 .menu-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  color: rgba(0, 255, 170, 0.95);
 }
 
-.menu-btn.primary {
-  background: linear-gradient(135deg, #c41e3a, #a01729);
-  color: white;
+.menu-btn:hover .btn-line {
+  width: 100%;
+  left: 0;
 }
 
-.menu-btn.secondary {
-  background: linear-gradient(135deg, #4a5568, #2d3748);
-  color: white;
+/* 点击反馈 */
+.menu-btn:active {
+  color: #ffffff;
+  transform: scale(0.98);
+  transition: transform 0.1s ease, color 0.1s ease;
 }
 
+/* 退出按钮特殊色 */
+.exit-btn {
+  color: rgba(180, 100, 100, 0.5);
+}
+
+.exit-btn:hover {
+  color: rgba(255, 100, 100, 0.9);
+}
+
+.exit-btn .btn-line {
+  background: rgba(255, 100, 100, 0.5);
+}
+
+/* 加入房间区域 */
 .join-section {
   display: flex;
+  align-items: center;
   gap: 12px;
-  margin-top: 8px;
+  margin: 4px 0;
 }
 
 .join-input {
   flex: 1;
   padding: 14px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 15px;
+  letter-spacing: 2px;
   outline: none;
-  transition: border-color 0.3s;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.join-input::placeholder {
+  color: rgba(160, 170, 180, 0.3);
+  letter-spacing: 2px;
 }
 
 .join-input:focus {
-  border-color: #c41e3a;
+  border-color: rgba(0, 255, 170, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.1);
 }
 
-.admin-section {
+.join-section .menu-btn {
+  width: auto;
+  padding: 14px 24px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+/* 错误信息 */
+.error-message {
   margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  color: rgba(255, 100, 100, 0.9);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: rgba(255, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: errorPulse 2s ease-in-out infinite;
 }
 
-.menu-btn.admin {
-  background: linear-gradient(135deg, #718096, #4a5568);
-  color: white;
-  text-decoration: none;
-  display: inline-block;
+.error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 100, 100, 0.5);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
 }
 
+@keyframes errorPulse {
+  0%, 100% { border-color: rgba(255, 100, 100, 0.2); }
+  50% { border-color: rgba(255, 100, 100, 0.4); }
+}
+
+/* ============================================================
+   游戏进行中的界面（保留原有样式）
+   ============================================================ */
 .game-container {
   display: flex;
   flex-direction: column;
@@ -156,24 +362,27 @@
   backdrop-filter: blur(10px);
 }
 
-.error-message {
-  color: #fc8181;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
+/* ============================================================
+   响应式
+   ============================================================ */
 @media (max-width: 768px) {
-  .game-title {
-    font-size: 36px;
-  }
-  
   .menu-container {
+    width: 90vw;
     padding: 40px 24px;
   }
-  
+
+  .game-title {
+    font-size: 40px;
+    letter-spacing: 16px;
+    text-indent: 16px;
+  }
+
   .join-section {
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .join-section .menu-btn {
+    width: 100%;
   }
 }

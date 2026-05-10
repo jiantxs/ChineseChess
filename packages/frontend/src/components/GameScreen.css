@@ -1,0 +1,599 @@
+/* ============================================================
+   GameScreen - Desktop layout: left board + right info panel
+   Sci-fi line-art design, black background, cyan accents
+   ============================================================ */
+
+/* ---------- Root Layout ---------- */
+.game-screen {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  background: #000000;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+}
+
+/* Scanlines (same as menu) */
+.game-screen .scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgba(0, 255, 170, 0.02) 2px,
+    rgba(0, 255, 170, 0.02) 4px
+  );
+  animation: scanlineMove 8s linear infinite;
+}
+
+@keyframes scanlineMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* ---------- Left: Board Area ---------- */
+.board-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  z-index: 5;
+}
+
+.board-wrapper {
+  position: relative;
+  padding: 16px;
+  background: rgba(10, 10, 12, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.1);
+}
+
+/* Board wrapper corner decorations */
+.board-wrapper::before,
+.board-wrapper::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(0, 255, 170, 0.3);
+  pointer-events: none;
+}
+
+.board-wrapper::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.board-wrapper::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* ---------- Right: Info Panel ---------- */
+.info-panel {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 100vh;
+  background: rgba(10, 10, 12, 0.7);
+  border-left: 1px solid rgba(0, 255, 170, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  position: relative;
+  z-index: 5;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 170, 0.2) transparent;
+}
+
+.info-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.info-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.info-panel::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 2px;
+}
+
+/* Panel corner decorations */
+.panel-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(0, 255, 170, 0.35);
+  pointer-events: none;
+}
+
+.panel-corner-tl {
+  top: 0;
+  left: 0;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.panel-corner-tr {
+  top: 0;
+  right: 0;
+  border-top: 1px solid;
+  border-right: 1px solid;
+}
+
+.panel-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid;
+  border-left: 1px solid;
+}
+
+.panel-corner-br {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* ---------- Panel Header ---------- */
+.panel-header {
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(0, 255, 170, 0.85);
+  margin: 0 0 12px 0;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  font-family: 'KaiTi', 'STKaiti', 'SimSun', serif;
+}
+
+.panel-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 170, 0.3),
+    rgba(0, 255, 170, 0.1) 60%,
+    transparent
+  );
+}
+
+/* ---------- Section Labels ---------- */
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(160, 170, 180, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ---------- Turn Section ---------- */
+.turn-section {
+  margin-bottom: 20px;
+}
+
+.turn-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  border: 1px solid;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.turn-red {
+  color: rgba(220, 60, 60, 0.9);
+  border-color: rgba(220, 60, 60, 0.4);
+  box-shadow: 0 0 12px rgba(220, 60, 60, 0.1);
+}
+
+.turn-black {
+  color: rgba(180, 180, 180, 0.9);
+  border-color: rgba(180, 180, 180, 0.4);
+  box-shadow: 0 0 12px rgba(180, 180, 180, 0.1);
+}
+
+/* ---------- Players Section ---------- */
+.players-section {
+  margin-bottom: 20px;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(100, 100, 100, 0.2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.player-red {
+  color: rgba(220, 60, 60, 0.7);
+}
+
+.player-red.player-active {
+  border-color: rgba(220, 60, 60, 0.5);
+  background: rgba(220, 60, 60, 0.08);
+  color: rgba(220, 60, 60, 0.95);
+}
+
+.player-black {
+  color: rgba(180, 180, 180, 0.7);
+}
+
+.player-black.player-active {
+  border-color: rgba(180, 180, 180, 0.5);
+  background: rgba(180, 180, 180, 0.08);
+  color: rgba(220, 220, 220, 0.95);
+}
+
+.player-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.player-active .player-dot {
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.player-vs {
+  font-size: 11px;
+  color: rgba(160, 170, 180, 0.4);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.your-side {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(160, 170, 180, 0.6);
+  letter-spacing: 1px;
+}
+
+.your-side .side-red {
+  color: rgba(220, 60, 60, 0.9);
+  font-weight: 600;
+}
+
+.your-side .side-black {
+  color: rgba(200, 200, 200, 0.9);
+  font-weight: 600;
+}
+
+/* ---------- Connection Section ---------- */
+.connection-section {
+  margin-bottom: 20px;
+}
+
+.connection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+  letter-spacing: 1px;
+}
+
+.connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: connectionPulse 2s ease-in-out infinite;
+}
+
+.connection-badge.connected {
+  color: rgba(0, 255, 170, 0.8);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.connection-badge.connected .connection-dot {
+  background: rgba(0, 255, 170, 0.8);
+}
+
+.connection-badge.connecting {
+  color: rgba(237, 137, 54, 0.8);
+  border-color: rgba(237, 137, 54, 0.3);
+}
+
+.connection-badge.connecting .connection-dot {
+  background: rgba(237, 137, 54, 0.8);
+}
+
+.connection-badge.disconnected {
+  color: rgba(255, 100, 100, 0.7);
+  border-color: rgba(255, 100, 100, 0.2);
+}
+
+.connection-badge.disconnected .connection-dot {
+  background: rgba(255, 100, 100, 0.7);
+  animation: none;
+}
+
+@keyframes connectionPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ---------- Room Section ---------- */
+.room-section {
+  margin-bottom: 20px;
+}
+
+.room-id-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-id-text {
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 14px;
+  color: rgba(0, 255, 170, 0.8);
+  letter-spacing: 1px;
+  flex: 1;
+  word-break: break-all;
+}
+
+.room-copy-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.25);
+  color: rgba(0, 255, 170, 0.6);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.room-copy-btn:hover {
+  border-color: rgba(0, 255, 170, 0.5);
+  color: rgba(0, 255, 170, 0.9);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+/* ---------- Move History ---------- */
+.history-section {
+  margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.move-count {
+  font-size: 11px;
+  color: rgba(160, 170, 180, 0.4);
+  font-weight: 400;
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 255, 170, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 12px;
+  max-height: 280px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 170, 0.15) transparent;
+}
+
+.history-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.15);
+  border-radius: 2px;
+}
+
+.history-empty {
+  font-size: 12px;
+  color: rgba(160, 170, 180, 0.3);
+  text-align: center;
+  padding: 16px 0;
+  letter-spacing: 2px;
+}
+
+.history-item {
+  font-family: 'Consolas', 'Monaco', 'Microsoft YaHei', monospace;
+  font-size: 12px;
+  color: rgba(160, 170, 180, 0.7);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(100, 100, 100, 0.08);
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+/* ---------- Status Section ---------- */
+.status-section {
+  margin-bottom: 20px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  border: 1px solid;
+}
+
+.status-waiting {
+  color: rgba(237, 137, 54, 0.85);
+  border-color: rgba(237, 137, 54, 0.3);
+  background: rgba(237, 137, 54, 0.05);
+}
+
+.status-gameover {
+  color: rgba(220, 60, 60, 0.9);
+  border-color: rgba(220, 60, 60, 0.3);
+  background: rgba(220, 60, 60, 0.05);
+}
+
+.status-playing {
+  color: rgba(0, 255, 170, 0.7);
+  border-color: rgba(0, 255, 170, 0.2);
+  background: rgba(0, 255, 170, 0.03);
+}
+
+.status-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(237, 137, 54, 0.8);
+  animation: connectionPulse 1.5s ease-in-out infinite;
+}
+
+/* ---------- Controls / Buttons ---------- */
+.controls-section {
+  margin-bottom: 16px;
+}
+
+.gs-btn {
+  position: relative;
+  width: 100%;
+  padding: 14px 0;
+  background: transparent;
+  border: none;
+  color: rgba(160, 170, 180, 0.6);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: color 0.4s ease;
+  overflow: hidden;
+}
+
+.gs-btn-line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width 0.4s ease, left 0.4s ease;
+}
+
+.gs-btn:hover {
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.gs-btn:hover .gs-btn-line {
+  width: 100%;
+  left: 0;
+}
+
+.gs-btn:active {
+  color: #ffffff;
+  transform: scale(0.98);
+  transition: transform 0.1s ease, color 0.1s ease;
+}
+
+/* ---------- Error Message ---------- */
+.gs-error-message {
+  margin-top: 12px;
+  padding: 10px 14px;
+  color: rgba(255, 100, 100, 0.9);
+  font-size: 13px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: rgba(255, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+.gs-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(255, 100, 100, 0.5);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@keyframes errorPulse {
+  0%, 100% { border-color: rgba(255, 100, 100, 0.2); }
+  50% { border-color: rgba(255, 100, 100, 0.4); }
+}
+
+/* ============================================================
+   Responsive: stack vertically on narrow screens
+   ============================================================ */
+@media (max-width: 900px) {
+  .game-screen {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .board-area {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .info-panel {
+    width: 100%;
+    min-width: auto;
+    max-width: none;
+    height: auto;
+    min-height: auto;
+    border-left: none;
+    border-top: 1px solid rgba(0, 255, 170, 0.12);
+  }
+}
