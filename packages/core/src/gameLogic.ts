@@ -85,12 +85,32 @@ function isValidGeneralMove(
   const palaceColMin = 3;
   const palaceColMax = 5;
 
+  const rowDiff = Math.abs(to.row - from.row);
+  const colDiff = Math.abs(to.col - from.col);
+
+  // 将帅面对面时可以互吃：如果目标位置是对方的将/帅，且中间无棋子，允许吃
+  const targetPiece = board[to.row][to.col];
+  if (targetPiece && targetPiece.type === PieceType.GENERAL) {
+    if (from.col === to.col) {
+      const minRow = Math.min(from.row, to.row);
+      const maxRow = Math.max(from.row, to.row);
+      let hasPieceBetween = false;
+      for (let row = minRow + 1; row < maxRow; row++) {
+        if (board[row][from.col] !== null) {
+          hasPieceBetween = true;
+          break;
+        }
+      }
+      // 中间无棋子时，允许将吃将（面对面），跳过九宫格和只能走一格的限制
+      if (!hasPieceBetween) {
+        return true;
+      }
+    }
+  }
+
   if (to.row < palaceRowMin || to.row > palaceRowMax || to.col < palaceColMin || to.col > palaceColMax) {
     return false;
   }
-
-  const rowDiff = Math.abs(to.row - from.row);
-  const colDiff = Math.abs(to.col - from.col);
 
   if (rowDiff + colDiff !== 1) {
     return false;
