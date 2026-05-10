@@ -18,6 +18,7 @@ export default defineConfig({
       '@chess/core': path.resolve(__dirname, '../core/src'),
     },
   },
+  base: './',
   build: {
     // Output directory (served by Express in production)
     outDir: './dist',

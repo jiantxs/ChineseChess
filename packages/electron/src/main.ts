@@ -12,6 +12,7 @@ import { app, BrowserWindow } from 'electron';
 import { spawn } from 'child_process';
 import * as net from 'net';
 import * as path from 'path';
+import { randomUUID } from 'crypto';
 
 /**
  * Finds an available TCP port in the given range.
@@ -65,8 +66,9 @@ let mainWindow: BrowserWindow | null = null;
  * Creates the main application window.
  *
  * @param port - The port the backend is running on
+ * @param prefix - The URL prefix (e.g., '/uuid')
  */
-function createWindow(port: number): void {
+function createWindow(port: number, prefix: string = ''): void {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
@@ -80,8 +82,10 @@ function createWindow(port: number): void {
     resizable: false,
   });
 
-  // Load the frontend from the backend server
-  mainWindow.loadURL(`http://127.0.0.1:${port}`);
+  // Load the frontend from the backend server with prefix
+  const url = `http://127.0.0.1:${port}${prefix}`;
+  console.log(`Loading URL: ${url}`);
+  mainWindow.loadURL(url);
 
   // Open DevTools in development
   if (process.env.NODE_ENV === 'development') {
@@ -97,17 +101,19 @@ function createWindow(port: number): void {
  * Waits for the backend to be ready by polling the health endpoint.
  *
  * @param port - The port the backend is running on
+ * @param prefix - The URL prefix (e.g., '/uuid')
  * @param timeout - Maximum time to wait in milliseconds
  * @returns A promise that resolves when the backend is ready
  */
-function waitForBackend(port: number, timeout: number = 30000): Promise<void> {
+function waitForBackend(port: number, prefix: string = '', timeout: number = 30000): Promise<void> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
+    const healthPath = prefix ? `${prefix}/api/config` : '/api/config';
     const interval = setInterval(() => {
       const socket = net.createConnection(port, '127.0.0.1');
 
       socket.on('connect', () => {
-        socket.write('GET /api/config HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n');
+        socket.write(`GET ${healthPath} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n`);
       });
 
       socket.on('data', () => {
@@ -136,6 +142,10 @@ async function main(): Promise<void> {
     const port = await findAvailablePort();
     console.log(`Found available port: ${port}`);
 
+    // Generate random UUID as base URL prefix
+    const basePrefix = `/${randomUUID()}`;
+    console.log(`Generated base prefix: ${basePrefix}`);
+
     // Start backend as child process using bundled Node.js
     const backendPath = getBackendPath();
     const nodePath = getNodePath();
@@ -146,6 +156,7 @@ async function main(): Promise<void> {
       ...process.env,
       CCHESSPORT: port.toString(),
       CCHESSHOST: '127.0.0.1',
+      CCHESSPREFIX: basePrefix,
       NODE_ENV: 'production',
     };
 
@@ -168,11 +179,11 @@ async function main(): Promise<void> {
     });
 
     // Wait for backend to be ready
-    await waitForBackend(port);
+    await waitForBackend(port, basePrefix);
     console.log('Backend is ready');
 
-    // Create the window
-    createWindow(port);
+    // Create the window with prefix URL
+    createWindow(port, basePrefix);
   } catch (error) {
     console.error('Failed to start application:', error);
     app.quit();

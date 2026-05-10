@@ -52,6 +52,7 @@ export interface ChessConfig {
   server: {
     port: number;
     host: string;
+    prefix: string;
     sessionSecret: string;
     sessionMaxAgeMs: number;
   };
@@ -95,6 +96,7 @@ export const defaultConfig: ChessConfig = {
   server: {
     port: 3000,
     host: '0.0.0.0',
+    prefix: '/abcc',
     sessionSecret: process.env.SESSION_SECRET || 'chinese-chess-secret-key-2024',
     sessionMaxAgeMs: 24 * 60 * 60 * 1000,
   },
@@ -151,6 +153,9 @@ function loadConfig(): ChessConfig {
   }
   if (process.env.CCHESSHOST) {
     config.server.host = process.env.CCHESSHOST;
+  }
+  if (process.env.CCHESSPREFIX) {
+    config.server.prefix = process.env.CCHESSPREFIX;
   }
   config.ai.enabled = process.env.ENABLE_AI === 'true';
   return Object.freeze(config);

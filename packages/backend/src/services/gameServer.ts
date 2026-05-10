@@ -91,9 +91,10 @@ export class GameServer {
    * - Automatically starts ping interval and cleanup interval
    * - Sets up connection handler for new WebSocket clients
    */
-  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager) {
+  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '') {
     this.gameManager = gameManager;
-    this.wss = new WebSocketServer({ server, path: '/ws' });
+    const wsPath = prefix ? `${prefix}/ws` : '/ws';
+    this.wss = new WebSocketServer({ server, path: wsPath });
     this.setupWebSocketServer();
     this.startPingInterval();
     this.startCleanupInterval();

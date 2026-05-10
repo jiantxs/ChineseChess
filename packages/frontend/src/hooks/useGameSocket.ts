@@ -77,7 +77,11 @@ export function useGameSocket(): UseGameSocketReturn {
       try {
         const playerId = await getPlayerId();
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws?playerId=${playerId}`;
+        // Get path prefix from current URL (remove last path segment if not root)
+        const pathname = window.location.pathname;
+        const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+        const wsPath = pathPrefix ? `${pathPrefix}/ws` : '/ws';
+        const wsUrl = `${protocol}//${window.location.host}${wsPath}?playerId=${playerId}`;
         
         const ws = new WebSocket(wsUrl);
         
