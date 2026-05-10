@@ -24,7 +24,7 @@ function detectMonorepoRoot(fromDir: string): string {
   let current = fromDir;
   const maxDepth = 10;
   for (let i = 0; i < maxDepth; i++) {
-    if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml'))) {
+    if (fs.existsSync(path.join(current, 'pnpm-workspace.yaml')) || fs.existsSync(path.join(current, 'LICENSES.chromium.html'))) {
       return current;
     }
     const parent = path.dirname(current);
