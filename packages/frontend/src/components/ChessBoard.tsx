@@ -15,6 +15,8 @@ import { AboveEffectsLayer } from '../canvas/layers/AboveEffectsLayer';
 import { AnimationEngine } from '../canvas/animations/AnimationEngine';
 import { GridLinesEffect } from '../canvas/effects/GridLinesEffect';
 import { StarfieldEffect } from '../canvas/effects/StarfieldEffect';
+import { CaptureEffect } from '../canvas/effects/CaptureEffect';
+import { MoveTrail } from '../canvas/effects/MoveTrail';
 import { BoardMetrics } from '../canvas/types/canvas';
 
 /** Default piece size in pixels. */
@@ -75,6 +77,8 @@ export default function ChessBoard({
   const animEngineRef = useRef<AnimationEngine | null>(null);
   const piecesLayerRef = useRef<PiecesLayer | null>(null);
   const aboveLayerRef = useRef<AboveEffectsLayer | null>(null);
+  const prevGameStateRef = useRef<GameState | null>(null);
+  const effectIdCounter = useRef(0);
 
   /** Internally selected piece position when not controlled externally. */
   const [internalSelectedPiece, setInternalSelectedPiece] = useState<Position | null>(null);
@@ -164,7 +168,47 @@ export default function ChessBoard({
     if (piecesLayerRef.current) {
       piecesLayerRef.current.setGameState(gameState);
     }
-  }, [gameState]);
+
+    // Detect captures and moves for effects
+    if (gameState && prevGameStateRef.current && animEngineRef.current) {
+      const prevState = prevGameStateRef.current;
+      
+      // Get last move if available
+      let lastMove = null;
+      if (gameState.moves.length > prevState.moves.length) {
+        lastMove = gameState.moves[gameState.moves.length - 1];
+      }
+      
+      // Check for captures (piece disappeared at destination of last move)
+      if (lastMove) {
+        const toRow = lastMove.to.row;
+        const toCol = lastMove.to.col;
+        const prevPieceAtDest = prevState.board[toRow][toCol];
+        
+        // If there was a piece at destination and it's different from the moving piece, it's a capture
+        if (prevPieceAtDest && prevPieceAtDest.id !== lastMove.piece.id) {
+          const x = padding + toCol * cellSize;
+          const y = padding + toRow * cellSize;
+          effectIdCounter.current++;
+          animEngineRef.current.add(
+            new CaptureEffect(x, y, prevPieceAtDest.side, `cap-${effectIdCounter.current}`)
+          );
+        }
+        
+        // Add move trail for every move
+        const fromX = padding + lastMove.from.col * cellSize;
+        const fromY = padding + lastMove.from.row * cellSize;
+        const toX = padding + lastMove.to.col * cellSize;
+        const toY = padding + lastMove.to.row * cellSize;
+        effectIdCounter.current++;
+        animEngineRef.current.add(
+          new MoveTrail(fromX, fromY, toX, toY, lastMove.piece.side, `trail-${effectIdCounter.current}`)
+        );
+      }
+    }
+
+    prevGameStateRef.current = gameState;
+  }, [gameState, padding, cellSize]);
 
   // Update above-effects layer when selection/validMoves change
   useEffect(() => {
