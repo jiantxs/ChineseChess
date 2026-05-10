@@ -42,6 +42,9 @@ if (PREFIX) {
  */
 const gameServer = new GameServer(server, gameManager, PREFIX);
 
+// Store gameServer reference in app locals for access by routes
+app.locals.gameServer = gameServer;
+
 /** Server port from configuration (default: 3000) */
 const PORT = chessConfig.server.port;
 

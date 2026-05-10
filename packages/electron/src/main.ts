@@ -61,6 +61,7 @@ function getNodePath(): string {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let backendProcess: ReturnType<typeof spawn> | null = null;
 
 /**
  * Creates the main application window.
@@ -176,7 +177,14 @@ async function main(): Promise<void> {
 
     proc.on('exit', (code) => {
       console.log(`Backend process exited with code ${code}`);
+      // Backend died — close the app so we don't leave a zombie Electron window
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.close();
+      }
+      app.quit();
     });
+
+    backendProcess = proc;
 
     // Wait for backend to be ready
     await waitForBackend(port, basePrefix);
@@ -194,6 +202,10 @@ async function main(): Promise<void> {
 app.on('ready', main);
 
 app.on('window-all-closed', () => {
+  // Kill the backend child process when the window is closed
+  if (backendProcess && !backendProcess.killed) {
+    backendProcess.kill();
+  }
   if (process.platform !== 'darwin') {
     app.quit();
   }

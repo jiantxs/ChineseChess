@@ -169,8 +169,17 @@ function App() {
 
             <button
               className="menu-btn exit-btn"
-              onClick={() => {
-                window.location.reload();
+              onClick={async () => {
+                try {
+                  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+                  const pathname = window.location.pathname;
+                  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+                  const Path = pathPrefix ? `${pathPrefix}/api/game/exit` : '/api/game/exit';
+                  const Url = `${protocol}//${window.location.host}${Path}`;
+                  await fetch(Url, { method: 'POST' });
+                } catch {
+                  // Server may close connection before response; ignore error
+                }
               }}
             >
               <span className="btn-line" />

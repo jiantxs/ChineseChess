@@ -39,4 +39,34 @@ router.post('/player-id', (req, res) => {
   res.json({ playerId });
 });
 
+/**
+ * Exit game and shutdown server
+ * @route POST /api/game/exit
+ * @description Receives exit request from frontend, responds with success,
+ *              then gracefully shuts down the server process.
+ *
+ * @param req - Express request
+ * @param res - Express response confirming shutdown initiation
+ * @returns JSON with success message
+ *
+ * @example
+ * // Request
+ * POST /api/game/exit
+ *
+ * // Response
+ * { "message": "Server is shutting down" }
+ */
+router.post('/exit', (req, res) => {
+  res.json({ message: 'Server is shutting down' });
+
+  // Allow response to be sent before shutting down
+  setTimeout(() => {
+    const gameServer = (req as any).app.locals.gameServer;
+    if (gameServer && typeof gameServer.stop === 'function') {
+      gameServer.stop();
+    }
+    process.exit(0);
+  }, 100);
+});
+
 export default router;
