@@ -30,7 +30,7 @@ src/
 ## CONVENTIONS
 - React 19 with TypeScript strict mode
 - Vite builds to `backend/public` (single Express serves frontend)
-- Chinese UI labels for pieces and controls ("天天象棋", "本地对战", "创建在线房间")
+- Chinese UI labels for pieces and controls ("象棋", "本地对战", "创建在线房间")
 - Path aliases: `@chess/core`, `@chess/config`
 - Canvas-based board (not SVG/DOM chess pieces)
 - Two identical boards rendered side-by-side for hot-seat view

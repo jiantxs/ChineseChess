@@ -22,7 +22,7 @@
   },
   "build": {
     "appId": "com.chess.desktop",
-    "productName": "天天象棋",
+    "productName": "象棋",
     "directories": {
       "output": "../../winapp"
     },

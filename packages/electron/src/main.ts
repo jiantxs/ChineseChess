@@ -75,7 +75,7 @@ function createWindow(port: number): void {
       contextIsolation: true,
     },
     autoHideMenuBar: true,
-    title: '天天象棋',
+    title: '象棋',
     icon: path.resolve(__dirname, '../assets/icon.png'),
     resizable: false,
   });

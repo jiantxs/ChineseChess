@@ -116,7 +116,7 @@ function App() {
     return (
       <div className="app">
         <div className="menu-container">
-          <h1 className="game-title">天天象棋</h1>
+          <h1 className="game-title">象棋</h1>
           <div className="menu-buttons">
             <button className="menu-btn primary" onClick={handleStartLocal}>
               本地对战
@@ -161,7 +161,7 @@ function App() {
     <div className="app">
       <div className="game-container">
         <div className="game-header">
-          <h1>天天象棋</h1>
+          <h1>象棋</h1>
           <div className="game-info">
             {gameMode === 'online' && (
               <>
