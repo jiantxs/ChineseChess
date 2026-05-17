@@ -12,6 +12,15 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { logClientLogEvent, logError } from '../services/logger';
+
+interface ClientLogPayload {
+  level: string;
+  message: string;
+  timestamp: number;
+  source: string;
+  metadata?: Record<string, unknown>;
+}
 
 /** Express router for game-related endpoints */
 const router: ExpressRouter = Router();
@@ -62,11 +71,45 @@ router.post('/exit', (req, res) => {
   // Allow response to be sent before shutting down
   setTimeout(() => {
     const gameServer = (req as any).app.locals.gameServer;
-    if (gameServer && typeof gameServer.stop === 'function') {
-      gameServer.stop();
+    try {
+      if (gameServer && typeof gameServer.stop === 'function') {
+        gameServer.stop();
+      }
+    } catch (err) {
+      logError('Error during server shutdown', err as Error, { context: 'gameServer.stop()' });
     }
     process.exit(0);
   }, 100);
+});
+
+/**
+ * Receive client-side log entries from frontend
+ * @route POST /api/game/logs/client
+ * @description Receives log entries from frontend clients and logs them
+ *              server-side with proper source attribution as 'frontend'.
+ *
+ * @param req - Express request containing client log in body
+ * @param res - Express response confirming receipt
+ * @returns JSON with success message
+ */
+router.post('/logs/client', (req, res) => {
+  const payload = req.body as ClientLogPayload;
+  const playerId = (req.session as any)?.playerId || undefined;
+
+  if (!payload || !payload.level || !payload.message) {
+    res.status(400).json({ error: 'Invalid log payload' });
+    return;
+  }
+
+  logClientLogEvent(
+    payload.level,
+    payload.message,
+    payload.timestamp || Date.now(),
+    payload.metadata,
+    playerId
+  );
+
+  res.json({ success: true });
 });
 
 export default router;

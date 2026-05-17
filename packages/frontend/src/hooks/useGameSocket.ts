@@ -12,6 +12,8 @@ import {
   Position,
   GameStatus,
 } from '@chess/types';
+import { clientLogger } from '../utils/clientLogger';
+import { apiPath, wsPath } from '../utils/api';
 
 /**
  * Return type for the useGameSocket hook.
@@ -44,9 +46,9 @@ export function useGameSocket(): UseGameSocketReturn {
 
   const getPlayerId = useCallback(async (): Promise<string> => {
     if (playerIdRef.current) return playerIdRef.current;
-    
+
     try {
-      const response = await fetch('/api/game/player-id', {
+      const response = await fetch(apiPath('/api/game/player-id'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -76,13 +78,8 @@ export function useGameSocket(): UseGameSocketReturn {
     const connectPromise = new Promise<void>(async (resolve, reject) => {
       try {
         const playerId = await getPlayerId();
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Get path prefix from current URL (remove last path segment if not root)
-        const pathname = window.location.pathname;
-        const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
-        const wsPath = pathPrefix ? `${pathPrefix}/ws` : '/ws';
-        const wsUrl = `${protocol}//${window.location.host}${wsPath}?playerId=${playerId}`;
-        
+        const wsUrl = `${wsPath('/ws')}?playerId=${playerId}`;
+
         const ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
@@ -97,7 +94,7 @@ export function useGameSocket(): UseGameSocketReturn {
             const message: GameMessage = JSON.parse(event.data);
             handleMessage(message);
           } catch (err) {
-            console.error('Failed to parse message:', err);
+            clientLogger.error('Failed to parse message', { error: err instanceof Error ? err.message : String(err) });
           }
         };
         
@@ -105,9 +102,11 @@ export function useGameSocket(): UseGameSocketReturn {
           setConnectionStatus('disconnected');
           wsRef.current = null;
           isConnectingRef.current = false;
+          clientLogger.info('WebSocket disconnected', { playerId: playerIdRef.current });
         };
         
         ws.onerror = (err) => {
+          clientLogger.error('WebSocket connection error', { error: err.type || 'unknown' });
           setError('Connection error');
           setConnectionStatus('disconnected');
           isConnectingRef.current = false;
@@ -176,7 +175,7 @@ case MessageType.VALID_MOVES:
         break;
         
       default:
-        console.log('Unhandled message type:', message.type);
+        clientLogger.warn('Unhandled message type', { type: message.type });
     }
   }, []);
 
@@ -204,7 +203,7 @@ case MessageType.VALID_MOVES:
         gameId: '',
       });
     } catch (err) {
-      console.error('Failed to create game:', err);
+      clientLogger.error('Failed to create game', { error: err instanceof Error ? err.message : String(err) });
       setError('Failed to create game');
     }
   }, [connect, sendMessage]);
@@ -218,7 +217,7 @@ case MessageType.VALID_MOVES:
         gameId,
       });
     } catch (err) {
-      console.error('Failed to join game:', err);
+      clientLogger.error('Failed to join game', { error: err instanceof Error ? err.message : String(err) });
       setError('Failed to join game');
     }
   }, [connect, sendMessage]);

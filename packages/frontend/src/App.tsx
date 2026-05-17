@@ -4,6 +4,8 @@ import { useGameSocket } from './hooks/useGameSocket';
 import { useLocalGame } from './hooks/useLocalGame';
 import { useBoardController } from './controllers/BoardController';
 import { Side, Position } from '@chess/types';
+import { clientLogger } from './utils/clientLogger';
+import { apiPath } from './utils/api';
 import './App.css';
 
 /**
@@ -171,14 +173,9 @@ function App() {
               className="menu-btn exit-btn"
               onClick={async () => {
                 try {
-                  const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-                  const pathname = window.location.pathname;
-                  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
-                  const Path = pathPrefix ? `${pathPrefix}/api/game/exit` : '/api/game/exit';
-                  const Url = `${protocol}//${window.location.host}${Path}`;
-                  await fetch(Url, { method: 'POST' });
-                } catch {
-                  // Server may close connection before response; ignore error
+                  await fetch(apiPath('/api/game/exit'), { method: 'POST' });
+                } catch (err) {
+                  clientLogger.error('Exit button error', { error: err instanceof Error ? err.message : String(err) });
                 }
               }}
             >

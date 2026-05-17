@@ -5,6 +5,7 @@
 
 import { BaseLayer } from './BaseLayer';
 import { BoardMetrics } from '../types/canvas';
+import { clientLogger } from '../../utils/clientLogger';
 
 /** Cached board SVG image */
 let boardImage: HTMLImageElement | null = null;
@@ -25,7 +26,7 @@ function loadBoardImage(): Promise<void> {
       resolve();
     };
     img.onerror = () => {
-      console.error('Failed to load board image');
+      clientLogger.error('Failed to load board image');
       resolve();
     };
     img.src = './assets/svg/board.svg';

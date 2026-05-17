@@ -111,9 +111,13 @@ export class GameManager {
    */
   joinGame(gameId: string, playerId: string, side?: Side): GameState | null {
     const game = this.games.get(gameId);
-    if (!game) return null;
+    if (!game) {
+      gameLogger.warn('joinGame failed - game not found', { gameId, playerId, side });
+      return null;
+    }
 
     if (game.status !== GameStatus.WAITING && !game.localGame) {
+      gameLogger.warn('joinGame failed - game not waiting', { gameId, playerId, side, status: game.status });
       return null;
     }
 
@@ -123,20 +127,31 @@ export class GameManager {
       game.blackPlayer = playerId;
       this.playerGames.set(playerId, gameId);
       game.status = GameStatus.PLAYING;
+
+      gameLogger.info('Local game joined', {
+        gameId,
+        playerId,
+        side: Side.RED,
+      });
       return game;
     }
 
     if (side === Side.RED && game.redPlayer) {
+      gameLogger.warn('joinGame failed - side occupied', { gameId, playerId, side, existingPlayer: game.redPlayer });
       return null;
     }
     if (side === Side.BLACK && game.blackPlayer) {
+      gameLogger.warn('joinGame failed - side occupied', { gameId, playerId, side, existingPlayer: game.blackPlayer });
       return null;
     }
 
     if (!side) {
       if (!game.redPlayer) side = Side.RED;
       else if (!game.blackPlayer) side = Side.BLACK;
-      else return null;
+      else {
+        gameLogger.warn('joinGame failed - no sides available', { gameId, playerId });
+        return null;
+      }
     }
 
     if (side === Side.RED) {
@@ -150,6 +165,13 @@ export class GameManager {
     if (game.redPlayer && game.blackPlayer) {
       game.status = GameStatus.PLAYING;
     }
+
+    gameLogger.info('Player joined game', {
+      gameId,
+      playerId,
+      side,
+      status: game.status,
+    });
 
     return game;
   }
@@ -172,10 +194,12 @@ export class GameManager {
   ): { success: boolean; game?: GameState; error?: string } {
     const game = this.games.get(gameId);
     if (!game) {
+      gameLogger.warn('makeMove failed - game not found', { gameId, playerId, from, to });
       return { success: false, error: 'Game not found' };
     }
 
     if (game.status !== GameStatus.PLAYING) {
+      gameLogger.warn('makeMove failed - game not in progress', { gameId, playerId, from, to, status: game.status });
       return { success: false, error: 'Game is not in progress' };
     }
 
@@ -184,20 +208,24 @@ export class GameManager {
     if (!game.localGame) {
       const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
       if (expectedPlayer !== playerId) {
+        gameLogger.warn('makeMove failed - not your turn', { gameId, playerId, from, to, expectedPlayer, currentTurn: game.currentTurn });
         return { success: false, error: 'Not your turn' };
       }
     }
 
     const piece = game.board[from.row][from.col];
     if (!piece) {
+      gameLogger.warn('makeMove failed - no piece at source', { gameId, playerId, from, to });
       return { success: false, error: 'No piece at source position' };
     }
 
     if (piece.side !== game.currentTurn) {
+      gameLogger.warn('makeMove failed - cannot move opponent piece', { gameId, playerId, from, to, pieceSide: piece.side, currentTurn: game.currentTurn });
       return { success: false, error: 'Cannot move opponent piece' };
     }
 
     if (!isValidMove(game.board, piece, from, to)) {
+      gameLogger.warn('makeMove failed - invalid move', { gameId, playerId, from, to, pieceType: piece.type, pieceSide: piece.side });
       return { success: false, error: 'Invalid move' };
     }
 
@@ -253,13 +281,19 @@ export class GameManager {
    */
   leaveGame(gameId: string, playerId: string): GameState | null {
     const game = this.games.get(gameId);
-    if (!game) return null;
+    if (!game) {
+      gameLogger.warn('leaveGame failed - game not found', { gameId, playerId });
+      return null;
+    }
 
     const wasRedPlayer = game.redPlayer === playerId;
     if (wasRedPlayer) {
       game.redPlayer = undefined;
     } else if (game.blackPlayer === playerId) {
       game.blackPlayer = undefined;
+    } else {
+      gameLogger.warn('leaveGame failed - player not in game', { gameId, playerId });
+      return null;
     }
 
     this.playerGames.delete(playerId);
@@ -268,16 +302,23 @@ export class GameManager {
       game.status = GameStatus.ABORTED;
       game.winner = wasRedPlayer ? Side.BLACK : Side.RED;
 
-      gameLogger.info('Game aborted', {
+      gameLogger.info('Game aborted due to player leaving', {
         gameId,
         playerId,
         winner: game.winner,
         reason: 'player_left',
       });
+    } else if (game.status === GameStatus.WAITING) {
+      gameLogger.info('Player left waiting game', {
+        gameId,
+        playerId,
+        wasRedPlayer,
+      });
     }
 
     if (!game.redPlayer && !game.blackPlayer) {
       this.games.delete(gameId);
+      gameLogger.info('Game deleted - all players left', { gameId });
       return null;
     }
 
@@ -331,6 +372,7 @@ return getValidMovesLogic(game.board, piece);
   cleanupInactiveGames(maxAgeMs: number): number {
     const now = Date.now();
     let cleaned = 0;
+    const cleanedGameIds: string[] = [];
 
     for (const [gameId, game] of this.games.entries()) {
       if (game.status === GameStatus.FINISHED || game.status === GameStatus.ABORTED) {
@@ -339,8 +381,17 @@ return getValidMovesLogic(game.board, piece);
           if (game.redPlayer) this.playerGames.delete(game.redPlayer);
           if (game.blackPlayer) this.playerGames.delete(game.blackPlayer);
           cleaned++;
+          cleanedGameIds.push(gameId);
         }
       }
+    }
+
+    if (cleaned > 0) {
+      gameLogger.info('Inactive games cleaned up', {
+        count: cleaned,
+        gameIds: cleanedGameIds,
+        maxAgeMs,
+      });
     }
 
     return cleaned;

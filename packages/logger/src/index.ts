@@ -450,4 +450,50 @@ export function logSystemEvent(
   logEvent('SYSTEM', 'backend', { message, ...metadata });
 }
 
+/**
+ * Logs a client-side (frontend) log entry received via HTTP API.
+ * Tags the log with eventType 'CLIENT' to distinguish from server logs.
+ *
+ * @param level - Log level (debug, info, warn, error)
+ * @param message - The log message from frontend
+ * @param timestamp - Unix timestamp when the log was created on client
+ * @param metadata - Additional metadata from client
+ * @param playerId - Optional player ID if available
+ * @param gameId - Optional game ID if available
+ */
+export function logClientLogEvent(
+  level: string,
+  message: string,
+  timestamp: number,
+  metadata?: Record<string, unknown>,
+  playerId?: string,
+  gameId?: string
+): void {
+  const logData = {
+    eventType: 'CLIENT',
+    source: 'frontend',
+    clientTimestamp: timestamp,
+    level,
+    message,
+    playerId: playerId || null,
+    gameId: gameId || null,
+    ...metadata,
+  };
+
+  switch (level) {
+    case 'error':
+      globalEventLogger.error('client_log', logData);
+      errorLogger.error('client_log', logData);
+      break;
+    case 'warn':
+      globalEventLogger.warn('client_log', logData);
+      break;
+    case 'debug':
+      globalEventLogger.debug('client_log', logData);
+      break;
+    default:
+      globalEventLogger.info('client_log', logData);
+  }
+}
+
 export { createEventLogger };

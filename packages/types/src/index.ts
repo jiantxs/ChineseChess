@@ -136,6 +136,7 @@ export enum MessageType {
   AI_MOVE = 'ai_move',
   GET_VALID_MOVES = 'get_valid_moves',
   VALID_MOVES = 'valid_moves',
+  CLIENT_LOG = 'client_log',
 }
 
 /**

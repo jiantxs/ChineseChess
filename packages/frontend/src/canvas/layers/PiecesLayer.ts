@@ -6,6 +6,7 @@
 import { BaseLayer } from './BaseLayer';
 import { BoardMetrics } from '../types/canvas';
 import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/types';
+import { clientLogger } from '../../utils/clientLogger';
 
 /** In-memory cache of loaded piece SVG images */
 const PIECE_IMAGES: Record<string, HTMLImageElement> = {};
@@ -30,7 +31,7 @@ function loadPieceImages(): Promise<void> {
       const img = new Image();
       img.onload = () => resolve();
       img.onerror = () => {
-        console.error(`Failed to load piece image: ${name}`);
+        clientLogger.error('Failed to load piece image', { pieceName: name });
         resolve();
       };
       img.src = `./assets/svg/${name}.svg`;

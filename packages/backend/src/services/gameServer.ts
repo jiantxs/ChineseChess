@@ -245,7 +245,11 @@ export class GameServer {
       if (layoutName) {
         try {
           layout = getLayout(layoutName);
-        } catch {
+        } catch (err) {
+          logWebSocketEvent('layout_fallback', player.playerId, undefined, {
+            requestedLayout: layoutName,
+            reason: err instanceof Error ? err.message : 'Unknown error',
+          });
           layout = PieceLayout.fromJSON(standardLayoutData);
         }
       } else {
@@ -259,6 +263,11 @@ export class GameServer {
     const game = this.gameManager.joinGame(targetGameId!, player.playerId, side);
 
     if (!game) {
+      logWebSocketEvent('join_game_failed', player.playerId, targetGameId, {
+        reason: 'Failed to join game',
+        side,
+        local: local || false,
+      });
       this.sendError(player, 'Failed to join game');
       return;
     }
@@ -307,6 +316,7 @@ export class GameServer {
    */
   private handleMakeMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
+      logWebSocketEvent('make_move_not_in_game', player.playerId, undefined);
       this.sendError(player, 'Not in a game');
       return;
     }
@@ -318,6 +328,7 @@ export class GameServer {
         typeof to.row !== 'number' || typeof to.col !== 'number' ||
         from.row < 0 || from.row > 9 || from.col < 0 || from.col > 8 ||
         to.row < 0 || to.row > 9 || to.col < 0 || to.col > 8) {
+      logWebSocketEvent('make_move_invalid_coords', player.playerId, player.gameId, { from, to });
       this.sendError(player, 'Invalid coordinates');
       return;
     }
@@ -325,6 +336,11 @@ export class GameServer {
     const result = this.gameManager.makeMove(player.gameId, player.playerId, from, to);
 
     if (!result.success) {
+      logWebSocketEvent('make_move_failed', player.playerId, player.gameId, {
+        reason: result.error,
+        from,
+        to,
+      });
       this.sendError(player, result.error || 'Move failed');
       return;
     }
@@ -446,10 +462,12 @@ export class GameServer {
    */
   private handleAIMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!chessConfig.ai.enabled) {
+      logWebSocketEvent('ai_move_disabled', player.playerId, player.gameId);
       this.sendError(player, 'AI is not enabled');
       return;
     }
 
+    logWebSocketEvent('ai_move_not_implemented', player.playerId, player.gameId);
     this.sendError(player, 'AI not yet implemented');
   }
 
@@ -471,6 +489,7 @@ export class GameServer {
    */
   private handleGetValidMoves(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
+      logWebSocketEvent('get_valid_moves_not_in_game', player.playerId, undefined);
       this.sendError(player, 'Not in a game');
       return;
     }
@@ -478,6 +497,7 @@ export class GameServer {
     const { position } = message.payload as { position: Position };
 
     if (!position || typeof position.row !== 'number' || typeof position.col !== 'number') {
+      logWebSocketEvent('get_valid_moves_invalid_position', player.playerId, player.gameId, { position });
       this.sendError(player, 'Invalid position');
       return;
     }
@@ -487,6 +507,11 @@ export class GameServer {
       player.playerId,
       position
     );
+
+    logWebSocketEvent('get_valid_moves', player.playerId, player.gameId, {
+      position,
+      moveCount: validMoves.length,
+    });
 
     this.sendToPlayer(player, {
       type: MessageType.VALID_MOVES,

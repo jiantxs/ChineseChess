@@ -20,6 +20,7 @@ import {
   logGameEvent,
   logGameLifecycle,
   logSystemEvent,
+  logClientLogEvent,
   getGameLogger,
   clearGameLogger,
 } from '@chess/logger';
@@ -44,7 +45,7 @@ export { errorLogger };
 export { globalEventLogger };
 
 /** @ignore Re-exported for convenience */
-export { logHttpRequest, logError, logEvent, logGameEvent, logGameLifecycle, logSystemEvent };
+export { logHttpRequest, logError, logEvent, logGameEvent, logGameLifecycle, logSystemEvent, logClientLogEvent };
 /** @ignore Re-exported for game logger management */
 export { getGameLogger, clearGameLogger };
 
