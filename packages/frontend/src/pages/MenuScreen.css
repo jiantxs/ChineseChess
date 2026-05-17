@@ -71,6 +71,18 @@
   text-align: center;
   z-index: 20;
   backdrop-filter: blur(4px);
+  animation: menuFadeIn 0.8s ease-out forwards;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 四角装饰 */
