@@ -23,10 +23,14 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "@chess/types": "workspace:*",
+    "@chess/logger": "workspace:*",
+    "uuid": "^9.0.1"
+  },
   "devDependencies": {
     "@types/node": "^20.10.5",
     "@types/uuid": "^9.0.7",
-    "typescript": "^5.3.3",
-    "uuid": "^9.0.1"
+    "typescript": "^5.3.3"
   }
 }

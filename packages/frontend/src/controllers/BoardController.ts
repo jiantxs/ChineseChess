@@ -5,7 +5,7 @@
  * Used by App.tsx for piece selection handling.
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Position, GameState, GameStatus } from '@chess/core';
+import { Position, GameState, GameStatus } from '@chess/types';
 
 /**
  * Represents the current state of the board controller.

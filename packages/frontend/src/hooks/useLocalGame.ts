@@ -5,7 +5,7 @@
  */
 import { useCallback } from 'react';
 import { useGameSocket } from './useGameSocket';
-import type { GameState, Position } from '@chess/core';
+import type { GameState, Position } from '@chess/types';
 
 /**
  * Return type for the useLocalGame hook.

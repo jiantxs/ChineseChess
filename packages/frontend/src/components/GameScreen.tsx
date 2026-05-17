@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import ChessBoard, { ChessBoardSize } from './ChessBoard';
-import { GameState, Side, Position, GameStatus, PieceType } from '@chess/core';
+import { GameState, Side, Position, GameStatus, PieceType } from '@chess/types';
 import './GameScreen.css';
 
 /** Props for the {@link GameScreen} component. */

@@ -5,7 +5,7 @@
 
 import { BaseLayer } from './BaseLayer';
 import { BoardMetrics } from '../types/canvas';
-import { Position, GameState, GameStatus, Side } from '@chess/core';
+import { Position, GameState, GameStatus, Side } from '@chess/types';
 
 /**
  * Layer 3: Renders dynamic UI effects above the pieces.

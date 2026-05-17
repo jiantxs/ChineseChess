@@ -5,7 +5,7 @@
 
 import { BaseAnimation } from '../animations/BaseAnimation';
 import { BoardMetrics } from '../types/canvas';
-import { Side } from '@chess/core';
+import { Side } from '@chess/types';
 
 interface Particle {
   x: number;

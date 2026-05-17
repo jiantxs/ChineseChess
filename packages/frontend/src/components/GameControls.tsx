@@ -1,4 +1,4 @@
-import { GameState, GameStatus } from '@chess/core';
+import { GameState, GameStatus } from '@chess/types';
 import './GameControls.css';
 
 /** Props for the {@link GameControls} component. */

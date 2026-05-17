@@ -12,6 +12,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@chess/types": "workspace:*",
     "@chess/core": "workspace:*",
     "@chess/config": "workspace:*",
     "@chess/game-records": "workspace:*",

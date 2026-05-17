@@ -1,16 +1,15 @@
 /**
- * @chess/logger - Winston-based logging module
+ * @fileoverview Winston-based logging module for the Chinese Chess application.
  *
- * Provides structured logging for requests, errors, and game events using Winston
- * with daily rotation file transport. Logs are stored in logs/{requests,errors,events}/
+ * Provides structured logging for requests, errors, game events, and system events
+ * using Winston with daily rotation file transport. Logs are stored in:
+ *   - logs/requests/   (HTTP request logs)
+ *   - logs/errors/     (Error logs)
+ *   - logs/events/     (General event logs)
+ *   - logs/games/      (Game-specific event logs per gameId)
  *
  * Usage:
- *   import { requestLogger, errorLogger, globalEventLogger, logGameEvent } from '@chess/logger';
- *
- * Three main loggers:
- *   - requestLogger: HTTP request logs
- *   - errorLogger: Error-only logs
- *   - globalEventLogger: General event logs (all event types)
+ *   import { requestLogger, errorLogger, globalEventLogger, logGameEvent, gameLogger } from '@chess/logger';
  *
  * @module @chess/logger
  */
@@ -20,13 +19,19 @@ import path from 'path';
 import fs from 'fs';
 import { chessConfig } from '@chess/config';
 
+const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
+
+// Ensure game log directory exists
+const gameLogDir = path.join(logDir, 'games');
+if (!fs.existsSync(gameLogDir)) {
+  fs.mkdirSync(gameLogDir, { recursive: true });
+}
+
 /**
  * Event types for categorized logging
  * @enum {string}
  */
 export type EventType = 'GAME' | 'HTTP' | 'WEBSOCKET' | 'SYSTEM' | 'ERROR';
-
-const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
 
 /**
  * Creates an HTTP request logger with daily rotation file transport.
@@ -153,6 +158,137 @@ export const requestLogger = createRequestLogger();
 export const errorLogger = createErrorLogger();
 /** General event logger - logs to logs/events/events-%DATE%.log */
 export const globalEventLogger = createEventLogger();
+
+/**
+ * Game ID keyed logger factory
+ * Creates Winston loggers that write game-specific logs to logs/games/<gameId>/%DATE%.log
+ * Each game gets its own log file within its gameId subdirectory.
+ *
+ * @param gameId - The unique game identifier
+ * @returns Winston logger instance for the specified game
+ */
+function createGameLogger(gameId: string): winston.Logger {
+  const gameLogSubdir = path.join(gameLogDir, gameId);
+
+  return winston.createLogger({
+    level: chessConfig.log.level,
+    defaultMeta: { service: 'chess-game', gameId },
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    transports: [
+      new DailyRotateFile({
+        filename: path.join(gameLogSubdir, '%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxFiles: chessConfig.log.maxFiles,
+        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+      }),
+      ...(process.env.NODE_ENV !== 'production'
+        ? [new winston.transports.Console({
+            level: 'debug',
+            format: winston.format.combine(
+              winston.format.timestamp(),
+              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                if (Object.keys(metadata).length > 0) {
+                  msg += ` ${JSON.stringify(metadata)}`;
+                }
+                return msg;
+              }),
+            ),
+          })]
+        : []),
+    ],
+  });
+}
+
+// In-memory store for game loggers - prevents recreating loggers for the same game
+const gameLoggers: Map<string, winston.Logger> = new Map();
+
+/**
+ * Gets or creates a game-specific logger for the given gameId.
+ * Loggers are cached so repeated calls with the same gameId return the same logger instance.
+ *
+ * @param gameId - The unique game identifier
+ * @returns Winston logger instance configured for the specified game
+ */
+export function getGameLogger(gameId: string): winston.Logger {
+  let logger = gameLoggers.get(gameId);
+  if (!logger) {
+    logger = createGameLogger(gameId);
+    gameLoggers.set(gameId, logger);
+  }
+  return logger;
+}
+
+/**
+ * Logs a game lifecycle event with detailed metadata.
+ * Writes to both:
+ *   - The game's specific log file (logs/games/<gameId>/<date>.log)
+ *   - The global event log (logs/events/events-<date>.log)
+ *
+ * This is called from @chess/core when game state changes (created, move, finished, aborted).
+ *
+ * @param gameId - The game identifier
+ * @param action - The action being logged ('created' | 'move' | 'finished' | 'aborted')
+ * @param metadata - Additional event-specific metadata
+ */
+export function logGameLifecycle(
+  gameId: string,
+  action: string,
+  metadata: Record<string, unknown> = {}
+): void {
+  const gameLogger = getGameLogger(gameId);
+
+  const eventData = {
+    action,
+    gameId,
+    timestamp: Date.now(),
+    ...metadata,
+  };
+
+  // Write to game's dedicated log file
+  switch (action) {
+    case 'created':
+      gameLogger.info('game_created', eventData);
+      break;
+    case 'move':
+      gameLogger.info('game_move', eventData);
+      break;
+    case 'finished':
+      gameLogger.info('game_finished', eventData);
+      break;
+    case 'aborted':
+      gameLogger.warn('game_aborted', eventData);
+      break;
+    default:
+      gameLogger.info('game_event', eventData);
+  }
+
+  // Also write to global event log for cross-game monitoring
+  globalEventLogger.info('game_event', {
+    eventType: 'GAME',
+    source: 'core',
+    gameId,
+    action,
+    ...metadata,
+  });
+}
+
+/**
+ * Clears the internal game logger cache.
+ * Call this during shutdown or when games are fully cleaned up to prevent memory leaks.
+ *
+ * @param gameId - Optional specific game ID to clear. If omitted, clears all game loggers.
+ */
+export function clearGameLogger(gameId?: string): void {
+  if (gameId) {
+    gameLoggers.delete(gameId);
+  } else {
+    gameLoggers.clear();
+  }
+}
 
 /**
  * Logs a WebSocket event with player and optional game context.

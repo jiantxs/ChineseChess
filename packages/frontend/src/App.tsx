@@ -3,7 +3,7 @@ import GameScreen from './components/GameScreen';
 import { useGameSocket } from './hooks/useGameSocket';
 import { useLocalGame } from './hooks/useLocalGame';
 import { useBoardController } from './controllers/BoardController';
-import { Side, Position } from '@chess/core';
+import { Side, Position } from '@chess/types';
 import './App.css';
 
 /**

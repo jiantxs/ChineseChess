@@ -14,7 +14,7 @@ import { chessConfig } from '@chess/config';
 import { gameManager } from '@chess/core';
 import gameRoutes from './game';
 import configRoutes from './config';
-import { requestLogMiddleware } from '../services/logger';
+import { requestLogMiddleware, logError } from '../services/logger';
 
 /**
  * Creates and configures the main application router with all middleware and routes.
@@ -71,7 +71,7 @@ export function createAppRouter(): Router {
 
   // Global error handling middleware
   router.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Unhandled error:', err);
+    logError('Unhandled error in Express router', err, { path: req.path });
     res.status(500).json({ error: 'Internal server error' });
   });
 

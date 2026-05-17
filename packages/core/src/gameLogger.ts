@@ -39,14 +39,26 @@ export interface LogEntry {
 }
 
 /**
+ * External logger interface for bridging to Winston/file logging.
+ * When set, game events will also be forwarded to this external logger.
+ */
+export interface ExternalGameLogger {
+  (gameId: string, action: string, metadata: Record<string, unknown>): void;
+}
+
+/**
  * In-memory event logger with level filtering
  *
  * Stores log entries in memory and supports filtering by game ID
  * for game replay functionality.
+ *
+ * Optionally forwards logs to an external logger (e.g., Winston-based)
+ * via setExternalLogger() for file persistence.
  */
 export class GameLogger {
   private logs: LogEntry[] = [];
   private minLevel: LogLevel;
+  private externalLogger: ExternalGameLogger | null = null;
 
   /**
    * Creates a new GameLogger instance
@@ -54,6 +66,17 @@ export class GameLogger {
    */
   constructor(minLevel: LogLevel = LogLevel.INFO) {
     this.minLevel = minLevel;
+  }
+
+  /**
+   * Sets an external logger to receive game events for file persistence.
+   * This allows @chess/core to forward events to @chess/logger without
+   * creating a circular dependency.
+   *
+   * @param logger - External logger function (gameId, action, metadata)
+   */
+  setExternalLogger(logger: ExternalGameLogger | null): void {
+    this.externalLogger = logger;
   }
 
   /**
@@ -74,8 +97,10 @@ export class GameLogger {
 
     this.logs.push(entry);
 
-    const levelName = LogLevel[level];
-    console.log(`[${levelName}] ${message}`, data || '');
+    // Forward to external logger if set (for file persistence via Winston)
+    if (this.externalLogger && data?.gameId) {
+      this.externalLogger(data.gameId as string, message, data);
+    }
   }
 
   /**

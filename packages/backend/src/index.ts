@@ -15,6 +15,7 @@ import { chessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import { gameManager } from '@chess/core';
 import { createAppRouter } from './routes';
+import { requestLogger, logSystemEvent } from './services/logger';
 
 /** Express application instance */
 const app = express();
@@ -30,7 +31,7 @@ const appRouter = createAppRouter();
 
 if (PREFIX) {
   app.use(PREFIX, appRouter);
-  console.log(`Routes mounted at prefix: ${PREFIX}`);
+  logSystemEvent('Routes mounted at prefix', { prefix: PREFIX });
 } else {
   app.use(appRouter);
 }
@@ -56,7 +57,8 @@ const HOST = chessConfig.server.host;
  * @remarks Begins listening on configured port and host, logs startup message
  */
 server.listen(PORT, HOST, () => {
-  console.log(`Chinese Chess server running on http://${HOST}:${PORT}${PREFIX}`);
+  requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
+  logSystemEvent('Chinese Chess server started', { host: HOST, port: PORT, url: `http://${HOST}:${PORT}${PREFIX}` });
 });
 
 /**
@@ -66,10 +68,10 @@ server.listen(PORT, HOST, () => {
  * @param signal - The signal received (SIGTERM)
  */
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
+  logSystemEvent('SIGTERM received, shutting down gracefully');
   gameServer.stop();
   server.close(() => {
-    console.log('Server closed');
+    logSystemEvent('Server closed');
     process.exit(0);
   });
 });

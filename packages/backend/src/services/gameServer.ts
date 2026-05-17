@@ -19,11 +19,14 @@ import {
   Position,
   Side,
   GameStatus,
+} from '@chess/types';
+import {
   GameManager,
   PieceLayout,
+  gameLogger,
 } from '@chess/core';
 import { chessConfig } from '@chess/config';
-import { logWebSocketEvent, logError } from './logger';
+import { logWebSocketEvent, logError, logGameLifecycle, getGameLogger, clearGameLogger } from './logger';
 import { getLayout, standardLayoutData } from '@chess/game-records';
 
 /**
@@ -95,6 +98,12 @@ export class GameServer {
     this.gameManager = gameManager;
     const wsPath = prefix ? `${prefix}/ws` : '/ws';
     this.wss = new WebSocketServer({ server, path: wsPath });
+
+    // Bridge @chess/core's in-memory gameLogger to @chess/logger's file-based game logging
+    gameLogger.setExternalLogger((gameId, action, metadata) => {
+      logGameLifecycle(gameId, action, metadata);
+    });
+
     this.setupWebSocketServer();
     this.startPingInterval();
     this.startCleanupInterval();
@@ -671,7 +680,7 @@ export class GameServer {
     this.cleanupInterval = setInterval(() => {
       const cleaned = this.gameManager.cleanupInactiveGames(3600000);
       if (cleaned > 0) {
-        console.log(`Cleaned up ${cleaned} inactive games`);
+        logWebSocketEvent('cleanup', 'system', undefined, { cleaned });
       }
     }, 600000);
   }

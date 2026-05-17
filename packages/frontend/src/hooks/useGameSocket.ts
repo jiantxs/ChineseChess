@@ -11,7 +11,7 @@ import {
   Side,
   Position,
   GameStatus,
-} from '@chess/core';
+} from '@chess/types';
 
 /**
  * Return type for the useGameSocket hook.

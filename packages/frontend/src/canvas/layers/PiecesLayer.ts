@@ -5,7 +5,7 @@
 
 import { BaseLayer } from './BaseLayer';
 import { BoardMetrics } from '../types/canvas';
-import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/core';
+import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/types';
 
 /** In-memory cache of loaded piece SVG images */
 const PIECE_IMAGES: Record<string, HTMLImageElement> = {};

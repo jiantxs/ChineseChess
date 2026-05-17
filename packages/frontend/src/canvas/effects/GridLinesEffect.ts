@@ -5,7 +5,7 @@
 
 import { BaseAnimation } from '../animations/BaseAnimation';
 import { BoardMetrics } from '../types/canvas';
-import { BOARD_ROWS, BOARD_COLS } from '@chess/core';
+import { BOARD_ROWS, BOARD_COLS } from '@chess/types';
 
 /**
  * Animated grid lines for the chess board.

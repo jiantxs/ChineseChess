@@ -6,7 +6,7 @@ import {
   GameStatus,
   BOARD_ROWS,
   BOARD_COLS,
-} from '@chess/core';
+} from '@chess/types';
 import { LayeredRenderer } from '../canvas/renderer/LayeredRenderer';
 import { BoardLayer } from '../canvas/layers/BoardLayer';
 import { BelowEffectsLayer } from '../canvas/layers/BelowEffectsLayer';

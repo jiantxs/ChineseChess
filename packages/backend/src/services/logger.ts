@@ -18,7 +18,10 @@ import {
   logError,
   logEvent,
   logGameEvent,
+  logGameLifecycle,
   logSystemEvent,
+  getGameLogger,
+  clearGameLogger,
 } from '@chess/logger';
 import type express from 'express';
 
@@ -41,7 +44,9 @@ export { errorLogger };
 export { globalEventLogger };
 
 /** @ignore Re-exported for convenience */
-export { logHttpRequest, logError, logEvent, logGameEvent, logSystemEvent };
+export { logHttpRequest, logError, logEvent, logGameEvent, logGameLifecycle, logSystemEvent };
+/** @ignore Re-exported for game logger management */
+export { getGameLogger, clearGameLogger };
 
 /**
  * Log a WebSocket event to both request and event loggers
