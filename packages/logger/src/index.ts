@@ -1,14 +1,13 @@
 /**
- * @fileoverview Winston-based logging module for the Chinese Chess application.
+ * @fileoverview 基于 Winston 的中国象棋应用程序日志模块。
  *
- * Provides structured logging for requests, errors, game events, and system events
- * using Winston with daily rotation file transport. Logs are stored in:
- *   - logs/requests/   (HTTP request logs)
- *   - logs/errors/     (Error logs)
- *   - logs/events/     (General event logs)
- *   - logs/games/      (Game-specific event logs per gameId)
+ * 使用 Winston 和每日轮转文件传输提供结构化日志记录，用于：
+ *   - logs/requests/   (HTTP 请求日志)
+ *   - logs/errors/     (错误日志)
+ *   - logs/events/     (通用事件日志)
+ *   - logs/games/      (按 gameId 分组的游戏特定事件日志)
  *
- * Usage:
+ * 使用方法：
  *   import { requestLogger, errorLogger, globalEventLogger, logGameEvent, gameLogger } from '@chess/logger';
  *
  * @module @chess/logger
@@ -21,24 +20,24 @@ import { chessConfig } from '@chess/config';
 
 const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
 
-// Ensure game log directory exists
+// 确保游戏日志目录存在
 const gameLogDir = path.join(logDir, 'games');
 if (!fs.existsSync(gameLogDir)) {
   fs.mkdirSync(gameLogDir, { recursive: true });
 }
 
 /**
- * Event types for categorized logging
+ * 分类日志的事件类型
  * @enum {string}
  */
 export type EventType = 'GAME' | 'HTTP' | 'WEBSOCKET' | 'SYSTEM' | 'ERROR';
 
 /**
- * Creates an HTTP request logger with daily rotation file transport.
- * Logs HTTP requests to logs/requests/request-%DATE%.log
- * In non-production environments, also outputs to console at debug level.
+ * 创建 HTTP 请求日志记录器，使用每日轮转文件传输。
+ * 将 HTTP 请求记录到 logs/requests/request-%DATE%.log
+ * 在非生产环境中，也会在 debug 级别输出到控制台。
  *
- * @returns Winston logger instance configured for HTTP request logging
+ * @returns 配置为 HTTP 请求日志记录的 Winston 日志实例
  */
 function createRequestLogger(): winston.Logger {
   return winston.createLogger({
@@ -75,11 +74,11 @@ function createRequestLogger(): winston.Logger {
 }
 
 /**
- * Creates an error-only logger with daily rotation file transport.
- * Logs errors to logs/errors/error-%DATE%.log
- * In non-production environments, also outputs to console at error level.
+ * 创建仅记录错误的日志记录器，使用每日轮转文件传输。
+ * 将错误记录到 logs/errors/error-%DATE%.log
+ * 在非生产环境中，也会在 error 级别输出到控制台。
  *
- * @returns Winston logger instance configured for error logging
+ * @returns 配置为错误日志记录的 Winston 日志实例
  */
 function createErrorLogger(): winston.Logger {
   return winston.createLogger({
@@ -116,11 +115,11 @@ function createErrorLogger(): winston.Logger {
 }
 
 /**
- * Creates a general event logger with daily rotation file transport.
- * Logs events to logs/events/events-%DATE%.log
- * In non-production environments, also outputs to console at debug level.
+ * 创建通用事件日志记录器，使用每日轮转文件传输。
+ * 将事件记录到 logs/events/events-%DATE%.log
+ * 在非生产环境中，也会在 debug 级别输出到控制台。
  *
- * @returns Winston logger instance configured for event logging
+ * @returns 配置为事件日志记录的 Winston 日志实例
  */
 function createEventLogger(): winston.Logger {
   return winston.createLogger({
@@ -150,22 +149,22 @@ function createEventLogger(): winston.Logger {
   });
 }
 
-// Exported loggers - initialized at module load time
+// 导出的日志记录器 - 在模块加载时初始化
 
-/** HTTP request logger - logs to logs/requests/request-%DATE%.log */
+/** HTTP 请求日志记录器 - 记录到 logs/requests/request-%DATE%.log */
 export const requestLogger = createRequestLogger();
-/** Error-only logger - logs to logs/errors/error-%DATE%.log */
+/** 仅记录错误的日志记录器 - 记录到 logs/errors/error-%DATE%.log */
 export const errorLogger = createErrorLogger();
-/** General event logger - logs to logs/events/events-%DATE%.log */
+/** 通用事件日志记录器 - 记录到 logs/events/events-%DATE%.log */
 export const globalEventLogger = createEventLogger();
 
 /**
- * Game ID keyed logger factory
- * Creates Winston loggers that write game-specific logs to logs/games/<gameId>/%DATE%.log
- * Each game gets its own log file within its gameId subdirectory.
+ * 基于游戏 ID 的日志记录器工厂
+ * 创建的 Winston 日志记录器会将游戏特定日志写入 logs/games/<gameId>/%DATE%.log
+ * 每个游戏在其 gameId 子目录中获得自己的日志文件。
  *
- * @param gameId - The unique game identifier
- * @returns Winston logger instance for the specified game
+ * @param gameId - 唯一的游戏标识符
+ * @returns 指定游戏的 Winston 日志实例
  */
 function createGameLogger(gameId: string): winston.Logger {
   const gameLogSubdir = path.join(gameLogDir, gameId);
@@ -203,15 +202,15 @@ function createGameLogger(gameId: string): winston.Logger {
   });
 }
 
-// In-memory store for game loggers - prevents recreating loggers for the same game
+// 游戏日志记录器的内存存储 - 防止为同一游戏重复创建日志记录器
 const gameLoggers: Map<string, winston.Logger> = new Map();
 
 /**
- * Gets or creates a game-specific logger for the given gameId.
- * Loggers are cached so repeated calls with the same gameId return the same logger instance.
+ * 获取或创建给定 gameId 的游戏特定日志记录器。
+ * 日志记录器被缓存，因此使用相同 gameId 的重复调用返回相同的日志实例。
  *
- * @param gameId - The unique game identifier
- * @returns Winston logger instance configured for the specified game
+ * @param gameId - 唯一的游戏标识符
+ * @returns 为指定游戏配置的 Winston 日志实例
  */
 export function getGameLogger(gameId: string): winston.Logger {
   let logger = gameLoggers.get(gameId);
@@ -223,16 +222,16 @@ export function getGameLogger(gameId: string): winston.Logger {
 }
 
 /**
- * Logs a game lifecycle event with detailed metadata.
- * Writes to both:
- *   - The game's specific log file (logs/games/<gameId>/<date>.log)
- *   - The global event log (logs/events/events-<date>.log)
+ * 记录游戏生命周期事件，包含详细元数据。
+ * 同时写入：
+ *   - 游戏特定的日志文件（logs/games/<gameId>/<date>.log）
+ *   - 全局事件日志（logs/events/events-<date>.log）
  *
- * This is called from @chess/core when game state changes (created, move, finished, aborted).
+ * 当游戏状态改变（创建、移动、结束、中止）时从 @chess/core 调用。
  *
- * @param gameId - The game identifier
- * @param action - The action being logged ('created' | 'move' | 'finished' | 'aborted')
- * @param metadata - Additional event-specific metadata
+ * @param gameId - 游戏标识符
+ * @param action - 要记录的动作（'created' | 'move' | 'finished' | 'aborted'）
+ * @param metadata - 额外的事件特定元数据
  */
 export function logGameLifecycle(
   gameId: string,
@@ -248,7 +247,7 @@ export function logGameLifecycle(
     ...metadata,
   };
 
-  // Write to game's dedicated log file
+  // 写入游戏的专用日志文件
   switch (action) {
     case 'created':
       gameLogger.info('game_created', eventData);
@@ -266,7 +265,7 @@ export function logGameLifecycle(
       gameLogger.info('game_event', eventData);
   }
 
-  // Also write to global event log for cross-game monitoring
+  // 同时写入全局事件日志以进行跨游戏监控
   globalEventLogger.info('game_event', {
     eventType: 'GAME',
     source: 'core',
@@ -277,10 +276,10 @@ export function logGameLifecycle(
 }
 
 /**
- * Clears the internal game logger cache.
- * Call this during shutdown or when games are fully cleaned up to prevent memory leaks.
+ * 清除内部游戏日志记录器缓存。
+ * 在关闭或游戏完全清理时调用，以防止内存泄漏。
  *
- * @param gameId - Optional specific game ID to clear. If omitted, clears all game loggers.
+ * @param gameId - 可选的要清除的特定游戏 ID。如果省略，清除所有游戏日志记录器。
  */
 export function clearGameLogger(gameId?: string): void {
   if (gameId) {
@@ -291,13 +290,13 @@ export function clearGameLogger(gameId?: string): void {
 }
 
 /**
- * Logs a WebSocket event with player and optional game context.
- * Logs to both requestLogger and globalEventLogger.
+ * 记录 WebSocket 事件，包含玩家和可选的游戏上下文。
+ * 同时记录到 requestLogger 和 globalEventLogger。
  *
- * @param event - The WebSocket event name/type
- * @param playerId - The player ID associated with the event
- * @param gameId - Optional game ID associated with the event
- * @param details - Optional additional metadata to log
+ * @param event - WebSocket 事件名称/类型
+ * @param playerId - 与事件关联的玩家 ID
+ * @param gameId - 可选的与事件关联的游戏 ID
+ * @param details - 可选的额外元数据
  */
 export function logWebSocketEvent(
   event: string,
@@ -321,17 +320,17 @@ export function logWebSocketEvent(
 }
 
 /**
- * Logs an HTTP request with method, URL, status code, and duration.
- * Logs to both requestLogger and globalEventLogger.
+ * 记录 HTTP 请求，包含方法、URL、状态码和持续时间。
+ * 同时记录到 requestLogger 和 globalEventLogger。
  *
- * @param method - HTTP method (GET, POST, etc.)
- * @param url - Full URL of the request
- * @param path - Request path
- * @param statusCode - HTTP status code
- * @param duration - Request duration in milliseconds
- * @param ip - Optional client IP address
- * @param userAgent - Optional user agent string
- * @param playerId - Optional player ID associated with the request
+ * @param method - HTTP 方法（GET、POST 等）
+ * @param url - 请求的完整 URL
+ * @param path - 请求路径
+ * @param statusCode - HTTP 状态码
+ * @param duration - 请求持续时间（毫秒）
+ * @param ip - 可选的客户端 IP 地址
+ * @param userAgent - 可选的用户代理字符串
+ * @param playerId - 可选的与请求关联的玩家 ID
  */
 export function logHttpRequest(
   method: string,
@@ -365,12 +364,12 @@ export function logHttpRequest(
 }
 
 /**
- * Logs an error with optional stack trace and additional context.
- * Logs to both errorLogger and globalEventLogger.
+ * 记录错误，包含可选的堆栈跟踪和额外上下文。
+ * 同时记录到 errorLogger 和 globalEventLogger。
  *
- * @param message - Error message to log
- * @param error - Optional Error object to extract message and stack trace from
- * @param context - Optional additional context metadata
+ * @param message - 要记录的错误消息
+ * @param error - 可选的 Error 对象，用于提取消息和堆栈跟踪
+ * @param context - 可选的额外上下文元数据
  */
 export function logError(
   message: string,
@@ -392,14 +391,14 @@ export function logError(
 }
 
 /**
- * Generic event logger with eventType, source, and metadata.
- * Logs to globalEventLogger with eventType categorization.
+ * 通用事件日志记录器，包含 eventType、source 和元数据。
+ * 使用 eventType 分类记录到 globalEventLogger。
  *
- * @param eventType - The type of event (GAME, HTTP, WEBSOCKET, SYSTEM, ERROR)
- * @param source - The source of the event (e.g., 'backend')
- * @param metadata - Additional metadata to log
- * @param playerId - Optional player ID
- * @param gameId - Optional game ID
+ * @param eventType - 事件类型（GAME、HTTP、WEBSOCKET、SYSTEM、ERROR）
+ * @param source - 事件来源（例如 'backend'）
+ * @param metadata - 要记录的额外元数据
+ * @param playerId - 可选的玩家 ID
+ * @param gameId - 可选的游戏 ID
  */
 export function logEvent(
   eventType: EventType,
@@ -419,13 +418,13 @@ export function logEvent(
 }
 
 /**
- * Convenience function for logging game-related events.
- * Calls logEvent with eventType 'GAME' and source 'backend'.
+ * 记录游戏相关事件的便捷函数。
+ * 使用 eventType 'GAME' 和 source 'backend' 调用 logEvent。
  *
- * @param gameId - The game ID
- * @param action - The action being logged (e.g., 'move', 'chat')
- * @param playerId - The player ID associated with the action
- * @param metadata - Additional metadata to log
+ * @param gameId - 游戏 ID
+ * @param action - 要记录的动作（例如 'move'、'chat'）
+ * @param playerId - 与动作关联的玩家 ID
+ * @param metadata - 额外元数据
  */
 export function logGameEvent(
   gameId: string,
@@ -437,11 +436,11 @@ export function logGameEvent(
 }
 
 /**
- * Convenience function for logging system-related events.
- * Calls logEvent with eventType 'SYSTEM' and source 'backend'.
+ * 记录系统相关事件的便捷函数。
+ * 使用 eventType 'SYSTEM' 和 source 'backend' 调用 logEvent。
  *
- * @param message - The system message to log
- * @param metadata - Additional metadata to log
+ * @param message - 要记录的系统消息
+ * @param metadata - 额外元数据
  */
 export function logSystemEvent(
   message: string,
@@ -451,15 +450,15 @@ export function logSystemEvent(
 }
 
 /**
- * Logs a client-side (frontend) log entry received via HTTP API.
- * Tags the log with eventType 'CLIENT' to distinguish from server logs.
+ * 记录通过 HTTP API 接收的客户端（前端）日志条目。
+ * 使用 eventType 'CLIENT' 标记日志，以区别于服务器日志。
  *
- * @param level - Log level (debug, info, warn, error)
- * @param message - The log message from frontend
- * @param timestamp - Unix timestamp when the log was created on client
- * @param metadata - Additional metadata from client
- * @param playerId - Optional player ID if available
- * @param gameId - Optional game ID if available
+ * @param level - 日志级别（debug、info、warn、error）
+ * @param message - 前端的日志消息
+ * @param timestamp - 客户端创建日志时的 Unix 时间戳
+ * @param metadata - 来自客户端的额外元数据
+ * @param playerId - 如果可用则可选的玩家 ID
+ * @param gameId - 如果可用则可选的游戏 ID
  */
 export function logClientLogEvent(
   level: string,

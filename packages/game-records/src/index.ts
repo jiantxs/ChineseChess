@@ -1,8 +1,8 @@
 /**
- * Layout Registry for pre-defined Chinese Chess board setups.
+ * 中国象棋棋盘预设布局的注册表。
  *
- * Usage: Import {@link getLayout}, {@link getAllLayouts}, etc. to access board configurations.
- * Default layout is "standard" - the classic 32-piece Xiangqi initial setup.
+ * 使用方法：导入 {@link getLayout}、{@link getAllLayouts} 等来访问棋盘配置。
+ * 默认布局是 "standard" - 经典 32 子象棋初始设置。
  *
  * @packageDocumentation
  */
@@ -10,7 +10,7 @@ import { PieceLayout, PieceLayoutData } from '@chess/core';
 import { standardLayout, standardLayoutData } from './layouts/standard.js';
 
 /**
- * Represents a single board layout record with metadata.
+ * 表示带有元数据的单个棋盘布局记录。
  */
 export interface GameRecord {
   id: string;
@@ -22,7 +22,7 @@ export interface GameRecord {
 }
 
 /**
- * Map of layout name to GameRecord for all registered layouts.
+ * 所有已注册布局的名称到 GameRecord 的映射。
  */
 export interface LayoutRegistry {
   [key: string]: GameRecord;
@@ -40,10 +40,10 @@ const registry: LayoutRegistry = {
 };
 
 /**
- * Retrieves a layout by name.
- * @param name - The name of the layout to retrieve
- * @returns The PieceLayout for the requested layout
- * @throws Error if the layout is not found
+ * 根据名称获取布局。
+ * @param name - 要获取的布局名称
+ * @returns 请求的布局的 PieceLayout
+ * @throws 如果布局未找到则抛出错误
  */
 export function getLayout(name: string): PieceLayout {
   const record = registry[name];
@@ -54,10 +54,10 @@ export function getLayout(name: string): PieceLayout {
 }
 
 /**
- * Returns the serialized layout data (JSON) for a given layout name.
- * @param name - The name of the layout
- * @returns PieceLayoutData containing the serialized board configuration
- * @throws Error if the layout is not found
+ * 返回给定布局名称的序列化布局数据（JSON）。
+ * @param name - 布局名称
+ * @returns 包含序列化棋盘配置的 PieceLayoutData
+ * @throws 如果布局未找到则抛出错误
  */
 export function getLayoutData(name: string): PieceLayoutData {
   const layout = getLayout(name);
@@ -65,44 +65,44 @@ export function getLayoutData(name: string): PieceLayoutData {
 }
 
 /**
- * Returns an array of all registered layout names.
- * @returns Array of layout name strings
+ * 返回所有已注册布局名称的数组。
+ * @returns 布局名称字符串数组
  */
 export function getAllLayoutNames(): string[] {
   return Object.keys(registry);
 }
 
 /**
- * Returns all GameRecord entries in the registry.
- * @returns Array of all GameRecord objects
+ * 返回注册表中所有 GameRecord 条目。
+ * @returns 所有 GameRecord 对象的数组
  */
 export function getAllLayouts(): GameRecord[] {
   return Object.values(registry);
 }
 
 /**
- * Filters layouts by a specific tag.
- * @param tag - The tag to filter by
- * @returns Array of GameRecord objects that have the specified tag
+ * 按特定标签筛选布局。
+ * @param tag - 要筛选的标签
+ * @returns 具有指定标签的 GameRecord 对象数组
  */
 export function getLayoutsByTag(tag: string): GameRecord[] {
   return Object.values(registry).filter(record => record.tags.includes(tag));
 }
 
 /**
- * Checks if a layout with the given name exists.
- * @param name - The layout name to check
- * @returns true if the layout exists, false otherwise
+ * 检查给定名称的布局是否存在。
+ * @param name - 要检查的布局名称
+ * @returns 如果布局存在则返回 true，否则返回 false
  */
 export function hasLayout(name: string): boolean {
   return name in registry;
 }
 
 /**
- * Registers a new layout in the registry.
- * @param name - The name for the new layout
- * @param record - The GameRecord to register
- * @throws Error if a layout with this name already exists
+ * 在注册表中注册新布局。
+ * @param name - 新布局的名称
+ * @param record - 要注册的 GameRecord
+ * @throws 如果已存在同名布局则抛出错误
  */
 export function registerLayout(name: string, record: GameRecord): void {
   if (name in registry) {

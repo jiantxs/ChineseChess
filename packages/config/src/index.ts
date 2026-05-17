@@ -1,10 +1,10 @@
 /**
- * @fileoverview Runtime configuration module with environment variable overrides.
+ * @fileoverview 运行时配置模块，支持环境变量覆盖。
  *
- * This module provides the application's central configuration system:
- * - Import `chessConfig` for all configuration values throughout the application
- * - Configuration is built from `defaultConfig` merged with environment variables
- * - The final config is frozen to prevent accidental mutations at runtime
+ * 本模块提供应用程序的集中配置系统：
+ * - 在整个应用程序中导入 `chessConfig` 获取所有配置值
+ * - 配置由 `defaultConfig` 与环境变量合并构建
+ * - 最终配置被冻结以防止运行时意外修改
  *
  * @module config
  */
@@ -13,12 +13,12 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Traverses parent directories from the given directory to find the monorepo root.
- * Looks for pnpm-workspace.yaml as the indicator of a monorepo structure.
- * Falls back to a default path if not found within maxDepth iterations.
+ * 从给定目录向上遍历父目录，查找 monorepo 根目录。
+ * 以 pnpm-workspace.yaml 作为 monorepo 结构的标识。
+ * 如果在 maxDepth 次迭代内未找到，则回退到默认路径。
  *
- * @param fromDir - The starting directory for the search
- * @returns The absolute path to the monorepo root directory
+ * @param fromDir - 搜索的起始目录
+ * @returns monorepo 根目录的绝对路径
  */
 function detectMonorepoRoot(fromDir: string): string {
   let current = fromDir;
@@ -37,16 +37,16 @@ function detectMonorepoRoot(fromDir: string): string {
 const monorepoRoot = detectMonorepoRoot(path.resolve(__dirname, '..'));
 
 /**
- * Runtime configuration interface for the Chinese Chess application.
- * All configuration sections support environment variable overrides.
+ * 中国象棋应用程序的运行时配置接口。
+ * 所有配置部分都支持环境变量覆盖。
  *
- * @property server - Server settings (port, host, session configuration)
- * @property game - Game session settings (turn/reconnect timeouts, max games, board dimensions)
- * @property ai - AI opponent settings (enabled flag, difficulty 1-10, optional external endpoint)
- * @property frontend - Frontend build and dev server settings
- * @property assets - Asset paths for SVG pieces and static files
- * @property log - Logging configuration (levels and directory paths for request/error/game logs)
- * @property admin - Admin dashboard authentication
+ * @property server - 服务器设置（端口、主机、会话配置）
+ * @property game - 游戏会话设置（回合/重连超时、最大游戏数、棋盘尺寸）
+ * @property ai - AI 对手设置（启用标志、难度 1-10、可选的外部端点）
+ * @property frontend - 前端构建和开发服务器设置
+ * @property assets - SVG 棋子资源和静态文件的路径
+ * @property log - 日志配置（日志级别和 request/error/game 日志的目录路径）
+ * @property admin - 管理面板认证
  */
 export interface ChessConfig {
   server: {
@@ -91,7 +91,7 @@ export interface ChessConfig {
   };
 }
 
-// Base configuration with all defaults - used as foundation for env overrides
+// 基础配置，包含所有默认值 - 作为环境变量覆盖的基础
 export const defaultConfig: ChessConfig = {
   server: {
     port: 3000,
@@ -136,12 +136,12 @@ export const defaultConfig: ChessConfig = {
 };
 
 /**
- * Applies environment variable overrides to the default configuration.
- * Currently supports:
- * - PORT: overrides server.port (validated 1-65535)
- * - NODE_ENV=production + ENABLE_AI=true: enables AI opponent
+ * 对默认配置应用环境变量覆盖。
+ * 当前支持：
+ * - CCHESSPORT: 覆盖 server.port（验证范围 1-65535）
+ * - NODE_ENV=production + ENABLE_AI=true: 启用 AI 对手
  *
- * @returns A frozen ChessConfig object with overrides applied
+ * @returns 应用覆盖后的冻结 ChessConfig 对象
  */
 function loadConfig(): ChessConfig {
   const config = { ...defaultConfig };
@@ -161,6 +161,6 @@ function loadConfig(): ChessConfig {
   return Object.freeze(config);
 }
 
-// Frozen singleton config after applying env overrides - use throughout the app
+// 应用环境变量覆盖后的冻结单例配置 - 在整个应用中使用
 export const chessConfig = loadConfig();
 export default chessConfig;
