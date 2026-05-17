@@ -1,30 +1,30 @@
 import { Piece, PieceType, Side, Position, BOARD_ROWS, BOARD_COLS } from './types';
 
 /**
- * Pure functions for Chinese Chess (Xiangqi) move validation.
+ * 中国象棋（Xiangqi）移动验证的纯函数。
  *
- * This module contains no side effects - all functions take board state as input
- * and return computed results based on Xiangqi rules.
+ * 此模块没有副作用——所有函数都将棋盘状态作为输入
+ * 并根据 Xiangqi 规则返回计算结果。
  *
- * Board coordinate system: row 0 = black home (top), row 9 = red home (bottom)
+ * 棋盘坐标系统：row 0 = 黑方底线（上方），row 9 = 红方底线（下方）
  *
- * Usage:
- *   - isValidMove: validate if a move is legal for a given piece
- *   - isGeneralCaptured: check if game is over (a general was captured)
- *   - getValidMoves: get all valid destinations for a piece
+ * 用法：
+ *   - isValidMove：验证给定棋子的移动是否合法
+ *   - isGeneralCaptured：检查游戏是否结束（将帅是否被吃）
+ *   - getValidMoves：获取棋子的所有合法目标位置
  *
  * @module gameLogic
  */
 
 /**
- * Validates if a move is legal for a given piece on the current board.
- * Checks board boundaries, piece collisions, and piece-type-specific rules.
+ * 验证给定棋子在当前棋盘上的移动是否合法。
+ * 检查棋盘边界、棋子碰撞和特定棋子类型的规则。
  *
- * @param board - 2D array of (Piece | null), representing the current board state
- * @param piece - The piece to move, must include type and side
- * @param from - Current position {row, col} of the piece
- * @param to - Target position {row, col} to move to
- * @returns true if the move is valid according to Xiangqi rules, false otherwise
+ * @param board - (Piece | null) 的 2D 数组，表示当前棋盘状态
+ * @param piece - 要移动的棋子，必须包含 type 和 side
+ * @param from - 棋子的当前位置 {row, col}
+ * @param to - 要移动到的目标位置 {row, col}
+ * @returns 如果移动符合 Xiangqi 规则则返回 true，否则返回 false
  */
 export function isValidMove(
   board: (Piece | null)[][],
@@ -62,16 +62,16 @@ export function isValidMove(
 }
 
 /**
- * Validates a General (将/帅) move.
- * General moves 1 step orthogonally within the palace (rows 0-2 for black, rows 7-9 for red, cols 3-5).
- * Cannot move out of palace or move more than 1 step.
- * Cannot move in a way that would expose own general to direct attack (illegal in Xiangqi).
+ * 验证将帅（将/帅）的移动。
+ * 将帅在九宫内水平或垂直移动一步（黑方：第 0-2 行，红方：第 7-9 行，第 3-5 列）。
+ * 不能走出九宫或移动超过一步。
+ * 不能以会使己方将帅直接受到攻击的方式移动（象棋中的违规）。
  *
- * @param board - Current board state
- * @param piece - The general piece
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for a General
+ * @param board - 当前棋盘状态
+ * @param piece - 将帅棋子
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果将帅的移动合法则返回 true
  */
 function isValidGeneralMove(
   board: (Piece | null)[][],
@@ -120,14 +120,14 @@ function isValidGeneralMove(
 }
 
 /**
- * Validates an Advisor (士) move.
- * Advisor moves 1 step diagonally within the palace (same row/col boundaries as General).
- * There are 5 advisor positions in each palace forming an X pattern.
+ * 验证士（仕）的移动。
+ * 士在九宫内对角线移动一步（与将帅相同的行/列边界）。
+ * 九宫内每个士有5个位置形成 X 形。
  *
- * @param piece - The advisor piece
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for an Advisor
+ * @param piece - 士棋子
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果士的移动合法则返回 true
  */
 function isValidAdvisorMove(piece: Piece, from: Position, to: Position): boolean {
   const isRed = piece.side === Side.RED;
@@ -147,17 +147,17 @@ function isValidAdvisorMove(piece: Piece, from: Position, to: Position): boolean
 }
 
 /**
- * Validates an Elephant (象/相) move.
- * Elephant moves 2 steps orthogonally then 1 step diagonally, forming a jump pattern.
- * Cannot cross the river: red elephant restricted to rows 5-9, black elephant to rows 0-4.
- * The "eye" position (intermediate orthogonal cell) must be empty - cannot be blocked.
- * Represents the minister/counselor piece in Xiangqi.
+ * 验证象（相）的移动。
+ * 象先垂直移动2步再对角线移动1步，形成跳跃模式。
+ * 不能过河：红象限制在第5-9行，黑象限制在第0-4行。
+ * "眼"位置（中间垂直单元格）必须为空——不能被阻挡。
+ * 代表 Xiangqi 中的士/卿职位。
  *
- * @param board - Current board state
- * @param piece - The elephant piece
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for an Elephant
+ * @param board - 当前棋盘状态
+ * @param piece - 象棋子
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果象的移动合法则返回 true
  */
 function isValidElephantMove(
   board: (Piece | null)[][],
@@ -184,15 +184,15 @@ function isValidElephantMove(
 }
 
 /**
- * Validates a Horse (马) move.
- * Horse moves 1 step orthogonally then 1 step diagonally, forming an L-shape.
- * The "leg" position (the orthogonal cell horse passes through) must be empty.
- * Can jump over pieces unlike chariot/cannon. L-shape can be 2 rows + 1 col OR 1 row + 2 cols.
+ * 验证马（馬）的移动。
+ * 马先垂直移动1步再对角线移动1步，形成 L 形。
+ * "腿"位置（马经过的垂直单元格）必须为空。
+ * 与车炮不同，马可以跳跃。L 形可以是 2 行 + 1 列或 1 行 + 2 列。
  *
- * @param board - Current board state
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for a Horse
+ * @param board - 当前棋盘状态
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果马的移动合法则返回 true
  */
 function isValidHorseMove(
   board: (Piece | null)[][],
@@ -221,15 +221,15 @@ function isValidHorseMove(
 }
 
 /**
- * Validates a Chariot (车) move.
- * Chariot moves any distance orthogonally (like rook in chess) but cannot jump pieces.
- * Path between from and to must be completely clear of all pieces.
- * Can capture opponent pieces but must land on them during move.
+ * 验证车（車）的移动。
+ * 车可以水平或垂直移动任意距离（像国际象棋中的车），但不能跳跃。
+ * 从源位置到目标位置的路径必须完全畅通。
+ * 可以吃对方的棋子，但在移动过程中必须落在它们上面。
  *
- * @param board - Current board state
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for a Chariot
+ * @param board - 当前棋盘状态
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果车的移动合法则返回 true
  */
 function isValidChariotMove(
   board: (Piece | null)[][],
@@ -258,16 +258,16 @@ function isValidChariotMove(
 }
 
 /**
- * Validates a Cannon (炮) move.
- * Cannon moves orthogonally like the Chariot, but captures differently:
- * - Moving to empty square: path must be completely clear (0 screen pieces)
- * - Capturing opponent piece: must have exactly 1 screen piece (hurdle) between start and target
- * The cannon "jumps" over pieces to capture, unlike chariot which cannot jump.
+ * 验证炮（砲）的移动。
+ * 炮像车一样水平或垂直移动，但吃子方式不同：
+ * - 移动到空位：路径必须完全畅通（0 个垫子棋子）
+ * - 吃对方棋子：起点和目标之间必须有恰好 1 个垫子（炮架）
+ * 炮"跳"过棋子来吃，与不能跳的车不同。
  *
- * @param board - Current board state
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for a Cannon
+ * @param board - 当前棋盘状态
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果炮的移动合法则返回 true
  */
 function isValidCannonMove(
   board: (Piece | null)[][],
@@ -303,15 +303,15 @@ function isValidCannonMove(
 }
 
 /**
- * Validates a Soldier (兵/卒) move.
- * Before crossing the river (red: rows 5-9, black: rows 0-4): moves 1 step forward only.
- * After crossing river (red: rows 0-4, black: rows 5-9): can also move 1 step sideways.
- * Cannot move backward. Red moves toward row 0 (up), black moves toward row 9 (down).
+ * 验证兵（卒）的移动。
+ * 过河前（红方：第 5-9 行，黑方：第 0-4 行）：只能前进一步。
+ * 过河后（红方：第 0-4 行，黑方：第 5-9 行）：还可以横向移动一步。
+ * 不能后退。红方向第 0 行移动（向上），黑方向第 9 行移动（向下）。
  *
- * @param piece - The soldier piece with side information
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move is valid for a Soldier
+ * @param piece - 带 side 信息的兵棋子
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果兵的移动合法则返回 true
  */
 function isValidSoldierMove(
   piece: Piece,
@@ -340,15 +340,15 @@ function isValidSoldierMove(
 }
 
 /**
- * Simulates a move and checks if it would expose the moving player's general to direct attack.
- * In Xiangqi, having generals face each other across an open file is illegal (forbidden check).
- * This function clones the board, performs the move, then checks if the moving general is in check.
+ * 模拟移动并检查是否会使移动方的将帅直接受到攻击。
+ * 在 Xiangqi 中，将帅在空旷的直线上面对面是违规的（禁止的将军）。
+ * 此函数克隆棋盘，执行移动，然后检查移动的将帅是否被将军。
  *
- * @param board - Current board state
- * @param piece - The piece being moved
- * @param from - Current position
- * @param to - Target position
- * @returns true if the move would expose own general to attack (illegal move)
+ * @param board - 当前棋盘状态
+ * @param piece - 被移动的棋子
+ * @param from - 当前位置
+ * @param to - 目标位置
+ * @returns 如果移动会使己方将帅受到攻击则返回 true（违规移动）
  */
 function wouldExposeGeneral(
   board: (Piece | null)[][],
@@ -389,11 +389,11 @@ function wouldExposeGeneral(
 }
 
 /**
- * Checks if either general has been captured, determining game over condition.
- * In Xiangqi, capturing the opponent's general ends the game immediately.
+ * 检查任一将帅是否被吃，确定游戏结束条件。
+ * 在 Xiangqi 中，吃掉对方的将帅会立即结束游戏。
  *
- * @param board - Current board state as 2D array of (Piece | null)
- * @returns Object with captured=true if a general is missing, winner is the surviving side
+ * @param board - 作为 (Piece | null) 2D 数组的当前棋盘状态
+ * @returns 如果将帅缺失则 captured 为 true，winner 是存活的一方
  */
 export function isGeneralCaptured(board: (Piece | null)[][]): { captured: boolean; winner?: Side } {
   let redGeneral = false;
@@ -415,12 +415,12 @@ export function isGeneralCaptured(board: (Piece | null)[][]): { captured: boolea
 }
 
 /**
- * Returns all valid destination positions for a given piece on the current board.
- * Scans all 90 board positions and returns only those that pass isValidMove validation.
+ * 返回给定棋子在当前棋盘上的所有合法目标位置。
+ * 扫描所有 90 个棋盘位置，只返回通过 isValidMove 验证的位置。
  *
- * @param board - Current board state as 2D array of (Piece | null)
- * @param piece - The piece to get valid moves for, must include position
- * @returns Array of valid {row, col} positions the piece can move to
+ * @param board - 作为 (Piece | null) 2D 数组的当前棋盘状态
+ * @param piece - 要获取合法移动的棋子，必须包含 position
+ * @returns 棋子可以移动到的合法 {row, col} 位置数组
  */
 export function getValidMoves(
   board: (Piece | null)[][],

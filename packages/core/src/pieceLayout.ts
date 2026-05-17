@@ -1,9 +1,9 @@
 /**
- * Board layout helper for Chinese Chess
+ * 中国象棋棋盘布局辅助类
  *
- * Usage: Create PieceLayout instances to represent initial board setups
- * Supports JSON serialization/deserialization for persistence
- * Used by game-records package for layout registry
+ * 用法：创建 PieceLayout 实例来表示初始棋盘设置
+ * 支持用于持久化的 JSON 序列化/反序列化
+ * 由 game-records 包用于布局注册表
  *
  * @module PieceLayout
  * @fileoverview Board layout helper for Chinese Chess
@@ -12,32 +12,32 @@
 import { Piece, Side } from './types';
 
 /**
- * Data structure for serializing/deserializing piece layouts
+ * 用于序列化/反序列化棋子布局的数据结构
  */
 export interface PieceLayoutData {
-  /** Array of pieces on the board */
+  /** 棋盘上的棋子数组 */
   pieces: Piece[];
-  /** Which side moves first (RED or BLACK) */
+  /** 先手方（RED 或 BLACK） */
   firstPlayer: Side;
-  /** Optional layout name */
+  /** 可选的布局名称 */
   name?: string;
-  /** Optional layout description */
+  /** 可选的布局描述 */
   description?: string;
 }
 
 /**
- * Represents a board layout configuration for Chinese Chess
+ * 代表中国象棋的棋盘布局配置
  *
- * Used to define initial piece positions, which side moves first,
- * and metadata about the layout (name, description).
+ * 用于定义初始棋子位置、先手方，
+ * 以及布局的元数据（名称、描述）。
  */
 export class PieceLayout {
   /**
-   * Creates a new PieceLayout instance
-   * @param pieces - Array of pieces defining the initial board setup
-   * @param firstPlayer - Which side moves first (RED or BLACK)
-   * @param name - Layout name (default: 'custom')
-   * @param description - Layout description (default: '')
+   * 创建新的 PieceLayout 实例
+   * @param pieces - 定义初始棋盘布局的棋子数组
+   * @param firstPlayer - 先手方（RED 或 BLACK）
+   * @param name - 布局名称（默认：'custom'）
+   * @param description - 布局描述（默认：''）
    */
   constructor(
     private pieces: Piece[],
@@ -47,9 +47,9 @@ export class PieceLayout {
   ) {}
 
   /**
-   * Creates a PieceLayout from a PieceLayoutData object
-   * @param json - The PieceLayoutData object to deserialize
-   * @returns A new PieceLayout instance
+   * 从 PieceLayoutData 对象创建 PieceLayout
+   * @param json - 要反序列化的 PieceLayoutData 对象
+   * @returns 新的 PieceLayout 实例
    */
   static fromJSON(json: PieceLayoutData): PieceLayout {
     return new PieceLayout(
@@ -61,9 +61,9 @@ export class PieceLayout {
   }
 
   /**
-   * Creates a PieceLayout from a JSON string
-   * @param jsonString - JSON string to parse
-   * @returns A new PieceLayout instance
+   * 从 JSON 字符串创建 PieceLayout
+   * @param jsonString - 要解析的 JSON 字符串
+   * @returns 新的 PieceLayout 实例
    */
   static fromJSONString(jsonString: string): PieceLayout {
     const data = JSON.parse(jsonString) as PieceLayoutData;
@@ -71,40 +71,40 @@ export class PieceLayout {
   }
 
   /**
-   * Returns a copy of the initial pieces array
-   * @returns Array of pieces with deep-copied positions
+   * 返回初始棋子数组的副本
+   * @returns 深拷贝位置的棋子数组
    */
   getInitialPieces(): Piece[] {
     return this.pieces.map(p => ({ ...p, position: { ...p.position } }));
   }
 
   /**
-   * Returns which side moves first
-   * @returns The first player side (RED or BLACK)
+   * 返回先手方
+   * @returns 先手方（RED 或 BLACK）
    */
   getFirstPlayer(): Side {
     return this.firstPlayer;
   }
 
   /**
-   * Returns the layout name
-   * @returns The name of this layout
+   * 返回布局名称
+   * @returns 此布局的名称
    */
   getName(): string {
     return this.name;
   }
 
   /**
-   * Returns the layout description
-   * @returns The description of this layout
+   * 返回布局描述
+   * @returns 此布局的描述
    */
   getDescription(): string {
     return this.description;
   }
 
   /**
-   * Serializes the layout to a PieceLayoutData object
-   * @returns A plain object representation of this layout
+   * 将布局序列化为 PieceLayoutData 对象
+   * @returns 此布局的纯对象表示
    */
   toJSON(): PieceLayoutData {
     return {
@@ -116,8 +116,8 @@ export class PieceLayout {
   }
 
   /**
-   * Serializes the layout to a formatted JSON string
-   * @returns JSON string representation of this layout
+   * 将布局序列化为格式化的 JSON 字符串
+   * @returns 此布局的 JSON 字符串表示
    */
   toJSONString(): string {
     return JSON.stringify(this.toJSON(), null, 2);

@@ -6,28 +6,28 @@ import { PieceLayout } from './pieceLayout';
 import { gameLogger } from './gameLogger';
 
 /**
- * GameManager - Singleton for in-memory Chinese Chess game state management.
+ * GameManager - 中国象棋内存游戏状态管理的单例。
  *
- * This module provides the GameManager singleton for managing all game state in memory.
- * It maintains:
- * - `games`: Map<gameId, GameState> - all active and finished games
- * - `playerGames`: Map<playerId, gameId> - player to game mapping
+ * 此模块提供 GameManager 单例来管理所有内存中的游戏状态。
+ * 它维护：
+ * - `games`：Map<gameId, GameState> - 所有活跃和已结束的游戏
+ * - `playerGames`：Map<playerId, gameId> - 玩家到游戏的映射
  *
- * Usage:
+ * 用法：
  *   import { gameManager } from '@chess/core';
  *   const game = gameManager.createGame(layout);
  *
- * IMPORTANT: The cleanupInactiveGames method must be called externally
- * (e.g., by a scheduled job or the WebSocket server) to periodically
- * remove finished/aborted games from memory.
+ * 重要提示：cleanupInactiveGames 方法必须由外部调用
+ *（例如由定时任务或 WebSocket 服务器调用）以定期
+ * 从内存中删除已结束/已中止的游戏。
  *
  * @module GameManager
  */
 export class GameManager {
   /**
-   * Singleton GameManager for managing all game state in memory.
-   * Uses a private static instance field to ensure only one instance exists.
-   * The constructor is private to prevent direct instantiation - use getInstance() instead.
+   * 用于管理所有游戏状态的单例 GameManager。
+   * 使用私有静态实例字段确保只存在一个实例。
+   * 构造函数是私有的以防止直接实例化——请改用 getInstance()。
    */
   private static instance: GameManager;
   private games: Map<string, GameState> = new Map();
@@ -36,9 +36,9 @@ export class GameManager {
   private constructor() {}
 
   /**
-   * Returns the singleton GameManager instance.
-   * Creates a new instance if one does not already exist.
-   * @returns The singleton GameManager instance
+   * 返回单例 GameManager 实例。
+   * 如果实例不存在则创建一个新实例。
+   * @returns 单例 GameManager 实例
    */
   static getInstance(): GameManager {
     if (!GameManager.instance) {
@@ -48,11 +48,11 @@ export class GameManager {
   }
 
   /**
-   * Creates a new game with the given layout and optional local mode.
-   * Finishes any games still in PLAYING or WAITING status before creating.
-   * @param layout - PieceLayout instance defining initial board setup
-   * @param local - If true, game is hot-seat mode (both sides same player)
-   * @returns Newly created GameState
+   * 使用给定的布局和可选的本地模式创建新游戏。
+   * 在创建之前结束任何仍处于 PLAYING 或 WAITING 状态的游戏。
+   * @param layout - 定义初始棋盘布局的 PieceLayout 实例
+   * @param local - 如果为 true，则为热座模式（双方为同一玩家）
+   * @returns 新创建的 GameState
    */
   createGame(layout: PieceLayout, local: boolean = false): GameState {
     for (const [gameId, game] of this.games.entries()) {
@@ -92,22 +92,22 @@ export class GameManager {
   }
 
   /**
-   * Retrieves a game by its unique identifier.
-   * @param gameId - UUID of the game to retrieve
-   * @returns GameState if found, undefined otherwise
+   * 通过唯一标识符检索游戏。
+   * @param gameId - 要检索的游戏的 UUID
+   * @returns 如果找到则返回 GameState，否则返回 undefined
    */
   getGame(gameId: string): GameState | undefined {
     return this.games.get(gameId);
   }
 
   /**
-   * Adds a player to an existing game or creates a local game.
-   * For local games, both sides are assigned to the same player.
-   * For online games, player joins the specified side or an available side.
-   * @param gameId - Game to join
-   * @param playerId - Player's unique identifier
-   * @param side - Optional specific side (RED/BLACK) to join
-   * @returns Updated GameState if join succeeds, null otherwise
+   * 将玩家添加到现有游戏或创建本地游戏。
+   * 对于本地游戏，双方都分配给同一玩家。
+   * 对于在线游戏，玩家加入指定方或可用方。
+   * @param gameId - 要加入的游戏
+   * @param playerId - 玩家的唯一标识符
+   * @param side - 可选的要加入的特定方（RED/BLACK）
+   * @returns 如果加入成功则返回更新后的 GameState，否则返回 null
    */
   joinGame(gameId: string, playerId: string, side?: Side): GameState | null {
     const game = this.games.get(gameId);
@@ -121,7 +121,7 @@ export class GameManager {
       return null;
     }
 
-    // For local games, assign both sides to the same playerId
+    // 对于本地游戏，将双方分配给同一个 playerId
     if (game.localGame) {
       game.redPlayer = playerId;
       game.blackPlayer = playerId;
@@ -177,14 +177,14 @@ export class GameManager {
   }
 
   /**
-   * Executes a move in the specified game.
-   * Validates turn order, piece ownership, and move legality before applying.
-   * Updates the board, records the move, switches turn, and checks win condition.
-   * @param gameId - Game to make move in
-   * @param playerId - Player making the move
-   * @param from - Source position {row, col}
-   * @param to - Destination position {row, col}
-   * @returns Object with success flag, updated game if successful, or error message
+   * 在指定游戏中执行移动。
+   * 在应用之前验证回合顺序、棋子所有权和移动合法性。
+   * 更新棋盘、记录移动、切换回合并检查获胜条件。
+   * @param gameId - 要进行移动的游戏
+   * @param playerId - 执行移动的玩家
+   * @param from - 源位置 {row, col}
+   * @param to - 目标位置 {row, col}
+   * @returns 包含成功标志的对象，如果成功则返回更新后的游戏，或错误消息
    */
   makeMove(
     gameId: string,
@@ -272,12 +272,12 @@ export class GameManager {
   }
 
   /**
-   * Removes a player from the game.
-   * For games in progress, this forfeits the game for the leaving player.
-   * If both players leave, the game is deleted.
-   * @param gameId - Game to leave
-   * @param playerId - Player leaving the game
-   * @returns Updated GameState if game continues, null if game deleted
+   * 从游戏中移除玩家。
+   * 对于进行中的游戏，这会使离开的玩家判负。
+   * 如果双方玩家都离开，游戏将被删除。
+   * @param gameId - 要离开的游戏
+   * @param playerId - 离开游戏的玩家
+   * @returns 如果游戏继续则返回更新后的 GameState，如果游戏被删除则返回 null
    */
   leaveGame(gameId: string, playerId: string): GameState | null {
     const game = this.games.get(gameId);
@@ -326,9 +326,9 @@ export class GameManager {
   }
 
   /**
-   * Finds the game a player is currently in.
-   * @param playerId - Player's unique identifier
-   * @returns GameState if player is in a game, undefined otherwise
+   * 查找玩家当前所在的游戏。
+   * @param playerId - 玩家的唯一标识符
+   * @returns 如果玩家在游戏中则返回 GameState，否则返回 undefined
    */
   getPlayerGame(playerId: string): GameState | undefined {
     const gameId = this.playerGames.get(playerId);
@@ -337,12 +337,12 @@ export class GameManager {
   }
 
   /**
-   * Gets all valid destination positions for the piece at the given position.
-   * Validates that it is the player's turn (for online games).
-   * @param gameId - Game to query
-   * @param playerId - Player requesting valid moves (validates turn)
-   * @param position - {row, col} of piece to get moves for
-   * @returns Array of valid destination positions
+   * 获取给定位置上棋子的所有合法目标位置。
+   * 验证是否是玩家的回合（对于在线游戏）。
+   * @param gameId - 要查询的游戏
+   * @param playerId - 请求合法移动的玩家（验证回合）
+   * @param position - 要获取移动的棋子的 {row, col}
+   * @returns 合法目标位置的数组
    */
   getValidMoves(gameId: string, playerId: string, position: Position): Position[] {
     const game = this.games.get(gameId);
@@ -351,8 +351,8 @@ export class GameManager {
     const piece = game.board[position.row][position.col];
     if (!piece) return [];
 
-    // For local games, both players can control any piece
-    // For online games, only the player whose turn it is can move
+    // 对于本地游戏，双方玩家都可以控制任何棋子
+    // 对于在线游戏，只有当前回合的玩家才能移动
     if (!game.localGame) {
       const isRedTurn = game.currentTurn === Side.RED;
       const expectedPlayer = isRedTurn ? game.redPlayer : game.blackPlayer;
@@ -365,9 +365,9 @@ return getValidMovesLogic(game.board, piece);
   }
 
   /**
-   * Removes finished or aborted games older than the specified max age.
-   * @param maxAgeMs - Maximum age in milliseconds (e.g., 3600000 for 1 hour)
-   * @returns Number of games cleaned up
+   * 删除早于指定最大时间的已结束或已中止的游戏。
+   * @param maxAgeMs - 以毫秒为单位的最大时间（例如 3600000 代表 1 小时）
+   * @returns 清理的游戏数量
    */
   cleanupInactiveGames(maxAgeMs: number): number {
     const now = Date.now();
@@ -398,10 +398,10 @@ return getValidMovesLogic(game.board, piece);
   }
 
   /**
-   * Creates a 10x9 board array from a pieces array.
-   * Initializes empty cells as null, then places pieces at their positions.
-   * @param pieces - Array of Piece objects with position data
-   * @returns 2D array (Piece | null)[][] representing the board
+   * 从棋子数组创建 10x9 的棋盘数组。
+   * 将空单元格初始化为 null，然后将棋子放在其位置上。
+   * @param pieces - 带有位置数据的 Piece 对象数组
+   * @returns 表示棋盘的 2D 数组 (Piece | null)[][]
    */
   private buildBoard(pieces: Piece[]): (Piece | null)[][] {
     const board: (Piece | null)[][] = Array(BOARD_ROWS)
@@ -416,8 +416,8 @@ return getValidMovesLogic(game.board, piece);
   }
 
   /**
-   * Returns all games currently in memory.
-   * @returns Array of all GameState objects
+   * 返回当前内存中的所有游戏。
+   * @returns 所有 GameState 对象的数组
    */
   getAllGames(): GameState[] {
     return Array.from(this.games.values());
