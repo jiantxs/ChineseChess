@@ -153,6 +153,7 @@ function prepareBackend() {
     '@chess/config': 'packages/config',
     '@chess/logger': 'packages/logger',
     '@chess/game-records': 'packages/game-records',
+    '@chess/types': 'packages/types',
   };
 
   const packedDeps = {};

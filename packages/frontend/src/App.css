@@ -10,7 +10,7 @@
 }
 
 /* ============================================================
-   菜单专用：纯黑背景 + 线条风
+   菜单专用：背景图片 + 动态平移动画
    ============================================================ */
 .menu-app {
   background: #000000;
@@ -20,6 +20,31 @@
   padding: 0;
   position: relative;
   overflow: hidden;
+}
+
+/* 动态背景图片层 - 显示大部分图片，左侧开始，平移到右下角，再动画回原点 */
+.background-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/assets/png/main_background.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  animation: backgroundPan 24s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@keyframes backgroundPan {
+  0%, 100% {
+    /* 显示大部分图片，从中心稍左偏移开始 */
+    background-position: 30% 50%;
+  }
+  50% {
+    /* 滑到右下角，显示原本未显示的部分 */
+    background-position: 70% 30%;
+  }
 }
 
 /* 扫描线效果 */

@@ -118,6 +118,8 @@ function App() {
   if (showMenu) {
     return (
       <div className="app menu-app">
+        {/* 动态背景图片 */}
+        <div className="background-layer" />
         {/* 扫描线 overlay */}
         <div className="scanlines" />
         <div className="menu-container">
