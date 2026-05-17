@@ -1,16 +1,16 @@
 /**
- * @file StarfieldEffect - 动态星空背景
+ * @file CyberStarfieldEffect - 动态星空背景 (Cyber 风格)
  * 渲染带随机发光效果（条形或圆形）的移动星星。
  */
 
-import { BaseAnimation } from '../animations/BaseAnimation';
-import { BoardMetrics, Star } from '../types/canvas';
+import { BaseAnimation } from '../../../animations/BaseAnimation';
+import { BoardMetrics, Star } from '../../../types/canvas';
 
 /**
  * 带移动星星和随机发光效果的动态星空。
  * 星星以一致的方向移动，具有不同的速度和亮度。
  */
-export class StarfieldEffect extends BaseAnimation {
+export class CyberStarfieldEffect extends BaseAnimation {
   readonly id = 'starfield';
   private stars: Star[] = [];
   private starCount: number = 80;

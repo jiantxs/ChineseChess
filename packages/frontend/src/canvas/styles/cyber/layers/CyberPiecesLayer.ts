@@ -1,12 +1,13 @@
 /**
- * @file PiecesLayer - 第2层：带空闲动画的棋子渲染
+ * @file CyberPiecesLayer - 第2层：带空闲动画的棋子渲染 (Cyber 风格)
  * 渲染所有棋子的空闲效果和中文字符标签。
  */
 
-import { BaseLayer } from './BaseLayer';
-import { BoardMetrics } from '../types/canvas';
+import { BaseLayer } from '../../../layers/BaseLayer';
+import { BoardMetrics } from '../../../types/canvas';
 import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/types';
-import { clientLogger } from '../../utils/clientLogger';
+import { clientLogger } from '../../../../utils/clientLogger';
+import { PiecesLayerInterface } from '../../types';
 
 /** 已加载棋子 SVG 图片的内存缓存 */
 const PIECE_IMAGES: Record<string, HTMLImageElement> = {};
@@ -34,7 +35,7 @@ function loadPieceImages(): Promise<void> {
         clientLogger.error('Failed to load piece image', { pieceName: name });
         resolve();
       };
-      img.src = `./assets/svg/${name}.svg`;
+      img.src = `./assets/svg/cyber/${name}.svg`;
       PIECE_IMAGES[name] = img;
     });
   });
@@ -88,7 +89,7 @@ function getPieceGlowColor(side: Side): string {
 /**
  * 第2层：渲染所有带空闲动画和中文字标签的棋子。
  */
-export class PiecesLayer extends BaseLayer {
+export class CyberPiecesLayer extends BaseLayer implements PiecesLayerInterface {
   readonly zIndex = 2;
   private imagesReady: boolean = false;
   private gameState: GameState | null = null;
@@ -124,22 +125,22 @@ export class PiecesLayer extends BaseLayer {
         if (piece) {
           const centerX = padding + col * cellSize;
           const centerY = padding + row * cellSize;
-          
+
           // 计算空闲动画
           const idleAnim = this.calculateIdleAnimation(piece, row, col, elapsedTime);
-          
+
           ctx.save();
           ctx.translate(centerX, centerY);
-          
+
           // 应用缩放动画
           ctx.scale(idleAnim.scale, idleAnim.scale);
-          
+
           // 应用旋转动画（微妙）
           ctx.rotate(idleAnim.rotation);
-          
+
           // 绘制发光效果
           this.drawPieceGlow(ctx, piece, pieceSize, idleAnim.glowIntensity);
-          
+
           // 绘制棋子图片
           const x = -pieceSize / 2;
           const y = -pieceSize / 2;
@@ -148,10 +149,10 @@ export class PiecesLayer extends BaseLayer {
           if (img) {
             ctx.drawImage(img, x, y, pieceSize, pieceSize);
           }
-          
+
           // 绘制中文字符标签（固定位置，不浮动）
           this.drawPieceLabel(ctx, piece, pieceSize);
-          
+
           ctx.restore();
         }
       }
@@ -169,21 +170,21 @@ export class PiecesLayer extends BaseLayer {
   ): { scale: number; rotation: number; glowIntensity: number } {
     // 基于位置的每个棋子的独特相位
     const phase = (row * BOARD_COLS + col) * 0.7;
-    
+
     // 呼吸缩放动画
     const breatheSpeed = 0.002;
     const breathePhase = Math.sin(elapsedTime * breatheSpeed + phase);
     const scale = 1 + breathePhase * 0.03; // 0.97 - 1.03
-    
+
     // 非常微妙的旋转（倾斜）
     const tiltSpeed = 0.001;
     const rotation = Math.sin(elapsedTime * tiltSpeed + phase) * 0.02; // ±0.02 rad
-    
+
     // 脉冲发光
     const glowSpeed = 0.003;
     const glowPhase = (Math.sin(elapsedTime * glowSpeed + phase) + 1) / 2;
     const glowIntensity = 0.3 + glowPhase * 0.7; // 0.3 - 1.0
-    
+
     // 将军有更突出的动画
     if (piece.type === PieceType.GENERAL) {
       return {
@@ -192,7 +193,7 @@ export class PiecesLayer extends BaseLayer {
         glowIntensity: 0.5 + glowPhase * 0.5,
       };
     }
-    
+
     return { scale, rotation, glowIntensity };
   }
 
@@ -207,7 +208,7 @@ export class PiecesLayer extends BaseLayer {
   ): void {
     const glowColor = getPieceGlowColor(piece.side);
     const radius = pieceSize / 2;
-    
+
     ctx.save();
     ctx.globalAlpha = intensity * 0.15;
     ctx.fillStyle = glowColor;
@@ -236,19 +237,19 @@ export class PiecesLayer extends BaseLayer {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    
+
     // 大字体 - 棋子大小的 45%
     const fontSize = Math.round(pieceSize * 0.45);
     ctx.font = `bold ${fontSize}px "Microsoft YaHei", "SimHei", "Noto Sans SC", sans-serif`;
-    
+
     // 带发光效果的白色文字以提高可见性
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = getPieceGlowColor(piece.side);
     ctx.shadowBlur = 8;
-    
+
     // 在棋子中心绘制
     ctx.fillText(label, 0, 0);
-    
+
     ctx.restore();
   }
 }

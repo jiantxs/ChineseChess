@@ -1,11 +1,11 @@
 /**
- * @file BoardLayer - 第0层：棋盘背景
+ * @file CyberBoardLayer - 第0层：棋盘背景 (Cyber 风格)
  * 渲染静态棋盘背景。
  */
 
-import { BaseLayer } from './BaseLayer';
-import { BoardMetrics } from '../types/canvas';
-import { clientLogger } from '../../utils/clientLogger';
+import { BaseLayer } from '../../../layers/BaseLayer';
+import { BoardMetrics } from '../../../types/canvas';
+import { clientLogger } from '../../../../utils/clientLogger';
 
 /** 缓存的棋盘 SVG 图片 */
 let boardImage: HTMLImageElement | null = null;
@@ -29,7 +29,7 @@ function loadBoardImage(): Promise<void> {
       clientLogger.error('Failed to load board image');
       resolve();
     };
-    img.src = './assets/svg/board.svg';
+    img.src = './assets/svg/cyber/board.svg';
   });
 }
 
@@ -37,7 +37,7 @@ function loadBoardImage(): Promise<void> {
  * 第0层：渲染棋盘背景。
  * 如果 SVG 图片可用则使用它，否则回退到纯色。
  */
-export class BoardLayer extends BaseLayer {
+export class CyberBoardLayer extends BaseLayer {
   readonly zIndex = 0;
   private imageReady: boolean = false;
 

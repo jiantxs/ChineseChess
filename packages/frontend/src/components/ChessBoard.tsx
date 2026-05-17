@@ -7,16 +7,7 @@ import {
   BOARD_ROWS,
   BOARD_COLS,
 } from '@chess/types';
-import { LayeredRenderer } from '../canvas/renderer/LayeredRenderer';
-import { BoardLayer } from '../canvas/layers/BoardLayer';
-import { BelowEffectsLayer } from '../canvas/layers/BelowEffectsLayer';
-import { PiecesLayer } from '../canvas/layers/PiecesLayer';
-import { AboveEffectsLayer } from '../canvas/layers/AboveEffectsLayer';
-import { AnimationEngine } from '../canvas/animations/AnimationEngine';
-import { GridLinesEffect } from '../canvas/effects/GridLinesEffect';
-import { StarfieldEffect } from '../canvas/effects/StarfieldEffect';
-import { CaptureEffect } from '../canvas/effects/CaptureEffect';
-import { MoveTrail } from '../canvas/effects/MoveTrail';
+import { BoardRenderingKit } from '../canvas/BoardRenderingKit';
 import { BoardMetrics } from '../canvas/types/canvas';
 
 /** 默认棋子尺寸（像素）。 */
@@ -43,6 +34,8 @@ export interface ChessBoardProps {
   validMoves?: Position[];
   selectedPosition?: Position | null;
   size?: ChessBoardSize;
+  /** 渲染风格名称，如 'cyber'。默认为 'cyber'。 */
+  style?: string;
   onCellClick?: (position: Position, hasPiece: boolean) => void;
   onMove?: (from: Position, to: Position) => void;
   onGetValidMoves?: (position: Position) => void;
@@ -53,9 +46,8 @@ export interface ChessBoardProps {
  *
  * 功能：
  * - 分层渲染：背景 → 下方特效 → 棋子 → 上方特效
- * - 带流动光效的动态网格线
- * - 动态星空背景
- * - SVG 棋子图片、选中高亮、有效移动点、游戏结束叠加层
+ * - 支持通过 style 参数切换渲染风格
+ * - 动态网格线、星空背景、SVG 棋子图片、选中高亮、有效移动点、游戏结束叠加层
  *
  * @param props - {@link ChessBoardProps}
  * @returns 渲染的 ChessBoard 组件。
@@ -68,15 +60,13 @@ export default function ChessBoard({
   validMoves: externalValidMoves,
   selectedPosition: externalSelectedPosition,
   size,
+  style: styleName = 'cyber',
   onCellClick,
   onMove,
   onGetValidMoves,
 }: ChessBoardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rendererRef = useRef<LayeredRenderer | null>(null);
-  const animEngineRef = useRef<AnimationEngine | null>(null);
-  const piecesLayerRef = useRef<PiecesLayer | null>(null);
-  const aboveLayerRef = useRef<AboveEffectsLayer | null>(null);
+  const kitRef = useRef<BoardRenderingKit | null>(null);
   const prevGameStateRef = useRef<GameState | null>(null);
   const effectIdCounter = useRef(0);
 
@@ -110,99 +100,81 @@ export default function ChessBoard({
     rows: BOARD_ROWS,
   };
 
-  // 初始化时创建分层渲染器
+  // 初始化时创建 BoardRenderingKit
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // 创建动画引擎
-    const animEngine = new AnimationEngine();
-    animEngineRef.current = animEngine;
-
-    // 创建渲染器（传递共享动画引擎）
-    const renderer = new LayeredRenderer(canvas, metrics, animEngine);
-    rendererRef.current = renderer;
-
-    // 创建分层
-    const boardLayer = new BoardLayer();
-    const belowEffectsLayer = new BelowEffectsLayer(animEngine);
-    const piecesLayer = new PiecesLayer();
-    const aboveEffectsLayer = new AboveEffectsLayer();
-
-    piecesLayerRef.current = piecesLayer;
-    aboveLayerRef.current = aboveEffectsLayer;
-
-    // 按顺序添加分层（z-index 自动排序）
-    renderer.addLayer(boardLayer);
-    renderer.addLayer(belowEffectsLayer);
-    renderer.addLayer(piecesLayer);
-    renderer.addLayer(aboveEffectsLayer);
-
-    // 添加背景动画
-    animEngine.add(new GridLinesEffect());
-    animEngine.add(new StarfieldEffect());
+    // 创建渲染套件（风格由 styleName 参数决定）
+    const kit = new BoardRenderingKit(canvas, metrics, styleName);
+    kitRef.current = kit;
 
     // 启动渲染循环
-    renderer.start();
+    kit.start();
 
     // 清理
     return () => {
-      renderer.destroy();
-      rendererRef.current = null;
-      animEngineRef.current = null;
-      piecesLayerRef.current = null;
-      aboveLayerRef.current = null;
+      kit.destroy();
+      kitRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 维度变化时更新度量
   useEffect(() => {
-    if (rendererRef.current) {
-      rendererRef.current.setMetrics(metrics);
+    if (kitRef.current) {
+      kitRef.current.setMetrics(metrics);
     }
   }, [metrics]);
 
-  // 游戏状态变化时更新棋子分层
+  // 游戏状态变化时更新棋子分层和触发特效
   useEffect(() => {
-    if (piecesLayerRef.current) {
-      piecesLayerRef.current.setGameState(gameState);
+    if (kitRef.current) {
+      kitRef.current.setGameState(gameState);
     }
 
     // 检测吃子和移动以产生特效
-    if (gameState && prevGameStateRef.current && animEngineRef.current) {
+    if (gameState && prevGameStateRef.current && kitRef.current) {
       const prevState = prevGameStateRef.current;
-      
+
       // 如果有上一步移动则获取它
       let lastMove = null;
       if (gameState.moves.length > prevState.moves.length) {
         lastMove = gameState.moves[gameState.moves.length - 1];
       }
-      
+
       // 检测吃子（棋子在最后移动目的地消失）
       if (lastMove) {
         const toRow = lastMove.to.row;
         const toCol = lastMove.to.col;
         const prevPieceAtDest = prevState.board[toRow][toCol];
-        
+
         // 如果目的地有棋子且与移动棋子不同，则是吃子
         if (prevPieceAtDest && prevPieceAtDest.id !== lastMove.piece.id) {
           const x = padding + toCol * cellSize;
           const y = padding + toRow * cellSize;
           effectIdCounter.current++;
-          animEngineRef.current.add(
-            new CaptureEffect(x, y, prevPieceAtDest.side, `cap-${effectIdCounter.current}`)
+          kitRef.current.addCaptureEffect(
+            x,
+            y,
+            prevPieceAtDest.side,
+            `cap-${effectIdCounter.current}`
           );
         }
-        
+
         // 为每步移动添加移动轨迹
         const fromX = padding + lastMove.from.col * cellSize;
         const fromY = padding + lastMove.from.row * cellSize;
         const toX = padding + lastMove.to.col * cellSize;
         const toY = padding + lastMove.to.row * cellSize;
         effectIdCounter.current++;
-        animEngineRef.current.add(
-          new MoveTrail(fromX, fromY, toX, toY, lastMove.piece.side, `trail-${effectIdCounter.current}`)
+        kitRef.current.addMoveTrail(
+          fromX,
+          fromY,
+          toX,
+          toY,
+          lastMove.piece.side,
+          `trail-${effectIdCounter.current}`
         );
       }
     }
@@ -212,10 +184,10 @@ export default function ChessBoard({
 
   // 选择/有效移动变化时更新上方特效层
   useEffect(() => {
-    if (aboveLayerRef.current) {
-      aboveLayerRef.current.setSelectedPosition(selectedPiece);
-      aboveLayerRef.current.setValidMoves(displayValidMoves);
-      aboveLayerRef.current.setGameState(gameState);
+    if (kitRef.current) {
+      kitRef.current.setSelectedPosition(selectedPiece);
+      kitRef.current.setValidMoves(displayValidMoves);
+      kitRef.current.setGameOverState(gameState);
     }
   }, [selectedPiece, displayValidMoves, gameState]);
 

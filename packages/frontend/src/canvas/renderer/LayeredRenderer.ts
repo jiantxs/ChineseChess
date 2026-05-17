@@ -1,27 +1,26 @@
 /**
  * @file LayeredRenderer - 中央画布渲染协调器
- * 使用单个渲染循环管理多个分层和动画引擎。
+ * 使用单个渲染循环管理多个分层，与具体渲染内容解耦。
  */
 
 import { BaseLayer } from '../layers/BaseLayer';
-import { AnimationEngine } from '../animations/AnimationEngine';
-import { RenderLoop } from '../renderer/RenderLoop';
+import { RenderLoop, RenderCallback } from '../renderer/RenderLoop';
 import { BoardMetrics } from '../types/canvas';
 
 /**
- * 协调带动画支持的多层画布渲染。
- * 管理渲染循环、分层和动画引擎。
+ * 协调多层画布渲染。
+ * 管理渲染循环和分层，不包含任何风格特定的渲染逻辑。
  */
 export class LayeredRenderer {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private layers: BaseLayer[] = [];
-  private animEngine: AnimationEngine;
   private renderLoop: RenderLoop;
   private metrics: BoardMetrics;
   private unsubscribeFrame: (() => void) | null = null;
+  private beforeRenderCallbacks: Set<RenderCallback> = new Set();
 
-  constructor(canvas: HTMLCanvasElement, metrics: BoardMetrics, animEngine: AnimationEngine) {
+  constructor(canvas: HTMLCanvasElement, metrics: BoardMetrics) {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -29,7 +28,6 @@ export class LayeredRenderer {
     }
     this.ctx = ctx;
     this.metrics = metrics;
-    this.animEngine = animEngine;
     this.renderLoop = new RenderLoop();
 
     // 设置画布尺寸
@@ -61,10 +59,16 @@ export class LayeredRenderer {
   }
 
   /**
-   * 获取动画引擎以添加/移除动画。
+   * 注册在每帧渲染分层之前执行的回调。
+   * 常用于更新动画引擎等逻辑。
+   * @param callback - 接收 (deltaTime, elapsedTime) 的函数
+   * @returns 取消注册函数
    */
-  get animationEngine(): AnimationEngine {
-    return this.animEngine;
+  onBeforeRender(callback: RenderCallback): () => void {
+    this.beforeRenderCallbacks.add(callback);
+    return () => {
+      this.beforeRenderCallbacks.delete(callback);
+    };
   }
 
   /**
@@ -105,11 +109,11 @@ export class LayeredRenderer {
    * 由渲染循环自动调用。
    */
   private render(deltaTime: number, elapsedTime: number): void {
+    // 执行前置回调（如动画更新）
+    this.beforeRenderCallbacks.forEach(cb => cb(deltaTime, elapsedTime));
+
     // 清除画布
     this.ctx.clearRect(0, 0, this.metrics.width, this.metrics.height);
-
-    // 更新动画
-    this.animEngine.update(deltaTime);
 
     // 按顺序渲染分层
     for (const layer of this.layers) {
@@ -129,7 +133,7 @@ export class LayeredRenderer {
    */
   destroy(): void {
     this.stop();
-    this.animEngine.clear();
+    this.beforeRenderCallbacks.clear();
     this.layers.forEach(layer => layer.onDetach?.());
     this.layers = [];
   }

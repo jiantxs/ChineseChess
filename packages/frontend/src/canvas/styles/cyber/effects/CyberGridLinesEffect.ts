@@ -1,10 +1,10 @@
 /**
- * @file GridLinesEffect - 动态棋盘网格线
+ * @file CyberGridLinesEffect - 动态棋盘网格线 (Cyber 风格)
  * 渲染带流动光效的发光白色网格线。
  */
 
-import { BaseAnimation } from '../animations/BaseAnimation';
-import { BoardMetrics } from '../types/canvas';
+import { BaseAnimation } from '../../../animations/BaseAnimation';
+import { BoardMetrics } from '../../../types/canvas';
 import { BOARD_ROWS, BOARD_COLS } from '@chess/types';
 
 /**
@@ -14,7 +14,7 @@ import { BOARD_ROWS, BOARD_COLS } from '@chess/types';
  * - 沿线流动光效（闪烁亮度）
  * - 装饰性边框框架
  */
-export class GridLinesEffect extends BaseAnimation {
+export class CyberGridLinesEffect extends BaseAnimation {
   readonly id = 'grid-lines';
 
   constructor() {

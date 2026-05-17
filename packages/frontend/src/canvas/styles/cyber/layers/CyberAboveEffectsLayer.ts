@@ -1,17 +1,18 @@
 /**
- * @file AboveEffectsLayer - 第3层：棋子上方渲染的效果
+ * @file CyberAboveEffectsLayer - 第3层：棋子上方渲染的效果 (Cyber 风格)
  * 渲染动态选中高亮、有效移动指示器和游戏结束叠加层。
  */
 
-import { BaseLayer } from './BaseLayer';
-import { BoardMetrics } from '../types/canvas';
+import { BaseLayer } from '../../../layers/BaseLayer';
+import { BoardMetrics } from '../../../types/canvas';
 import { Position, GameState, GameStatus, Side } from '@chess/types';
+import { AboveEffectsLayerInterface } from '../../types';
 
 /**
  * 第3层：在棋子上方渲染动态 UI 效果。
  * 包括动画选中高亮、脉冲有效移动指示器和游戏结束叠加层。
  */
-export class AboveEffectsLayer extends BaseLayer {
+export class CyberAboveEffectsLayer extends BaseLayer implements AboveEffectsLayerInterface {
   readonly zIndex = 3;
   private selectedPosition: Position | null = null;
   private validMoves: Position[] = [];
@@ -50,7 +51,7 @@ export class AboveEffectsLayer extends BaseLayer {
     if (this.selectedPosition) {
       const x = padding + this.selectedPosition.col * cellSize;
       const y = padding + this.selectedPosition.row * cellSize;
-      
+
       this.drawSelectionHighlight(ctx, x, y, pieceSize, elapsedTime);
     }
 
@@ -97,11 +98,11 @@ export class AboveEffectsLayer extends BaseLayer {
     const pulsePhase = Math.sin(elapsedTime * pulseSpeed) * 0.15 + 1; // 0.85 - 1.15
     const baseRadius = pieceSize / 2 + 4;
     const radius = baseRadius * pulsePhase;
-    
+
     // 旋转动画
     const rotationSpeed = 0.001;
     const rotation = elapsedTime * rotationSpeed;
-    
+
     // 颜色循环 - 青色到品红
     const colorPhase = (Math.sin(elapsedTime * 0.0015) + 1) / 2; // 0 - 1
     const r = Math.round(0 * (1 - colorPhase) + 255 * colorPhase);
@@ -171,10 +172,10 @@ export class AboveEffectsLayer extends BaseLayer {
     const phaseOffset = index * 0.5;
     const pulseSpeed = 0.004;
     const pulsePhase = Math.sin(elapsedTime * pulseSpeed + phaseOffset) * 0.3 + 1; // 0.7 - 1.3
-    
+
     const baseSize = cellSize * 0.12;
     const size = baseSize * pulsePhase;
-    
+
     // 带相位偏移的颜色循环
     const colorSpeed = 0.002;
     const colorPhase = (Math.sin(elapsedTime * colorSpeed + phaseOffset) + 1) / 2;
@@ -195,7 +196,7 @@ export class AboveEffectsLayer extends BaseLayer {
     const rotation = elapsedTime * rotationSpeed + phaseOffset;
     ctx.save();
     ctx.rotate(rotation);
-    
+
     const outerSize = size * 1.6;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;

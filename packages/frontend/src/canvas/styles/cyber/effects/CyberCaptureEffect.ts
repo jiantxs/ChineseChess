@@ -1,10 +1,10 @@
 /**
- * @file CaptureEffect - 棋子捕获爆炸动画
+ * @file CyberCaptureEffect - 棋子捕获爆炸动画 (Cyber 风格)
  * 棋子被吃时渲染粒子爆炸效果。
  */
 
-import { BaseAnimation } from '../animations/BaseAnimation';
-import { BoardMetrics } from '../types/canvas';
+import { BaseAnimation } from '../../../animations/BaseAnimation';
+import { BoardMetrics } from '../../../types/canvas';
 import { Side } from '@chess/types';
 
 interface Particle {
@@ -22,7 +22,7 @@ interface Particle {
  * 棋子被捕获时的爆炸效果。
  * 创建向外扩散并渐隐的粒子。
  */
-export class CaptureEffect extends BaseAnimation {
+export class CyberCaptureEffect extends BaseAnimation {
   readonly id: string;
   private particles: Particle[] = [];
   private x: number;
@@ -41,14 +41,14 @@ export class CaptureEffect extends BaseAnimation {
 
   private initParticles(): void {
     const particleCount = 20;
-    const colors = this.side === Side.RED 
+    const colors = this.side === Side.RED
       ? ['#00f0ff', '#80f8ff', '#ffffff']
       : ['#ff00ff', '#ff80ff', '#ffffff'];
 
     for (let i = 0; i < particleCount; i++) {
       const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
       const speed = 1.5 + Math.random() * 3;
-      
+
       this.particles.push({
         x: this.x,
         y: this.y,
@@ -66,7 +66,7 @@ export class CaptureEffect extends BaseAnimation {
     super.update(deltaTime);
 
     let allDead = true;
-    
+
     for (const particle of this.particles) {
       if (particle.life > 0) {
         allDead = false;
@@ -88,17 +88,17 @@ export class CaptureEffect extends BaseAnimation {
       if (particle.life <= 0) continue;
 
       const alpha = particle.life / particle.maxLife;
-      
+
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = particle.color;
       ctx.shadowColor = particle.color;
       ctx.shadowBlur = 6 * alpha;
-      
+
       ctx.beginPath();
       ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
       ctx.fill();
-      
+
       ctx.restore();
     }
   }
