@@ -1,9 +1,9 @@
 /**
- * @fileoverview Configuration endpoint for frontend
+ * @fileoverview 前端配置端点
  * @module backend/src/routes/config
  *
- * Provides server and game configuration to the frontend client.
- * Returns available layouts, server settings, and asset paths.
+ * 向前端客户端提供服务器和游戏配置。
+ * 返回可用的布局、服务器设置和资源路径。
  *
  * @author Chinese Chess Development Team
  * @version 1.0.0
@@ -13,24 +13,24 @@ import { Router } from 'express';
 import { chessConfig } from '@chess/config';
 import { getAllLayoutNames, getAllLayouts } from '@chess/game-records';
 
-/** Express router for configuration endpoint */
+/** Express 路由器，用于配置端点 */
 const router: Router = Router();
 
 /**
- * Get server configuration and available layouts
+ * 获取服务器配置和可用布局
  * @route GET /api/config
- * @description Returns comprehensive server configuration including:
- *              - Server port and host
- *              - Available game layouts with metadata
- *              - Frontend build settings
- *              - Asset paths for SVG pieces and static files
+ * @description 返回全面的服务器配置，包括：
+ *              - 服务器端口和主机
+ *              - 带有元数据的可用游戏布局
+ *              - 前端构建设置
+ *              - SVG 棋子和其他静态文件的资源路径
  *
- * @param req - Express request (no parameters required)
- * @param res - Express response containing configuration JSON
- * @returns JSON object with server, game, frontend, and assets configuration
+ * @param req - Express 请求（不需要参数）
+ * @param res - Express 响应，包含配置 JSON
+ * @returns 带有服务器、游戏、前端和资源配置的 JSON 对象
  *
  * @example
- * // Response structure:
+ * // 响应结构：
  * {
  *   "server": { "port": 3000, "host": "0.0.0.0" },
  *   "game": {

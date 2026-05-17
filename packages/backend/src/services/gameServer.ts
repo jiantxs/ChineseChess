@@ -1,10 +1,10 @@
 /**
- * @fileoverview WebSocket game server handling real-time multiplayer
+ * @fileoverview 处理实时多人游戏的 WebSocket 游戏服务器
  * @module backend/src/services/gameServer
  *
- * Manages WebSocket connections for Chinese Chess multiplayer games.
- * Handles player authentication, game creation/joining, move validation,
- * and real-time game state synchronization.
+ * 管理中国象棋多人游戏的 WebSocket 连接。
+ * 处理玩家认证、游戏创建/加入、走动验证，
+ * 以及实时游戏状态同步。
  *
  * @author Chinese Chess Development Team
  * @version 1.0.0
@@ -30,76 +30,75 @@ import { logWebSocketEvent, logError, logGameLifecycle, getGameLogger, clearGame
 import { getLayout, standardLayoutData } from '@chess/game-records';
 
 /**
- * Represents a connected WebSocket player
+ * 表示已连接的 WebSocket 玩家
  * @interface ConnectedPlayer
- * @description Tracks WebSocket connection state and current game association
- *              for each connected player client.
+ * @description 跟踪每个已连接玩家客户端的 WebSocket 连接状态和当前游戏关联
  */
 interface ConnectedPlayer {
-  /** The active WebSocket connection */
+  /** 活动的 WebSocket 连接 */
   ws: WebSocket;
-  /** Unique player identifier (UUID from client) */
+  /** 唯一玩家标识符（来自客户端的 UUID） */
   playerId: string;
-  /** Current game ID if player is in a game */
+  /** 玩家所在游戏的当前游戏 ID（如果在游戏中） */
   gameId?: string;
-  /** Player's side (RED or BLACK) if in a game */
+  /** 玩家所在的一方（如果在游戏中为 RED 或 BLACK） */
   side?: Side;
-  /** Timestamp of last ping response */
+  /** 上次 ping 响应的时间戳 */
   lastPing: number;
-  /** Connection health flag (set false by ping, true by pong) */
+  /** 连接健康标志（ping 设置为 false，pong 设置为 true） */
   isAlive: boolean;
-  /** Timeout handle for reconnect window after disconnect */
+  /** 断开连接后重连窗口的超时句柄 */
   reconnectTimeout?: NodeJS.Timeout;
 }
 
 /**
- * WebSocket game server for real-time multiplayer Chinese Chess
+ * 用于实时多人中国象棋游戏的 WebSocket 游戏服务器
  * @class GameServer
- * @description Manages WebSocket connections, game state synchronization,
- *              player authentication via playerId query param, and automatic
- *              cleanup of inactive games and connections.
+ * @description 管理 WebSocket 连接、游戏状态同步、
+ *              通过 playerId 查询参数进行玩家认证，以及自动
+ *              清理不活跃的游戏和连接。
  *
  * @remarks
- * - Listens on path '/ws' for WebSocket connections
- * - Requires 'playerId' query parameter for connection authentication
- * - Implements 30-second ping/pong health checks
- * - Implements 10-minute cleanup interval for inactive games
- * - 30-second reconnect window before player forfeit
+ * - 在 '/ws' 路径上监听 WebSocket 连接
+ * - 需要 'playerId' 查询参数进行连接认证
+ * - 实现 30 秒 ping/pong 健康检查
+ * - 实现 10 分钟清理间隔，清理不活跃游戏
+ * - 30 秒重连窗口，然后玩家被判负
  *
  * @example
  * const server = createServer(app);
  * const gameServer = new GameServer(server, gameManager);
- * // Server stops on SIGTERM via gameServer.stop()
+ * // 服务器通过 gameServer.stop() 在 SIGTERM 时停止
  */
 export class GameServer {
-  /** WebSocket server instance */
+  /** WebSocket 服务器实例 */
   private wss: WebSocketServer;
-  /** Map of playerId to ConnectedPlayer for all active connections */
+  /** 从 playerId 到 ConnectedPlayer 的映射，用于所有活动连接 */
   private players: Map<string, ConnectedPlayer> = new Map();
-  /** Reference to GameManager singleton for game operations */
+  /** GameManager 单例的引用，用于游戏操作 */
   private gameManager: GameManager;
-  /** Interval handle for ping/pong health checks (30 seconds) */
+  /** ping/pong 健康检查的间隔句柄（30 秒） */
   private pingInterval: NodeJS.Timeout | null = null;
-  /** Interval handle for inactive game cleanup (10 minutes) */
+  /** 不活跃游戏清理的间隔句柄（10 分钟） */
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   /**
-   * Create a new GameServer instance
+   * 创建新的 GameServer 实例
    * @constructor
-   * @param server - HTTP server to attach WebSocket server to
-   * @param gameManager - GameManager instance for game operations
+   * @param server - 附加 WebSocket 服务器的 HTTP 服务器
+   * @param gameManager - 用于游戏操作的 GameManager 实例
    *
    * @remarks
-   * - Creates WebSocketServer on '/ws' path
-   * - Automatically starts ping interval and cleanup interval
-   * - Sets up connection handler for new WebSocket clients
+   * - 在 '/ws' 路径上创建 WebSocketServer
+   * - 自动启动 ping 间隔和清理间隔
+   * - 为新的 WebSocket 客户端设置连接处理器
    */
   constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '') {
     this.gameManager = gameManager;
     const wsPath = prefix ? `${prefix}/ws` : '/ws';
     this.wss = new WebSocketServer({ server, path: wsPath });
 
-    // Bridge @chess/core's in-memory gameLogger to @chess/logger's file-based game logging
+    // 将 @chess/core 的内存 gameLogger 桥接到 @chess/logger 的基于文件的游戏日志记录
     gameLogger.setExternalLogger((gameId, action, metadata) => {
       logGameLifecycle(gameId, action, metadata);
     });
@@ -110,19 +109,19 @@ export class GameServer {
   }
 
   /**
-   * Set up WebSocket server connection handler
+   * 设置 WebSocket 服务器连接处理器
    * @private
-   * @description Registers event handlers for:
-   *              - Connection (validates playerId, registers player)
-   *              - Message (parses JSON, routes to handler)
-   *              - Close (handles disconnect with reconnect window)
-   *              - Pong (updates isAlive flag)
+   * @description 为以下事件注册处理器：
+   *              - Connection（验证 playerId，注册玩家）
+   *              - Message（解析 JSON，路由到处理器）
+   *              - Close（处理断开连接，附带重连窗口）
+   *              - Pong（更新 isAlive 标志）
    *
    * @remarks
-   * - Rejects connections without playerId query param with code 1008
-   * - Sends initial PONG message on successful connection
-   * - Parses messages as JSON GameMessage objects
-   * - Logs all events via logWebSocketEvent
+   * - 如果没有 playerId 查询参数，以代码 1008 拒绝连接
+   * - 成功连接后发送初始 PONG 消息
+   * - 将消息解析为 JSON GameMessage 对象
+   * - 通过 logWebSocketEvent 记录所有事件
    */
   private setupWebSocketServer(): void {
     this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
@@ -178,13 +177,13 @@ export class GameServer {
   }
 
   /**
-   * Route incoming message by type to appropriate handler
+   * 根据类型将传入消息路由到适当的处理器
    * @private
-   * @description Dispatches GameMessage to specific handler based on MessageType.
-   *              Sends error response for unknown message types.
+   * @description 根据 MessageType 将 GameMessage 调度到特定处理器。
+   *              对未知消息类型发送错误响应。
    *
-   * @param player - The ConnectedPlayer who sent the message
-   * @param message - The parsed GameMessage to handle
+   * @param player - 发送消息的 ConnectedPlayer
+   * @param message - 要处理的解析后的 GameMessage
    *
    * @see {@link handleJoinGame}
    * @see {@link handleMakeMove}
@@ -219,20 +218,20 @@ export class GameServer {
   }
 
   /**
-   * Handle JOIN_GAME message - create or join a game
+   * 处理 JOIN_GAME 消息 - 创建或加入游戏
    * @private
-   * @description Creates a new game if no gameId provided, or joins existing game.
-   *              Loads specified layout or uses standard layout as default.
-   *              Broadcasts GAME_STATE to all players in the game.
+   * @description 如果没有提供 gameId，则创建新游戏；或者加入现有游戏。
+   *              加载指定的布局或使用标准布局作为默认。
+   *              向游戏中的所有玩家广播 GAME_STATE。
    *
-   * @param player - The ConnectedPlayer joining a game
-   * @param message - Message containing optional gameId, side, local flag, layoutName
+   * @param player - 加入游戏的 ConnectedPlayer
+   * @param message - 包含可选 gameId、side、local 标志、layoutName 的消息
    *
    * @remarks
-   * - If no gameId: creates new game with specified or default layout
-   * - If gameId provided: joins existing game if available
-   * - Assigns RED/BLACK side based on which player slot is available
-   * - Sends GAME_STATE to all players in game with their assigned side
+   * - 如果没有 gameId：使用指定或默认布局创建新游戏
+   * - 如果提供了 gameId：如果可用则加入现有游戏
+   * - 根据哪个玩家槽位可用分配 RED/BLACK 方
+   * - 向游戏中的所有玩家发送带有其分配方的 GAME_STATE
    */
   private handleJoinGame(player: ConnectedPlayer, message: GameMessage): void {
     const { gameId, side, local, layoutName } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string };
@@ -298,21 +297,21 @@ export class GameServer {
   }
 
   /**
-   * Handle MAKE_MOVE message - validate and execute a chess move
+   * 处理 MAKE_MOVE 消息 - 验证并执行象棋走动
    * @private
-   * @description Validates move coordinates and player turn, then executes move
-   *              via GameManager. Broadcasts updated GAME_STATE to all players.
-   *              If game ends, broadcasts GAME_OVER.
+   * @description 验证走动坐标和玩家回合，然后通过 GameManager 执行走动。
+   *              向所有玩家广播更新的 GAME_STATE。
+   *              如果游戏结束，广播 GAME_OVER。
    *
-   * @param player - The ConnectedPlayer making the move
-   * @param message - Message containing from and to positions
+   * @param player - 执行走动的 ConnectedPlayer
+   * @param message - 包含 from 和 to 位置的消息
    *
    * @remarks
-   * - Validates coordinates are within 0-9 (row) and 0-8 (col)
-   * - Returns error if player is not in a game
-   * - Returns error if move validation fails
-   * - Broadcasts GAME_STATE with lastMove info to both players
-   * - Broadcasts GAME_OVER when general is captured
+   * - 验证坐标在 0-9（行）和 0-8（列）范围内
+   * - 如果玩家不在游戏中则返回错误
+   * - 如果走动验证失败则返回错误
+   * - 向双方玩家广播带有 lastMove 信息的 GAME_STATE
+   * - 当将领被捕获时广播 GAME_OVER
    */
   private handleMakeMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
@@ -387,18 +386,18 @@ export class GameServer {
   }
 
   /**
-   * Handle LEAVE_GAME message - player voluntarily leaves game
+   * 处理 LEAVE_GAME 消息 - 玩家主动离开游戏
    * @private
-   * @description Removes player from current game via GameManager.
-   *              Broadcasts PLAYER_DISCONNECTED to remaining players.
+   * @description 通过 GameManager 将玩家从当前游戏中移除。
+   *              向剩余玩家广播 PLAYER_DISCONNECTED。
    *
-   * @param player - The ConnectedPlayer leaving the game
-   * @param message - The leave game message (payload unused)
+   * @param player - 离开游戏的 ConnectedPlayer
+   * @param message - 离开游戏消息（有效载荷未使用）
    *
    * @remarks
-   * - Player's gameId and side are cleared after leaving
-   * - Remaining players receive updated game state
-   * - Game continues with remaining player until finished
+   * - 玩家离开后清除 gameId 和 side
+   * - 剩余玩家收到更新的游戏状态
+   * - 游戏继续进行，直到剩余玩家完成
    */
   private handleLeaveGame(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
@@ -425,16 +424,16 @@ export class GameServer {
   }
 
   /**
-   * Handle PING message - respond with PONG and update timestamp
+   * 处理 PING 消息 - 响应 PONG 并更新时间戳
    * @private
-   * @description Updates player's lastPing and responds with PONG message.
-   *              Used by client to keep connection alive and verify server responsiveness.
+   * @description 更新玩家的 lastPing 并响应 PONG 消息。
+   *              供客户端保持连接活跃并验证服务器响应能力。
    *
-   * @param player - The ConnectedPlayer who sent the ping
+   * @param player - 发送 ping 的 ConnectedPlayer
    *
    * @remarks
-   * - Returns current server timestamp in response
-   * - lastPing updated for connection health tracking
+   * - 在响应中返回当前服务器时间戳
+   * - 更新 lastPing 以进行连接健康跟踪
    */
   private handlePing(player: ConnectedPlayer): void {
     player.lastPing = Date.now();
@@ -447,18 +446,18 @@ export class GameServer {
   }
 
   /**
-   * Handle AI_MOVE message - request AI move calculation
+   * 处理 AI_MOVE 消息 - 请求 AI 走动计算
    * @private
-   * @description Placeholder for AI opponent integration.
-   *              Returns error indicating AI is not yet implemented.
+   * @description AI 对手集成的占位符。
+   *              返回指示 AI 尚未实现的错误。
    *
-   * @param player - The ConnectedPlayer requesting AI move
-   * @param message - The AI move request message
+   * @param player - 请求 AI 走动的 ConnectedPlayer
+   * @param message - AI 走动请求消息
    *
    * @remarks
-   * - Returns error if AI is not enabled via chessConfig
-   * - Returns error "AI not yet implemented" when AI feature is requested
-   * - AI integration would go here when ENABLE_AI is fully implemented
+   * - 如果 AI 未通过 chessConfig 启用则返回错误
+   * - 当请求 AI 功能时返回错误"AI 尚未实现"
+   * - 当 ENABLE_AI 完全实现时，AI 集成将放在这里
    */
   private handleAIMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!chessConfig.ai.enabled) {
@@ -472,20 +471,20 @@ export class GameServer {
   }
 
   /**
-   * Handle GET_VALID_MOVES message - get legal moves for a piece
+   * 处理 GET_VALID_MOVES 消息 - 获取棋子的合法走动
    * @private
-   * @description Queries GameManager for all valid moves for a piece at given position.
-   *              Returns array of valid destination positions.
+   * @description 查询 GameManager 获取位于给定位置的棋子的所有合法走动。
+   *              返回有效目标位置数组。
    *
-   * @param player - The ConnectedPlayer requesting valid moves
-   * @param message - Message containing position of piece to evaluate
+   * @param player - 请求合法走动的 ConnectedPlayer
+   * @param message - 包含要评估的棋子位置的消息
    *
-   * @returns VALID_MOVES message with array of valid destination positions
+   * @returns 带有有效目标位置数组的 VALID_MOVES 消息
    *
    * @remarks
-   * - Position coordinates must be valid numbers
-   * - Returns empty array if no valid moves available
-   * - Used by frontend to highlight valid move destinations
+   * - 位置坐标必须是有效数字
+   * - 如果没有有效走动可用则返回空数组
+   * - 供前端用来高亮显示有效的走动目标
    */
   private handleGetValidMoves(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
@@ -522,20 +521,20 @@ export class GameServer {
   }
 
   /**
-   * Handle WebSocket disconnect - manage cleanup and reconnect window
+   * 处理 WebSocket 断开连接 - 管理清理和重连窗口
    * @private
-   * @description Processes player disconnection:
-   *              - Clears any pending reconnect timeout
-   *              - Broadcasts PLAYER_DISCONNECTED to game
-   *              - Sets 30-second reconnect window before forfeit
-   *              - Removes player from players map after timeout
+   * @description 处理玩家断开连接：
+   *              - 清除任何待处理的重连超时
+   *              - 向游戏广播 PLAYER_DISCONNECTED
+   *              - 在判负之前设置 30 秒重连窗口
+   *              - 超时后从 players 映射中移除玩家
    *
-   * @param player - The ConnectedPlayer who disconnected
+   * @param player - 断开连接的 ConnectedPlayer
    *
    * @remarks
-   * - If player reconnects within timeout, they keep their game slot
-   * - If timeout expires, player is forfeited and game may end
-   * - Uses chessConfig.game.reconnectTimeoutMs for timeout duration
+   * - 如果玩家在超时内重新连接，他们保留游戏槽位
+   * - 如果超时到期，玩家被判负，游戏可能结束
+   * - 使用 chessConfig.game.reconnectTimeoutMs 作为超时持续时间
    */
   private handleDisconnect(player: ConnectedPlayer): void {
     if (player.reconnectTimeout) {
@@ -582,17 +581,16 @@ export class GameServer {
   }
 
   /**
-   * Send a message to a specific player
+   * 向特定玩家发送消息
    * @private
-   * @description Serializes and sends GameMessage to player's WebSocket
-   *              if connection is in OPEN state.
+   * @description 如果连接处于 OPEN 状态，则将 GameMessage 序列化并发送到玩家的 WebSocket。
    *
-   * @param player - The ConnectedPlayer to send message to
-   * @param message - The GameMessage to send
+   * @param player - 要发送消息的 ConnectedPlayer
+   * @param message - 要发送的 GameMessage
    *
    * @remarks
-   * - Checks readyState before sending to avoid errors
-   * - JSON stringifies the message object
+   * - 发送前检查 readyState 以避免错误
+   * - 将消息对象 JSON 字符串化
    */
   private sendToPlayer(player: ConnectedPlayer, message: GameMessage): void {
     if (player.ws.readyState === WebSocket.OPEN) {
@@ -601,12 +599,12 @@ export class GameServer {
   }
 
   /**
-   * Broadcast a message to all players in a game
+   * 向游戏中的所有玩家广播消息
    * @private
-   * @description Sends a message to all connected players currently in the specified game.
+   * @description 向当前位于指定游戏中的所有已连接玩家发送消息。
    *
-   * @param gameId - The game ID to broadcast to
-   * @param message - The GameMessage to send to each player
+   * @param gameId - 要广播到的游戏 ID
+   * @param message - 要发送给每个玩家的 GameMessage
    *
    * @see {@link sendToPlayer}
    */
@@ -619,12 +617,12 @@ export class GameServer {
   }
 
   /**
-   * Send an error message to a player
+   * 向玩家发送错误消息
    * @private
-   * @description Convenience method to send ERROR message type to player.
+   * @description 发送 ERROR 消息类型给玩家的便捷方法。
    *
-   * @param player - The ConnectedPlayer to send error to
-   * @param error - Error message string
+   * @param player - 要发送错误的 ConnectedPlayer
+   * @param error - 错误消息字符串
    *
    * @see {@link sendToPlayer}
    */
@@ -638,14 +636,14 @@ export class GameServer {
   }
 
   /**
-   * Remove sensitive data from game state before sending to client
+   * 在发送到客户端之前从游戏状态中移除敏感数据
    * @private
-   * @description Creates sanitized game state object that:
-   *              - Omits actual player IDs (replaced with booleans)
-   *              - Only includes safe fields for client consumption
+   * @description 创建清理过的游戏状态对象：
+   *              - 省略实际玩家 ID（用布尔值替换）
+   *              - 仅包含适合客户端使用的安全字段
    *
-   * @param game - Full GameState from GameManager
-   * @returns Sanitized game state object safe for client
+   * @param game - 来自 GameManager 的完整 GameState
+   * @returns 可安全发送给客户端的清理过的游戏状态对象
    */
   private sanitizeGameState(game: import('@chess/core').GameState) {
     return {
@@ -664,17 +662,17 @@ export class GameServer {
   }
 
   /**
-   * Start ping interval for connection health checks
+   * 启动连接健康检查的 ping 间隔
    * @private
-   * @description Starts 30-second interval that:
-   *              - Sets isAlive = false for all players
-   *              - Sends ping to each player
-   *              - Terminates connection if pong not received (isAlive stays false)
+   * @description 启动 30 秒间隔：
+   *              - 为所有玩家设置 isAlive = false
+   *              - 向每个玩家发送 ping
+   *              - 如果未收到 pong（isAlive 保持 false）则终止连接
    *
    * @remarks
-   * - Uses WebSocket ping() method
-   * - Pong handler sets isAlive = true
-   * - Connections without pong response are terminated
+   * - 使用 WebSocket ping() 方法
+   * - Pong 处理器设置 isAlive = true
+   * - 没有 pong 响应的连接被终止
    */
   private startPingInterval(): void {
     this.pingInterval = setInterval(() => {
@@ -691,15 +689,15 @@ export class GameServer {
   }
 
   /**
-   * Start cleanup interval for inactive games
+   * 启动不活跃游戏清理的清理间隔
    * @private
-   * @description Starts 10-minute interval that:
-   *              - Calls GameManager.cleanupInactiveGames(3600000)
-   *              - Logs number of games cleaned up if any
+   * @description 启动 10 分钟间隔：
+   *              - 调用 GameManager.cleanupInactiveGames(3600000)
+   *              - 如果有游戏被清理则记录清理数量
    *
    * @remarks
-   * - Cleans up games inactive for 1 hour (3600000 ms)
-   * - Only logs when games are actually cleaned
+   * - 清理 1 小时（3600000 毫秒）不活跃的游戏
+   * - 仅在实际清理游戏时记录
    */
   private startCleanupInterval(): void {
     this.cleanupInterval = setInterval(() => {
@@ -711,15 +709,15 @@ export class GameServer {
   }
 
   /**
-   * Gracefully stop the game server
-   * @description Stops all intervals and closes WebSocket server.
-   *              Called during SIGTERM shutdown.
+   * 优雅地停止游戏服务器
+   * @description 停止所有间隔并关闭 WebSocket 服务器。
+   *              在 SIGTERM 关闭期间调用。
    *
    * @remarks
-   * - Clears ping interval if running
-   * - Clears cleanup interval if running
-   * - Closes WebSocket server (no new connections accepted)
-   * - Existing connections will be terminated
+   * - 如果正在运行则清除 ping 间隔
+   * - 如果正在运行则清除清理间隔
+   * - 关闭 WebSocket 服务器（不接受新连接）
+   * - 现有连接将被终止
    */
   stop(): void {
     if (this.pingInterval) clearInterval(this.pingInterval);

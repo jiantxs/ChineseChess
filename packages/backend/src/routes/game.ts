@@ -1,9 +1,9 @@
 /**
- * @fileoverview Player ID endpoint for session-based identity
+ * @fileoverview 基于会话的玩家 ID 端点
  * @module backend/src/routes/game
  *
- * Provides session-based player identification for Chinese Chess multiplayer.
- * Generates UUID player IDs and stores them in Express session.
+ * 为中国象棋多人游戏提供基于会话的玩家身份识别。
+ * 生成 UUID 玩家 ID 并存储在 Express 会话中。
  *
  * @author Chinese Chess Development Team
  * @version 1.0.0
@@ -22,24 +22,24 @@ interface ClientLogPayload {
   metadata?: Record<string, unknown>;
 }
 
-/** Express router for game-related endpoints */
+/** Express 路由器，用于游戏相关端点 */
 const router: ExpressRouter = Router();
 
 /**
- * Generate a new player ID for session-based identity
+ * 为基于会话的身份生成新的玩家 ID
  * @route POST /api/game/player-id
- * @description Creates a UUID playerId and stores it in the session.
- *              Used by clients to establish WebSocket connection identity.
+ * @description 创建一个 UUID playerId 并存储在会话中。
+ *              供客户端建立 WebSocket 连接身份时使用。
  *
- * @param req - Express request (session must be initialized)
- * @param res - Express response containing the generated playerId
- * @returns JSON with playerId property
+ * @param req - Express 请求（会话必须已初始化）
+ * @param res - Express 响应，包含生成的 playerId
+ * @returns 带有 playerId 属性的 JSON
  *
  * @example
- * // Request
+ * // 请求
  * POST /api/game/player-id
  *
- * // Response
+ * // 响应
  * { "playerId": "550e8400-e29b-41d4-a716-446655440000" }
  */
 router.post('/player-id', (req, res) => {
@@ -49,26 +49,26 @@ router.post('/player-id', (req, res) => {
 });
 
 /**
- * Exit game and shutdown server
+ * 退出游戏并关闭服务器
  * @route POST /api/game/exit
- * @description Receives exit request from frontend, responds with success,
- *              then gracefully shuts down the server process.
+ * @description 接收前端的退出请求，响应成功，
+ *              然后优雅地关闭服务器进程。
  *
- * @param req - Express request
- * @param res - Express response confirming shutdown initiation
- * @returns JSON with success message
+ * @param req - Express 请求
+ * @param res - Express 响应，确认关闭启动
+ * @returns 带有成功消息的 JSON
  *
  * @example
- * // Request
+ * // 请求
  * POST /api/game/exit
  *
- * // Response
+ * // 响应
  * { "message": "Server is shutting down" }
  */
 router.post('/exit', (req, res) => {
   res.json({ message: 'Server is shutting down' });
 
-  // Allow response to be sent before shutting down
+  // 允许在关闭之前发送响应
   setTimeout(() => {
     const gameServer = (req as any).app.locals.gameServer;
     try {
@@ -83,14 +83,14 @@ router.post('/exit', (req, res) => {
 });
 
 /**
- * Receive client-side log entries from frontend
+ * 接收来自前端的客户端日志条目
  * @route POST /api/game/logs/client
- * @description Receives log entries from frontend clients and logs them
- *              server-side with proper source attribution as 'frontend'.
+ * @description 接收来自前端客户端的日志条目，并将其作为
+ *              'frontend' 源属性在服务器端记录。
  *
- * @param req - Express request containing client log in body
- * @param res - Express response confirming receipt
- * @returns JSON with success message
+ * @param req - Express 请求，body 中包含客户端日志
+ * @param res - Express 响应，确认收到
+ * @returns 带有成功消息的 JSON
  */
 router.post('/logs/client', (req, res) => {
   const payload = req.body as ClientLogPayload;

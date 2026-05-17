@@ -1,10 +1,9 @@
 /**
- * @fileoverview Winston logger re-exports and Express middleware
+ * @fileoverview Winston 日志器重新导出和 Express 中间件
  * @module backend/src/services/logger
  *
- * Re-exports all loggers from @chess/logger package and provides
- * custom middleware and helper functions for logging HTTP requests
- * and WebSocket events.
+ * 从 @chess/logger 包重新导出所有日志器，并提供
+ * 用于记录 HTTP 请求和 WebSocket 事件的自定义中间件和辅助函数。
  *
  * @author Chinese Chess Development Team
  * @version 1.0.0
@@ -27,43 +26,42 @@ import {
 import type express from 'express';
 
 /**
- * Winston logger for HTTP request logs
- * @remarks Writes to logs/requests/ directory via DailyRotateFile
+ * Winston 日志器，用于 HTTP 请求日志
+ * @remarks 通过 DailyRotateFile 写入 logs/requests/ 目录
  */
 export { requestLogger };
 
 /**
- * Winston logger for error logs
- * @remarks Writes to logs/errors/ directory via DailyRotateFile
+ * Winston 日志器，用于错误日志
+ * @remarks 通过 DailyRotateFile 写入 logs/errors/ 目录
  */
 export { errorLogger };
 
 /**
- * Winston logger for global events
- * @remarks Writes to logs/events/ directory, used for game and system events
+ * Winston 日志器，用于全局事件
+ * @remarks 写入 logs/events/ 目录，用于游戏和系统事件
  */
 export { globalEventLogger };
 
-/** @ignore Re-exported for convenience */
+/** @ignore 为方便起见重新导出 */
 export { logHttpRequest, logError, logEvent, logGameEvent, logGameLifecycle, logSystemEvent, logClientLogEvent };
-/** @ignore Re-exported for game logger management */
+/** @ignore 重新导出用于游戏日志管理器管理 */
 export { getGameLogger, clearGameLogger };
 
 /**
- * Log a WebSocket event to both request and event loggers
- * @description Records WebSocket events (connection, message, disconnect, etc.)
- *              with player context and optional game ID to both the request logger
- *              and global event logger for comprehensive tracking.
+ * 将 WebSocket 事件记录到请求和事件日志器
+ * @description 记录 WebSocket 事件（连接、消息、断开连接等），并带有玩家上下文和可选的游戏 ID，
+ *              到请求日志器和全局事件日志器中进行全面跟踪。
  *
- * @param event - Event name/type (e.g., 'connection', 'message', 'disconnect')
- * @param playerId - UUID of the player associated with the event
- * @param gameId - Optional UUID of the game associated with the event
- * @param details - Optional additional event data to include in log
+ * @param event - 事件名称/类型（例如 'connection'、'message'、'disconnect'）
+ * @param playerId - 与事件关联的玩家的 UUID
+ * @param gameId - 与事件关联的可选游戏 UUID
+ * @param details - 可选的附加事件数据，包含在日志中
  *
  * @remarks
- * - Logs to requestLogger with 'websocket_event' prefix
- * - Logs to globalEventLogger with eventType: 'WEBSOCKET' and source: 'backend'
- * - gameId is set to null if not provided for consistent log structure
+ * - 使用 'websocket_event' 前缀记录到 requestLogger
+ * - 使用 eventType: 'WEBSOCKET' 和 source: 'backend' 记录到 globalEventLogger
+ * - 如果未提供 gameId，则设置为 null 以保持日志结构一致
  *
  * @example
  * logWebSocketEvent('connection', playerId);
@@ -93,18 +91,18 @@ function logWebSocketEvent(
 export { logWebSocketEvent };
 
 /**
- * Express middleware to log HTTP requests
- * @description Creates middleware that logs all incoming HTTP requests including:
- *              method, URL, path, status code, response time, client IP,
- *              user agent, and player ID from session.
+ * Express 中间件，用于记录 HTTP 请求
+ * @description 创建中间件，记录所有传入的 HTTP 请求，包括：
+ *              方法、URL、路径、状态码、响应时间、客户端 IP、
+ *              用户代理和来自会话的玩家 ID。
  *
- * @returns Express request handler middleware
+ * @returns Express 请求处理程序中间件
  *
  * @remarks
- * - Measures request duration from receipt to response finish
- * - Retrieves playerId from express-session if available
- * - Logs via logHttpRequest which writes to request logger
- * - Non-blocking: logs on 'finish' event after response is sent
+ * - 从收到请求到响应结束测量请求持续时间
+ * - 如果可用，从 express-session 中获取 playerId
+ * - 通过 logHttpRequest 记录，写入请求日志器
+ * - 非阻塞：响应发送后在 'finish' 事件上记录
  *
  * @example
  * app.use(requestLogMiddleware());

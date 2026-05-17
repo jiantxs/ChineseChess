@@ -1,9 +1,9 @@
 /**
- * @fileoverview Express server entry point for Chinese Chess backend
+ * @fileoverview 中国象棋后端 Express 服务器入口
  * @module backend/src/index
  *
- * Sets up Express HTTP server with WebSocket support for real-time multiplayer Chinese Chess.
- * Handles session middleware, static file serving, API routes, and graceful shutdown.
+ * 配置 Express HTTP 服务器，支持 WebSocket 实时多人对中国象棋游戏。
+ * 处理会话中间件、静态文件服务、API 路由和优雅关闭。
  *
  * @author Chinese Chess Development Team
  * @version 1.0.0
@@ -17,16 +17,16 @@ import { gameManager } from '@chess/core';
 import { createAppRouter } from './routes';
 import { requestLogger, logSystemEvent } from './services/logger';
 
-/** Express application instance */
+/** Express 应用实例 */
 const app = express();
 
-/** HTTP server instance wrapping Express app */
+/** HTTP 服务器实例，包装 Express 应用 */
 const server = createServer(app);
 
-/** URL prefix from configuration (e.g., '/aabbcc') */
+/** 配置中的 URL 前缀（例如 '/aabbcc'） */
 const PREFIX = chessConfig.server.prefix;
 
-// Create and mount the application router
+// 创建并挂载应用路由器
 const appRouter = createAppRouter();
 
 if (PREFIX) {
@@ -37,24 +37,24 @@ if (PREFIX) {
 }
 
 /**
- * WebSocket game server instance
- * @remarks Handles real-time multiplayer game logic via /ws path
+ * WebSocket 游戏服务器实例
+ * @remarks 通过 /ws 路径处理实时多人游戏逻辑
  * @see {@link GameServer}
  */
 const gameServer = new GameServer(server, gameManager, PREFIX);
 
-// Store gameServer reference in app locals for access by routes
+// 在 app.locals 中存储 gameServer 引用，以便路由访问
 app.locals.gameServer = gameServer;
 
-/** Server port from configuration (default: 3000) */
+/** 服务器端口来自配置（默认：3000） */
 const PORT = chessConfig.server.port;
 
-/** Server host from configuration (default: 0.0.0.0) */
+/** 服务器主机来自配置（默认：0.0.0.0） */
 const HOST = chessConfig.server.host;
 
 /**
- * Start HTTP and WebSocket servers
- * @remarks Begins listening on configured port and host, logs startup message
+ * 启动 HTTP 和 WebSocket 服务器
+ * @remarks 开始监听配置的主机和端口，记录启动消息
  */
 server.listen(PORT, HOST, () => {
   requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
@@ -62,10 +62,10 @@ server.listen(PORT, HOST, () => {
 });
 
 /**
- * Graceful shutdown handler
- * @remarks Listens for SIGTERM signal, stops GameServer intervals, closes HTTP server,
- * then exits process cleanly. Ensures proper cleanup of WebSocket connections and timers.
- * @param signal - The signal received (SIGTERM)
+ * 优雅关闭处理器
+ * @remarks 监听 SIGTERM 信号，停止 GameServer 间隔，关闭 HTTP 服务器，
+ * 然后干净地退出进程。确保 WebSocket 连接和定时器的正确清理。
+ * @param signal - 接收到的信号（SIGTERM）
  */
 process.on('SIGTERM', () => {
   logSystemEvent('SIGTERM received, shutting down gracefully');
