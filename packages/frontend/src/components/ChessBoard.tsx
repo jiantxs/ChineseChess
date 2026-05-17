@@ -19,14 +19,14 @@ import { CaptureEffect } from '../canvas/effects/CaptureEffect';
 import { MoveTrail } from '../canvas/effects/MoveTrail';
 import { BoardMetrics } from '../canvas/types/canvas';
 
-/** Default piece size in pixels. */
+/** 默认棋子尺寸（像素）。 */
 const PIECE_SIZE = 60;
-/** Default board padding in pixels. */
+/** 默认棋盘内边距（像素）。 */
 const BOARD_PADDING = 35;
-/** Default cell size in pixels. */
+/** 默认格子尺寸（像素）。 */
 const CELL_SIZE = 55;
 
-/** Configurable dimensions for the chess board canvas. */
+/** 棋盘画布的可配置尺寸。 */
 export interface ChessBoardSize {
   width?: number;
   height?: number;
@@ -34,7 +34,7 @@ export interface ChessBoardSize {
   padding?: number;
 }
 
-/** Props for the {@link ChessBoard} component. */
+/** {@link ChessBoard} 组件的属性。 */
 export interface ChessBoardProps {
   id?: string;
   gameState: GameState | null;
@@ -49,16 +49,16 @@ export interface ChessBoardProps {
 }
 
 /**
- * Canvas-based Chinese Chess (Xiangqi) board component with layered animation system.
+ * 基于画布的中国象棋 (象棋) 棋盘组件，带分层动画系统。
  *
- * Features:
- * - Layered rendering: background → below-effects → pieces → above-effects
- * - Animated grid lines with flowing light effect
- * - Animated starfield background
- * - SVG piece images, selection highlights, valid-move dots, game-over overlay
+ * 功能：
+ * - 分层渲染：背景 → 下方特效 → 棋子 → 上方特效
+ * - 带流动光效的动态网格线
+ * - 动态星空背景
+ * - SVG 棋子图片、选中高亮、有效移动点、游戏结束叠加层
  *
  * @param props - {@link ChessBoardProps}
- * @returns The rendered ChessBoard component.
+ * @returns 渲染的 ChessBoard 组件。
  */
 export default function ChessBoard({
   id,
@@ -80,16 +80,16 @@ export default function ChessBoard({
   const prevGameStateRef = useRef<GameState | null>(null);
   const effectIdCounter = useRef(0);
 
-  /** Internally selected piece position when not controlled externally. */
+  /** 非外部控制时内部选中的棋子位置。 */
   const [internalSelectedPiece, setInternalSelectedPiece] = useState<Position | null>(null);
-  /** Internally computed valid moves when not controlled externally. */
+  /** 非外部控制时内部计算的有效移动。 */
   const [internalValidMoves, setInternalValidMoves] = useState<Position[]>([]);
 
-  /** Effective selected piece: external prop takes precedence over internal state. */
+  /** 有效的选中棋子：外部属性优先于内部状态。 */
   const selectedPiece = externalSelectedPosition ?? internalSelectedPiece;
-  /** Effective valid moves: external prop takes precedence over internal state. */
+  /** 有效的有效移动：外部属性优先于内部状态。 */
   const displayValidMoves = externalValidMoves ?? internalValidMoves;
-  /** Whether the component is operating in external-controlled mode. */
+  /** 组件是否处于外部控制模式。 */
   const isExternalMode = externalValidMoves !== undefined || externalSelectedPosition !== undefined;
 
   const cellSize = size?.cellSize ?? CELL_SIZE;
@@ -99,7 +99,7 @@ export default function ChessBoard({
   const width = size?.width ?? padding * 2 + cellSize * (BOARD_COLS - 1);
   const height = size?.height ?? padding * 2 + cellSize * (BOARD_ROWS - 1);
 
-  /** Build board metrics object. */
+  /** 构建棋盘度量对象。 */
   const metrics: BoardMetrics = {
     width,
     height,
@@ -110,20 +110,20 @@ export default function ChessBoard({
     rows: BOARD_ROWS,
   };
 
-  // Initialize layered renderer on mount
+  // 初始化时创建分层渲染器
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Create animation engine
+    // 创建动画引擎
     const animEngine = new AnimationEngine();
     animEngineRef.current = animEngine;
 
-    // Create renderer (pass shared animation engine)
+    // 创建渲染器（传递共享动画引擎）
     const renderer = new LayeredRenderer(canvas, metrics, animEngine);
     rendererRef.current = renderer;
 
-    // Create layers
+    // 创建分层
     const boardLayer = new BoardLayer();
     const belowEffectsLayer = new BelowEffectsLayer(animEngine);
     const piecesLayer = new PiecesLayer();
@@ -132,20 +132,20 @@ export default function ChessBoard({
     piecesLayerRef.current = piecesLayer;
     aboveLayerRef.current = aboveEffectsLayer;
 
-    // Add layers in order (z-index sorted automatically)
+    // 按顺序添加分层（z-index 自动排序）
     renderer.addLayer(boardLayer);
     renderer.addLayer(belowEffectsLayer);
     renderer.addLayer(piecesLayer);
     renderer.addLayer(aboveEffectsLayer);
 
-    // Add background animations
+    // 添加背景动画
     animEngine.add(new GridLinesEffect());
     animEngine.add(new StarfieldEffect());
 
-    // Start rendering loop
+    // 启动渲染循环
     renderer.start();
 
-    // Cleanup
+    // 清理
     return () => {
       renderer.destroy();
       rendererRef.current = null;
@@ -156,36 +156,36 @@ export default function ChessBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update metrics when dimensions change
+  // 维度变化时更新度量
   useEffect(() => {
     if (rendererRef.current) {
       rendererRef.current.setMetrics(metrics);
     }
   }, [metrics]);
 
-  // Update pieces layer when game state changes
+  // 游戏状态变化时更新棋子分层
   useEffect(() => {
     if (piecesLayerRef.current) {
       piecesLayerRef.current.setGameState(gameState);
     }
 
-    // Detect captures and moves for effects
+    // 检测吃子和移动以产生特效
     if (gameState && prevGameStateRef.current && animEngineRef.current) {
       const prevState = prevGameStateRef.current;
       
-      // Get last move if available
+      // 如果有上一步移动则获取它
       let lastMove = null;
       if (gameState.moves.length > prevState.moves.length) {
         lastMove = gameState.moves[gameState.moves.length - 1];
       }
       
-      // Check for captures (piece disappeared at destination of last move)
+      // 检测吃子（棋子在最后移动目的地消失）
       if (lastMove) {
         const toRow = lastMove.to.row;
         const toCol = lastMove.to.col;
         const prevPieceAtDest = prevState.board[toRow][toCol];
         
-        // If there was a piece at destination and it's different from the moving piece, it's a capture
+        // 如果目的地有棋子且与移动棋子不同，则是吃子
         if (prevPieceAtDest && prevPieceAtDest.id !== lastMove.piece.id) {
           const x = padding + toCol * cellSize;
           const y = padding + toRow * cellSize;
@@ -195,7 +195,7 @@ export default function ChessBoard({
           );
         }
         
-        // Add move trail for every move
+        // 为每步移动添加移动轨迹
         const fromX = padding + lastMove.from.col * cellSize;
         const fromY = padding + lastMove.from.row * cellSize;
         const toX = padding + lastMove.to.col * cellSize;
@@ -210,7 +210,7 @@ export default function ChessBoard({
     prevGameStateRef.current = gameState;
   }, [gameState, padding, cellSize]);
 
-  // Update above-effects layer when selection/validMoves change
+  // 选择/有效移动变化时更新上方特效层
   useEffect(() => {
     if (aboveLayerRef.current) {
       aboveLayerRef.current.setSelectedPosition(selectedPiece);
@@ -220,7 +220,7 @@ export default function ChessBoard({
   }, [selectedPiece, displayValidMoves, gameState]);
 
   /**
-   * Converts a mouse click event to board coordinates.
+   * 将鼠标点击事件转换为棋盘坐标。
    */
   const getPositionFromEvent = useCallback((e: React.MouseEvent<HTMLCanvasElement>): Position | null => {
     const canvas = canvasRef.current;
@@ -244,7 +244,7 @@ export default function ChessBoard({
   }, [padding, cellSize]);
 
   /**
-   * Handles canvas clicks: selects a piece or executes a move.
+   * 处理画布点击：选中棋子或执行移动。
    */
   const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!gameState || gameState.status === GameStatus.FINISHED) {

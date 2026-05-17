@@ -1,6 +1,6 @@
 /**
- * @file BelowEffectsLayer - Layer 1: Effects rendered below pieces
- * Manages background animations like starfield and grid effects.
+ * @file BelowEffectsLayer - 第1层：棋盘下方渲染的效果
+ * 管理星空和网格效果等背景动画。
  */
 
 import { BaseLayer } from './BaseLayer';
@@ -8,8 +8,8 @@ import { AnimationEngine } from '../animations/AnimationEngine';
 import { BoardMetrics } from '../types/canvas';
 
 /**
- * Layer 1: Renders animated effects below the chess pieces.
- * Includes starfield and animated grid lines.
+ * 第1层：在 chess 棋子下方渲染动画效果。
+ * 包括星空和动态网格线。
  */
 export class BelowEffectsLayer extends BaseLayer {
   readonly zIndex = 1;
@@ -26,7 +26,7 @@ export class BelowEffectsLayer extends BaseLayer {
     _elapsedTime: number,
     _deltaTime: number
   ): void {
-    // Render all below-piece animations
+    // 渲染所有棋子下方动画
     this.animEngine.render(ctx, metrics);
   }
 }

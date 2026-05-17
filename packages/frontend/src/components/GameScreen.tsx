@@ -3,7 +3,7 @@ import ChessBoard, { ChessBoardSize } from './ChessBoard';
 import { GameState, Side, Position, GameStatus, PieceType } from '@chess/types';
 import './GameScreen.css';
 
-/** Props for the {@link GameScreen} component. */
+/** {@link GameScreen} 组件的属性。 */
 export interface GameScreenProps {
   gameMode: 'local' | 'online';
   gameState: GameState | null;
@@ -17,7 +17,7 @@ export interface GameScreenProps {
   error?: string | null;
 }
 
-/** Maps piece type to Chinese character. */
+/** 棋子类型到中文字符的映射。 */
 const PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.GENERAL]: '将',
   [PieceType.ADVISOR]: '士',
@@ -28,7 +28,7 @@ const PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.SOLDIER]: '卒',
 };
 
-/** Maps piece type to Chinese character for red side. */
+/** 棋子类型到红方中文字符的映射。 */
 const RED_PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.GENERAL]: '帅',
   [PieceType.ADVISOR]: '仕',
@@ -39,21 +39,21 @@ const RED_PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.SOLDIER]: '兵',
 };
 
-/** Column labels for move notation (Chinese convention). */
+/** 步法记录的列标签（中文约定）。 */
 const COL_LABELS = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
 /**
- * Formats a single move into Chinese notation.
- * Example: "炮二平五" or "马8进7"
+ * 将单步移动格式化为中文记法。
+ * 示例："炮二平五" 或 "马8进7"
  */
 function formatMove(move: { from: Position; to: Position; piece: { type: PieceType; side: Side } }, index: number): string {
   const { from, to, piece } = move;
   const isRed = piece.side === Side.RED;
   const pieceChar = isRed ? RED_PIECE_CHAR[piece.type] : PIECE_CHAR[piece.type];
 
-  // For red: columns are numbered from right (一) to left (九) from red's perspective
-  // But our board has col 0 on the left. Red is at bottom (row 9).
-  // In Chinese notation, red uses Chinese numerals from right to left.
+  // 对于红方：从红方视角，列从右（一）到左（九）编号
+  // 但我们的棋盘 col 0 在左边。红方在底部（row 9）。
+  // 中文记法中，红方使用中文数字从右到左。
   const fromColLabel = isRed
     ? COL_LABELS[8 - from.col]
     : String(from.col + 1);
@@ -66,15 +66,15 @@ function formatMove(move: { from: Position; to: Position; piece: { type: PieceTy
 
   let action: string;
   if (colDiff === 0) {
-    // Vertical move
+    // 垂直移动
     const steps = Math.abs(rowDiff);
     const stepLabel = isRed ? COL_LABELS[steps - 1] : String(steps);
     action = rowDiff < 0 ? `进${stepLabel}` : `退${stepLabel}`;
   } else if (rowDiff === 0) {
-    // Horizontal move
+    // 横向移动
     action = '平' + toColLabel;
   } else {
-    // Diagonal (horse, elephant, advisor)
+    // 对角线移动（马、象、士）
     const steps = Math.abs(rowDiff);
     const stepLabel = isRed ? COL_LABELS[steps - 1] : String(steps);
     action = rowDiff < 0 ? `进${toColLabel}` : `退${toColLabel}`;
@@ -87,16 +87,16 @@ function formatMove(move: { from: Position; to: Position; piece: { type: PieceTy
 }
 
 /**
- * Desktop-style game screen with left board + right info panel.
+ * 桌面风格的游戏界面，左侧棋盘 + 右侧信息面板。
  *
- * Features:
- * - Single centered chess board on the left
- * - Info panel on the right with turn indicator, player info, move history, controls
- * - Sci-fi line-art design matching the menu aesthetic
- * - Online mode: shows connection status and room ID
+ * 功能：
+ * - 左侧居中的单个棋盘
+ * - 右侧信息面板，包含回合指示器、玩家信息、步法记录、控制器
+ * - 科幻线条艺术设计，与菜单风格一致
+ * - 在线模式：显示连接状态和房间 ID
  *
  * @param props - {@link GameScreenProps}
- * @returns The rendered GameScreen component.
+ * @returns 渲染的 GameScreen 组件。
  */
 export default function GameScreen({
   gameMode,

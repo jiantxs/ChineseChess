@@ -1,27 +1,27 @@
 /**
- * @file Class-based piece selection state management
- * Manages selected position, valid moves, and game state.
- * Uses subscriber pattern for React state synchronization.
- * Used by App.tsx for piece selection handling.
+ * @file 基于类的棋子选择状态管理
+ * 管理选中的位置、合法移动和游戏状态。
+ * 使用订阅者模式进行 React 状态同步。
+ * 由 App.tsx 用于棋子选择处理。
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Position, GameState, GameStatus } from '@chess/types';
 
 /**
- * Represents the current state of the board controller.
+ * 表示棋盘控制器的当前状态。
  * @interface BoardControllerState
  */
 export interface BoardControllerState {
-  /** Currently selected board position, or null if nothing selected */
+  /** 当前选中的棋盘位置，如果没有选中则为 null */
   selectedPosition: Position | null;
-  /** Array of valid destination positions for the selected piece */
+  /** 选中棋子的有效目标位置数组 */
   validMoves: Position[];
 }
 
 /**
- * Class-based controller for managing board piece selection and moves.
- * Maintains selected position, valid moves, and game state.
- * Uses subscriber pattern to notify React components of state changes.
+ * 用于管理棋盘棋子选择和移动的类控制器。
+ * 维护选中的位置、合法移动和游戏状态。
+ * 使用订阅者模式通知 React 组件状态变更。
  */
 export class BoardController {
   private gameState: GameState | null = null;
@@ -32,9 +32,9 @@ export class BoardController {
   private subscribers: Set<(state: BoardControllerState) => void> = new Set();
 
   /**
-   * Creates a new BoardController instance.
-   * @param onMove - Callback invoked when a valid move is executed (from, to)
-   * @param onGetValidMoves - Optional callback to request valid moves for a position
+   * 创建新的 BoardController 实例。
+   * @param onMove - 执行有效移动时调用的回调 (from, to)
+   * @param onGetValidMoves - 请求位置有效移动的可选回调
    */
   constructor(
     onMove: (from: Position, to: Position) => void,
@@ -45,9 +45,9 @@ export class BoardController {
   }
 
   /**
-   * Updates the callbacks after construction.
-   * @param onMove - Callback invoked when a valid move is executed
-   * @param onGetValidMoves - Optional callback to request valid moves
+   * 构造后更新回调。
+   * @param onMove - 执行有效移动时调用的回调
+   * @param onGetValidMoves - 请求有效移动的可选回调
    */
   setCallbacks(
     onMove: (from: Position, to: Position) => void,
@@ -58,9 +58,9 @@ export class BoardController {
   }
 
   /**
-   * Subscribes to state changes. Callback is immediately invoked with current state.
-   * @param callback - Function called whenever state changes
-   * @returns Unsubscribe function to remove the subscription
+   * 订阅状态变更。回调会立即使用当前状态调用。
+   * @param callback - 状态变更时调用的函数
+   * @returns 取消订阅函数，用于移除订阅
    */
   subscribe(callback: (state: BoardControllerState) => void): () => void {
     this.subscribers.add(callback);
@@ -83,16 +83,16 @@ export class BoardController {
   }
 
   /**
-   * Updates the current game state.
-   * @param state - The new game state, or null to clear
+   * 更新当前游戏状态。
+   * @param state - 新的游戏状态，或为 null 以清除
    */
   setGameState(state: GameState | null): void {
     this.gameState = state;
   }
 
   /**
-   * Updates the valid moves for the currently selected piece.
-   * @param moves - Array of valid destination positions
+   * 更新当前选中棋子的合法移动。
+   * @param moves - 有效目标位置数组
    */
   setValidMoves(moves: Position[]): void {
     this.validMoves = moves;
@@ -100,10 +100,10 @@ export class BoardController {
   }
 
   /**
-   * Handles a board cell click event.
-   * Selects a piece if it belongs to the current player, or executes a move if destination is valid.
-   * @param pos - The position that was clicked
-   * @param hasPiece - Whether the clicked cell contains a piece
+   * 处理棋盘格子点击事件。
+   * 如果棋子属于当前玩家则选中它，如果目标是有效移动则执行移动。
+   * @param pos - 被点击的位置
+   * @param hasPiece - 点击的格子是否包含棋子
    */
   onBoardClick(pos: Position, hasPiece: boolean): void {
     if (!this.gameState) return;
@@ -130,7 +130,7 @@ export class BoardController {
   }
 
   /**
-   * Clears the current piece selection and valid moves.
+   * 清除当前棋子选择和合法移动。
    */
   resetSelection(): void {
     this.selectedPos = null;
@@ -144,12 +144,12 @@ export class BoardController {
 }
 
 /**
- * React hook wrapping BoardController for use in functional components.
- * Maintains controller instance in a ref and syncs state with React.
+ * React Hook，用于在函数组件中使用 BoardController。
+ * 在 ref 中维护控制器实例并与 React 状态同步。
  *
- * @param onMove - Callback when a move is executed
- * @param onGetValidMoves - Optional callback to fetch valid moves
- * @returns Object containing controller instance, state, and action setters
+ * @param onMove - 执行移动时的回调
+ * @param onGetValidMoves - 获取有效移动的可选回调
+ * @returns 包含控制器实例、状态和操作设置器的对象
  */
 export function useBoardController(
   onMove: (from: Position, to: Position) => void,

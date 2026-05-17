@@ -1,10 +1,10 @@
 /**
- * @file API utility functions for building correct paths with prefix support
+ * @file 用于构建带前缀支持的正确路径的 API 工具函数
  *
- * Handles path prefix for both development and production deployments.
- * When deployed under a path prefix (e.g., /abcc), all API calls need to include it.
+ * 处理开发和生产部署的路径前缀。
+ * 当部署在路径前缀下时（如 /abcc），所有 API 调用都需要包含前缀。
  *
- * Usage:
+ * 用法：
  *   import { apiPath } from './api';
  *   await fetch(apiPath('/api/game/player-id'), { method: 'POST' });
  *
@@ -12,18 +12,18 @@
  */
 
 /**
- * Returns the API path with prefix support.
- * If the app is deployed under a prefix (e.g., /abcc), the prefix is prepended.
- * If deployed at root, returns the path as-is.
+ * 返回带前缀支持的 API 路径。
+ * 如果应用部署在前缀下（如 /abcc），则添加前缀。
+ * 如果部署在根目录，则返回原路径。
  *
- * @param path - The API path (e.g., '/api/game/player-id')
- * @returns The full path including prefix if applicable
+ * @param path - API 路径（例如 '/api/game/player-id'）
+ * @returns 包含前缀的完整路径（如果适用）
  *
  * @example
- * // Deployed at root
+ * // 部署在根目录
  * apiPath('/api/game/player-id')  // '/api/game/player-id'
  *
- * // Deployed at /abcc
+ * // 部署在 /abcc
  * apiPath('/api/game/player-id')  // '/abcc/api/game/player-id'
  */
 export function apiPath(path: string): string {
@@ -33,16 +33,16 @@ export function apiPath(path: string): string {
 }
 
 /**
- * Returns the WebSocket URL with prefix support.
+ * 返回带前缀支持的 WebSocket URL。
  *
- * @param path - The WebSocket path (e.g., '/ws')
- * @returns The full WebSocket URL with prefix if applicable
+ * @param path - WebSocket 路径（例如 '/ws'）
+ * @returns 带前缀的完整 WebSocket URL（如果适用）
  *
  * @example
- * // Deployed at root
+ * // 部署在根目录
  * wsPath('/ws')  // 'ws://localhost:3000/ws'
  *
- * // Deployed at /abcc
+ * // 部署在 /abcc
  * wsPath('/ws')  // 'ws://localhost:3000/abcc/ws'
  */
 export function wsPath(path: string): string {

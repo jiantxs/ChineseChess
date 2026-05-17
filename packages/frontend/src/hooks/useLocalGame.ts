@@ -1,36 +1,36 @@
 /**
- * @file Local hot-seat game hook
- * Wraps useGameSocket with local=true for hot-seat play.
- * Single player controls both sides on same device.
+ * @file 本地双人对战 Hook
+ * 使用 local=true 包装 useGameSocket，用于双人对战。
+ * 单个玩家在同一设备上控制双方。
  */
 import { useCallback } from 'react';
 import { useGameSocket } from './useGameSocket';
 import type { GameState, Position } from '@chess/types';
 
 /**
- * Return type for the useLocalGame hook.
+ * useLocalGame Hook 的返回值类型。
  * @interface UseLocalGameReturn
  */
 interface UseLocalGameReturn {
-  /** Current game state, or null if no game active */
+  /** 当前游戏状态，如果没有活动游戏则为 null */
   gameState: GameState | null;
-  /** Array of valid moves for the currently selected piece */
+  /** 当前选中棋子的有效移动位置数组 */
   validMoves: Position[];
-  /** Request valid moves for a given position */
+  /** 请求给定位置的有效移动 */
   getValidMoves: (position: Position) => void;
-  /** Execute a move from one position to another */
+  /** 执行从一位置到另一位置的移动 */
   makeMove: (from: Position, to: Position) => void;
-  /** Reset the current game and start a new one */
+  /** 重置当前游戏并开始新游戏 */
   resetGame: () => void;
 }
 
 /**
- * Hook for local hot-seat play.
- * Creates a local game on mount and provides game controls.
- * Single player controls both Red and Black sides on the same device.
+ * 用于本地双人对战的 Hook。
+ * 挂载时创建本地游戏并提供游戏控制功能。
+ * 单个玩家在同一设备上控制红方和黑方。
  *
- * @param layoutName - Name of the layout to use (default: 'standard')
- * @returns Game state and control functions
+ * @param layoutName - 要使用的布局名称（默认：'standard'）
+ * @returns 游戏状态和控制函数
  */
 export function useLocalGame(layoutName: string = 'standard'): UseLocalGameReturn {
   const socket = useGameSocket();

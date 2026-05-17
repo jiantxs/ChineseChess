@@ -1,6 +1,6 @@
 /**
- * @file CaptureEffect - Piece capture explosion animation
- * Renders particle explosion when a piece is captured.
+ * @file CaptureEffect - 棋子捕获爆炸动画
+ * 棋子被吃时渲染粒子爆炸效果。
  */
 
 import { BaseAnimation } from '../animations/BaseAnimation';
@@ -19,8 +19,8 @@ interface Particle {
 }
 
 /**
- * Explosion effect when a piece is captured.
- * Creates particles that burst outward and fade.
+ * 棋子被捕获时的爆炸效果。
+ * 创建向外扩散并渐隐的粒子。
  */
 export class CaptureEffect extends BaseAnimation {
   readonly id: string;
@@ -28,7 +28,7 @@ export class CaptureEffect extends BaseAnimation {
   private x: number;
   private y: number;
   private side: Side;
-  private duration: number = 800; // ms
+  private duration: number = 800; // 毫秒
 
   constructor(x: number, y: number, side: Side, uniqueId: string) {
     super(`capture-${uniqueId}`);
@@ -72,7 +72,7 @@ export class CaptureEffect extends BaseAnimation {
         allDead = false;
         particle.x += particle.vx * deltaTime * 0.1;
         particle.y += particle.vy * deltaTime * 0.1;
-        particle.vx *= 0.98; // friction
+        particle.vx *= 0.98; // 摩擦力
         particle.vy *= 0.98;
         particle.life -= deltaTime;
       }

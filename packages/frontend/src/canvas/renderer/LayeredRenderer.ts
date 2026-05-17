@@ -1,6 +1,6 @@
 /**
- * @file LayeredRenderer - Central canvas rendering coordinator
- * Manages multiple layers and animation engine with a single render loop.
+ * @file LayeredRenderer - 中央画布渲染协调器
+ * 使用单个渲染循环管理多个分层和动画引擎。
  */
 
 import { BaseLayer } from '../layers/BaseLayer';
@@ -9,8 +9,8 @@ import { RenderLoop } from '../renderer/RenderLoop';
 import { BoardMetrics } from '../types/canvas';
 
 /**
- * Coordinates multi-layer canvas rendering with animation support.
- * Manages the render loop, layers, and animation engine.
+ * 协调带动画支持的多层画布渲染。
+ * 管理渲染循环、分层和动画引擎。
  */
 export class LayeredRenderer {
   private canvas: HTMLCanvasElement;
@@ -32,25 +32,25 @@ export class LayeredRenderer {
     this.animEngine = animEngine;
     this.renderLoop = new RenderLoop();
 
-    // Set canvas size
+    // 设置画布尺寸
     this.canvas.width = metrics.width;
     this.canvas.height = metrics.height;
   }
 
   /**
-   * Add a rendering layer. Layers are sorted by z-index automatically.
-   * @param layer - The layer to add
+   * 添加渲染分层。分层自动按 z-index 排序。
+   * @param layer - 要添加的分层
    */
   addLayer(layer: BaseLayer): void {
     this.layers.push(layer);
-    // Sort by z-index (ascending - lower z-index drawn first)
+    // 按 z-index 排序（升序 - 较低 z-index 先绘制）
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
     layer.onAttach?.();
   }
 
   /**
-   * Remove a layer.
-   * @param layer - The layer to remove
+   * 移除分层。
+   * @param layer - 要移除的分层
    */
   removeLayer(layer: BaseLayer): void {
     const index = this.layers.indexOf(layer);
@@ -61,15 +61,15 @@ export class LayeredRenderer {
   }
 
   /**
-   * Get the animation engine for adding/removing animations.
+   * 获取动画引擎以添加/移除动画。
    */
   get animationEngine(): AnimationEngine {
     return this.animEngine;
   }
 
   /**
-   * Update board metrics (e.g., on resize).
-   * @param metrics - New board metrics
+   * 更新棋盘度量（例如在调整大小时）。
+   * @param metrics - 新的棋盘度量
    */
   setMetrics(metrics: BoardMetrics): void {
     this.metrics = metrics;
@@ -78,7 +78,7 @@ export class LayeredRenderer {
   }
 
   /**
-   * Start the render loop.
+   * 启动渲染循环。
    */
   start(): void {
     if (this.unsubscribeFrame) return;
@@ -90,7 +90,7 @@ export class LayeredRenderer {
   }
 
   /**
-   * Stop the render loop.
+   * 停止渲染循环。
    */
   stop(): void {
     this.renderLoop.stop();
@@ -101,31 +101,31 @@ export class LayeredRenderer {
   }
 
   /**
-   * Perform a single render frame.
-   * Called automatically by the render loop.
+   * 执行单个渲染帧。
+   * 由渲染循环自动调用。
    */
   private render(deltaTime: number, elapsedTime: number): void {
-    // Clear canvas
+    // 清除画布
     this.ctx.clearRect(0, 0, this.metrics.width, this.metrics.height);
 
-    // Update animations
+    // 更新动画
     this.animEngine.update(deltaTime);
 
-    // Render layers in order
+    // 按顺序渲染分层
     for (const layer of this.layers) {
       layer.render(this.ctx, this.metrics, elapsedTime, deltaTime);
     }
   }
 
   /**
-   * Check if renderer is currently running.
+   * 检查渲染器是否正在运行。
    */
   get isRunning(): boolean {
     return this.renderLoop.running;
   }
 
   /**
-   * Clean up resources.
+   * 清理资源。
    */
   destroy(): void {
     this.stop();

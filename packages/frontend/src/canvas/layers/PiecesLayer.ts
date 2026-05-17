@@ -1,6 +1,6 @@
 /**
- * @file PiecesLayer - Layer 2: Chess pieces rendering with idle animations
- * Renders all chess pieces with idle effects and Chinese character labels.
+ * @file PiecesLayer - 第2层：带空闲动画的棋子渲染
+ * 渲染所有棋子的空闲效果和中文字符标签。
  */
 
 import { BaseLayer } from './BaseLayer';
@@ -8,13 +8,13 @@ import { BoardMetrics } from '../types/canvas';
 import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/types';
 import { clientLogger } from '../../utils/clientLogger';
 
-/** In-memory cache of loaded piece SVG images */
+/** 已加载棋子 SVG 图片的内存缓存 */
 const PIECE_IMAGES: Record<string, HTMLImageElement> = {};
 let imagesLoaded = false;
 
 /**
- * Loads all piece SVG images.
- * @returns Promise that resolves when all images are loaded
+ * 加载所有棋子 SVG 图片。
+ * @returns 所有图片加载完成时解析的 Promise
  */
 function loadPieceImages(): Promise<void> {
   if (imagesLoaded) return Promise.resolve();
@@ -45,14 +45,14 @@ function loadPieceImages(): Promise<void> {
 }
 
 /**
- * Returns the image cache key for a piece.
+ * 返回棋子的图片缓存键。
  */
 function getPieceImageName(piece: Piece): string {
   return `${piece.side}-${piece.type}`;
 }
 
 /**
- * Get Chinese character label for a piece.
+ * 获取棋子的中文字符标签。
  */
 function getPieceLabel(piece: Piece): string {
   const labels: Record<string, Record<string, string>> = {
@@ -79,14 +79,14 @@ function getPieceLabel(piece: Piece): string {
 }
 
 /**
- * Get piece glow color based on side.
+ * 根据棋子阵营获取棋子发光颜色。
  */
 function getPieceGlowColor(side: Side): string {
   return side === Side.RED ? '#00f0ff' : '#ff00ff';
 }
 
 /**
- * Layer 2: Renders all chess pieces with idle animations and Chinese labels.
+ * 第2层：渲染所有带空闲动画和中文字标签的棋子。
  */
 export class PiecesLayer extends BaseLayer {
   readonly zIndex = 2;
@@ -101,8 +101,8 @@ export class PiecesLayer extends BaseLayer {
   }
 
   /**
-   * Update the game state to render.
-   * @param gameState - Current game state
+   * 更新要渲染的游戏状态。
+   * @param gameState - 当前游戏状态
    */
   setGameState(gameState: GameState | null): void {
     this.gameState = gameState;
@@ -125,22 +125,22 @@ export class PiecesLayer extends BaseLayer {
           const centerX = padding + col * cellSize;
           const centerY = padding + row * cellSize;
           
-          // Calculate idle animation
+          // 计算空闲动画
           const idleAnim = this.calculateIdleAnimation(piece, row, col, elapsedTime);
           
           ctx.save();
           ctx.translate(centerX, centerY);
           
-          // Apply scale animation
+          // 应用缩放动画
           ctx.scale(idleAnim.scale, idleAnim.scale);
           
-          // Apply rotation animation (subtle)
+          // 应用旋转动画（微妙）
           ctx.rotate(idleAnim.rotation);
           
-          // Draw glow effect
+          // 绘制发光效果
           this.drawPieceGlow(ctx, piece, pieceSize, idleAnim.glowIntensity);
           
-          // Draw piece image
+          // 绘制棋子图片
           const x = -pieceSize / 2;
           const y = -pieceSize / 2;
           const imgName = getPieceImageName(piece);
@@ -149,7 +149,7 @@ export class PiecesLayer extends BaseLayer {
             ctx.drawImage(img, x, y, pieceSize, pieceSize);
           }
           
-          // Draw Chinese character label (fixed position, not floating)
+          // 绘制中文字符标签（固定位置，不浮动）
           this.drawPieceLabel(ctx, piece, pieceSize);
           
           ctx.restore();
@@ -159,7 +159,7 @@ export class PiecesLayer extends BaseLayer {
   }
 
   /**
-   * Calculate idle animation parameters for a piece.
+   * 计算棋子的空闲动画参数。
    */
   private calculateIdleAnimation(
     piece: Piece,
@@ -167,24 +167,24 @@ export class PiecesLayer extends BaseLayer {
     col: number,
     elapsedTime: number
   ): { scale: number; rotation: number; glowIntensity: number } {
-    // Unique phase for each piece based on position
+    // 基于位置的每个棋子的独特相位
     const phase = (row * BOARD_COLS + col) * 0.7;
     
-    // Breathing scale animation
+    // 呼吸缩放动画
     const breatheSpeed = 0.002;
     const breathePhase = Math.sin(elapsedTime * breatheSpeed + phase);
     const scale = 1 + breathePhase * 0.03; // 0.97 - 1.03
     
-    // Very subtle rotation (tilt)
+    // 非常微妙的旋转（倾斜）
     const tiltSpeed = 0.001;
     const rotation = Math.sin(elapsedTime * tiltSpeed + phase) * 0.02; // ±0.02 rad
     
-    // Pulsing glow
+    // 脉冲发光
     const glowSpeed = 0.003;
     const glowPhase = (Math.sin(elapsedTime * glowSpeed + phase) + 1) / 2;
     const glowIntensity = 0.3 + glowPhase * 0.7; // 0.3 - 1.0
     
-    // General has more prominent animation
+    // 将军有更突出的动画
     if (piece.type === PieceType.GENERAL) {
       return {
         scale: 1 + breathePhase * 0.05,
@@ -197,7 +197,7 @@ export class PiecesLayer extends BaseLayer {
   }
 
   /**
-   * Draw glow effect behind piece.
+   * 在棋子后方绘制发光效果。
    */
   private drawPieceGlow(
     ctx: CanvasRenderingContext2D,
@@ -222,8 +222,8 @@ export class PiecesLayer extends BaseLayer {
   }
 
   /**
-   * Draw Chinese character label for a piece.
-   * Fixed position at center of piece, large and clear.
+   * 绘制棋子的中文字符标签。
+   * 固定位置在棋子中心，大而清晰。
    */
   private drawPieceLabel(
     ctx: CanvasRenderingContext2D,
@@ -237,16 +237,16 @@ export class PiecesLayer extends BaseLayer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Large font size - 45% of piece size
+    // 大字体 - 棋子大小的 45%
     const fontSize = Math.round(pieceSize * 0.45);
     ctx.font = `bold ${fontSize}px "Microsoft YaHei", "SimHei", "Noto Sans SC", sans-serif`;
     
-    // White text with glow for visibility
+    // 带发光效果的白色文字以提高可见性
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = getPieceGlowColor(piece.side);
     ctx.shadowBlur = 8;
     
-    // Draw at center of piece
+    // 在棋子中心绘制
     ctx.fillText(label, 0, 0);
     
     ctx.restore();

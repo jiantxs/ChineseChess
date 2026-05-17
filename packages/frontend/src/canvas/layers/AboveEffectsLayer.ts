@@ -1,6 +1,6 @@
 /**
- * @file AboveEffectsLayer - Layer 3: Effects rendered above pieces
- * Renders dynamic selection highlights, valid move indicators, and game-over overlay.
+ * @file AboveEffectsLayer - 第3层：棋子上方渲染的效果
+ * 渲染动态选中高亮、有效移动指示器和游戏结束叠加层。
  */
 
 import { BaseLayer } from './BaseLayer';
@@ -8,8 +8,8 @@ import { BoardMetrics } from '../types/canvas';
 import { Position, GameState, GameStatus, Side } from '@chess/types';
 
 /**
- * Layer 3: Renders dynamic UI effects above the pieces.
- * Includes animated selection highlight, pulsing valid move indicators, and game-over overlay.
+ * 第3层：在棋子上方渲染动态 UI 效果。
+ * 包括动画选中高亮、脉冲有效移动指示器和游戏结束叠加层。
  */
 export class AboveEffectsLayer extends BaseLayer {
   readonly zIndex = 3;
@@ -18,21 +18,21 @@ export class AboveEffectsLayer extends BaseLayer {
   private gameState: GameState | null = null;
 
   /**
-   * Update the selected piece position.
+   * 更新选中的棋子位置。
    */
   setSelectedPosition(pos: Position | null): void {
     this.selectedPosition = pos;
   }
 
   /**
-   * Update valid moves for display.
+   * 更新显示的有效移动。
    */
   setValidMoves(moves: Position[]): void {
     this.validMoves = moves;
   }
 
   /**
-   * Update game state for game-over detection.
+   * 更新游戏状态以检测游戏结束。
    */
   setGameState(gameState: GameState | null): void {
     this.gameState = gameState;
@@ -46,7 +46,7 @@ export class AboveEffectsLayer extends BaseLayer {
   ): void {
     const { padding, cellSize, pieceSize, width, height } = metrics;
 
-    // Selection highlight: animated rotating hexagon with pulsing glow
+    // 选中高亮：带脉冲发光的动画旋转六边形
     if (this.selectedPosition) {
       const x = padding + this.selectedPosition.col * cellSize;
       const y = padding + this.selectedPosition.row * cellSize;
@@ -54,18 +54,18 @@ export class AboveEffectsLayer extends BaseLayer {
       this.drawSelectionHighlight(ctx, x, y, pieceSize, elapsedTime);
     }
 
-    // Valid move indicators: animated pulsing diamonds
+    // 有效移动指示器：动画脉冲菱形
     if (this.validMoves.length > 0) {
       for (let i = 0; i < this.validMoves.length; i++) {
         const move = this.validMoves[i];
         const x = padding + move.col * cellSize;
         const y = padding + move.row * cellSize;
-        // Offset each indicator's animation phase for wave effect
+        // 为每个指示器的动画相位设置偏移以产生波动效果
         this.drawValidMoveIndicator(ctx, x, y, cellSize, elapsedTime, i);
       }
     }
 
-    // Game over overlay
+    // 游戏结束叠加层
     if (this.gameState?.status === GameStatus.FINISHED) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(0, 0, width, height);
@@ -83,7 +83,7 @@ export class AboveEffectsLayer extends BaseLayer {
   }
 
   /**
-   * Draw animated selection highlight - rotating hexagon with pulsing glow.
+   * 绘制动画选中高亮 - 带脉冲发光的旋转六边形。
    */
   private drawSelectionHighlight(
     ctx: CanvasRenderingContext2D,
@@ -92,17 +92,17 @@ export class AboveEffectsLayer extends BaseLayer {
     pieceSize: number,
     elapsedTime: number
   ): void {
-    // Pulsing size animation
+    // 脉冲大小动画
     const pulseSpeed = 0.003;
     const pulsePhase = Math.sin(elapsedTime * pulseSpeed) * 0.15 + 1; // 0.85 - 1.15
     const baseRadius = pieceSize / 2 + 4;
     const radius = baseRadius * pulsePhase;
     
-    // Rotating animation
+    // 旋转动画
     const rotationSpeed = 0.001;
     const rotation = elapsedTime * rotationSpeed;
     
-    // Color cycling - cyan to magenta
+    // 颜色循环 - 青色到品红
     const colorPhase = (Math.sin(elapsedTime * 0.0015) + 1) / 2; // 0 - 1
     const r = Math.round(0 * (1 - colorPhase) + 255 * colorPhase);
     const g = Math.round(240 * (1 - colorPhase) + 0 * colorPhase);
@@ -113,7 +113,7 @@ export class AboveEffectsLayer extends BaseLayer {
     ctx.translate(x, y);
     ctx.rotate(rotation);
 
-    // Outer glow effect
+    // 外部发光效果
     ctx.shadowColor = color;
     ctx.shadowBlur = 15 * pulsePhase;
 
@@ -134,7 +134,7 @@ export class AboveEffectsLayer extends BaseLayer {
     ctx.closePath();
     ctx.stroke();
 
-    // Inner hexagon (smaller, rotating opposite direction)
+    // 内部六边形（较小，向相反方向旋转）
     ctx.rotate(-rotation * 2);
     ctx.strokeStyle = color;
     ctx.lineWidth = 1.5;
@@ -157,7 +157,7 @@ export class AboveEffectsLayer extends BaseLayer {
   }
 
   /**
-   * Draw animated valid move indicator - pulsing diamond with color shift.
+   * 绘制动画有效移动指示器 - 带颜色变化的脉冲菱形。
    */
   private drawValidMoveIndicator(
     ctx: CanvasRenderingContext2D,
@@ -167,7 +167,7 @@ export class AboveEffectsLayer extends BaseLayer {
     elapsedTime: number,
     index: number
   ): void {
-    // Each indicator has slightly different phase for wave effect
+    // 每个指示器有略微不同的相位以产生波动效果
     const phaseOffset = index * 0.5;
     const pulseSpeed = 0.004;
     const pulsePhase = Math.sin(elapsedTime * pulseSpeed + phaseOffset) * 0.3 + 1; // 0.7 - 1.3
@@ -175,7 +175,7 @@ export class AboveEffectsLayer extends BaseLayer {
     const baseSize = cellSize * 0.12;
     const size = baseSize * pulsePhase;
     
-    // Color cycling with phase offset
+    // 带相位偏移的颜色循环
     const colorSpeed = 0.002;
     const colorPhase = (Math.sin(elapsedTime * colorSpeed + phaseOffset) + 1) / 2;
     const r = Math.round(0 * (1 - colorPhase) + 255 * colorPhase);
@@ -186,11 +186,11 @@ export class AboveEffectsLayer extends BaseLayer {
     ctx.save();
     ctx.translate(x, y);
 
-    // Glow effect
+    // 发光效果
     ctx.shadowColor = color;
     ctx.shadowBlur = 10 * pulsePhase;
 
-    // Outer rotating diamond frame (constant visibility, rotating)
+    // 外部旋转菱形框架（恒定可见性，旋转）
     const rotationSpeed = 0.002;
     const rotation = elapsedTime * rotationSpeed + phaseOffset;
     ctx.save();
@@ -220,7 +220,7 @@ export class AboveEffectsLayer extends BaseLayer {
     ctx.closePath();
     ctx.fill();
 
-    // Inner diamond (smaller, brighter)
+    // 内部菱形（较小，更亮）
     ctx.fillStyle = '#fff';
     ctx.globalAlpha = 0.8 * pulsePhase;
     ctx.beginPath();

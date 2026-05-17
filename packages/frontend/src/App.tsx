@@ -9,18 +9,18 @@ import { apiPath } from './utils/api';
 import './App.css';
 
 /**
- * Root React component for Chinese Chess (Xiangqi).
+ * 中国象棋 (象棋) 的根 React 组件。
  *
- * Provides mode switching between local hot-seat and online multiplayer.
- * Displays a menu screen with options to start a local game, create an online room,
- * or join an existing room. Once a game starts, renders the game board(s) and controls.
+ * 提供本地双人对战和在线多人游戏的模式切换。
+ * 显示菜单界面，包含开始本地游戏、创建在线房间或加入已有房间的选项。
+ * 游戏开始后，渲染棋盘和控制器。
  *
- * @returns The rendered App component.
+ * @returns 渲染的 App 组件。
  */
 function App() {
-  /** Current game mode: 'local' for hot-seat play, 'online' for multiplayer via WebSocket. */
+  /** 当前游戏模式：'local' 为双人对战，'online' 为通过 WebSocket 的多人游戏。 */
   const [gameMode, setGameMode] = useState<'local' | 'online'>('local');
-  /** Whether to show the menu screen (true) or the game screen (false). */
+  /** 是否显示菜单界面 (true) 或游戏界面 (false)。 */
   const [showMenu, setShowMenu] = useState(true);
 
   const onlineGame = useGameSocket();
@@ -29,10 +29,10 @@ function App() {
   const gameIdInputRef = useRef<HTMLInputElement>(null);
 
   /**
-   * Delegates a move to the active game mode (local or online).
+   * 将移动委托给当前活动的游戏模式（本地或在线）。
    *
-   * @param from - The source position of the piece.
-   * @param to - The destination position.
+   * @param from - 棋子的起始位置。
+   * @param to - 目标位置。
    */
   const handleMove = useCallback((from: Position, to: Position) => {
     if (gameMode === 'local') {
@@ -43,9 +43,9 @@ function App() {
   }, [gameMode, localGame, onlineGame]);
 
   /**
-   * Delegates a request for valid moves to the active game mode.
+   * 将获取有效移动的请求委托给当前活动的游戏模式。
    *
-   * @param position - The board position to query.
+   * @param position - 要查询的棋盘位置。
    */
   const handleGetValidMoves = useCallback((position: Position) => {
     if (gameMode === 'local') {
@@ -67,17 +67,17 @@ function App() {
   const gameState = activeGame.gameState;
   const error = gameMode === 'online' ? onlineGame.error : null;
 
-  // Sync the board controller with the current game state from the active mode.
+  // 将棋盘控制器与当前活动模式的游戏状态同步。
   useEffect(() => {
     setGameState(gameState);
   }, [gameState, setGameState]);
 
-  // Sync valid moves from the active mode into the board controller.
+  // 将活动模式的合法移动同步到棋盘控制器。
   useEffect(() => {
     setValidMoves(activeGame.validMoves);
   }, [activeGame.validMoves, setValidMoves]);
 
-  /** Starts a local hot-seat game and hides the menu. */
+  /** 开始本地双人对战并隐藏菜单。 */
   const handleStartLocal = useCallback(() => {
     setGameMode('local');
     setShowMenu(false);
@@ -85,7 +85,7 @@ function App() {
     localGame.resetGame();
   }, [localGame, resetSelection]);
 
-  /** Creates a new online room and hides the menu. */
+  /** 创建新的在线房间并隐藏菜单。 */
   const handleStartOnline = useCallback(() => {
     setGameMode('online');
     setShowMenu(false);
@@ -94,9 +94,9 @@ function App() {
   }, [onlineGame, resetSelection]);
 
   /**
-   * Joins an existing online room by ID and hides the menu.
+   * 通过 ID 加入一个已存在的在线房间并隐藏菜单。
    *
-   * @param gameId - The room ID to join.
+   * @param gameId - 要加入的房间 ID。
    */
   const handleJoinGame = useCallback((gameId: string) => {
     setGameMode('online');
@@ -105,7 +105,7 @@ function App() {
     onlineGame.joinGame(gameId);
   }, [onlineGame, resetSelection]);
 
-  /** Returns to the menu and resets both local and online game states. */
+  /** 返回菜单并重置本地和在线游戏状态。 */
   const handleReset = useCallback(() => {
     setShowMenu(true);
     resetSelection();

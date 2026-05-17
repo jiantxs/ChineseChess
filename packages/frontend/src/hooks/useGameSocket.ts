@@ -1,7 +1,7 @@
 /**
- * @file WebSocket client hook for online multiplayer
- * Manages WebSocket connection lifecycle, game state sync, moves, and valid moves.
- * Session-based player identity via /api/game/player-id
+ * @file 用于在线多人游戏的 WebSocket 客户端 Hook
+ * 管理 WebSocket 连接生命周期、游戏状态同步、移动和合法移动。
+ * 通过 /api/game/player-id 进行基于会话的玩家身份识别
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
@@ -16,7 +16,7 @@ import { clientLogger } from '../utils/clientLogger';
 import { apiPath, wsPath } from '../utils/api';
 
 /**
- * Return type for the useGameSocket hook.
+ * useGameSocket Hook 的返回值类型。
  * @interface UseGameSocketReturn
  */
 interface UseGameSocketReturn {

@@ -1,6 +1,6 @@
 /**
- * @file MoveTrail - Piece movement trail effect
- * Renders a vivid fading trail line from source to destination after a move.
+ * @file MoveTrail - 棋子移动轨迹效果
+ * 移动后在从起点到终点渲染生动的渐隐轨迹线。
  */
 
 import { BaseAnimation } from '../animations/BaseAnimation';
@@ -8,8 +8,8 @@ import { BoardMetrics } from '../types/canvas';
 import { Side } from '@chess/types';
 
 /**
- * Trail effect showing the path of a piece movement.
- * Creates a bright gradient line with particle effects that fades quickly.
+ * 显示棋子移动路径的轨迹效果。
+ * 创建带有粒子效果的高亮渐变线，快速淡出。
  */
 export class MoveTrail extends BaseAnimation {
   readonly id: string;
@@ -18,8 +18,8 @@ export class MoveTrail extends BaseAnimation {
   private toX: number;
   private toY: number;
   private side: Side;
-  private duration: number = 750; // ms - shortened by half
-  private trailWidth: number = 5; // thicker
+  private duration: number = 750; // 毫秒 - 减半
+  private trailWidth: number = 5; // 更粗
 
   constructor(
     fromX: number,
@@ -56,7 +56,7 @@ export class MoveTrail extends BaseAnimation {
     
     ctx.save();
     
-    // Main bright trail line
+    // 明亮的主轨迹线
     ctx.globalAlpha = alpha * 0.9;
     ctx.strokeStyle = color;
     ctx.lineWidth = this.trailWidth;
@@ -69,7 +69,7 @@ export class MoveTrail extends BaseAnimation {
     ctx.lineTo(this.toX, this.toY);
     ctx.stroke();
     
-    // Inner white core for brightness
+    // 内层白色核心以增加亮度
     ctx.globalAlpha = alpha * 0.7;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = this.trailWidth * 0.4;
@@ -80,7 +80,7 @@ export class MoveTrail extends BaseAnimation {
     ctx.lineTo(this.toX, this.toY);
     ctx.stroke();
     
-    // Animated energy particles along the trail
+    // 沿轨迹的动态能量粒子
     const particleCount = 5;
     const dx = this.toX - this.fromX;
     const dy = this.toY - this.fromY;
@@ -101,7 +101,7 @@ export class MoveTrail extends BaseAnimation {
       ctx.fill();
     }
     
-    // Start point - bright flash
+    // 起点 - 明亮闪光
     ctx.globalAlpha = alpha * 0.8;
     ctx.fillStyle = '#ffffff';
     ctx.shadowColor = color;
@@ -110,7 +110,7 @@ export class MoveTrail extends BaseAnimation {
     ctx.arc(this.fromX, this.fromY, 6, 0, Math.PI * 2);
     ctx.fill();
     
-    // Start point outer ring
+    // 起点外环
     ctx.globalAlpha = alpha * 0.5;
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
@@ -118,7 +118,7 @@ export class MoveTrail extends BaseAnimation {
     ctx.arc(this.fromX, this.fromY, 10, 0, Math.PI * 2);
     ctx.stroke();
     
-    // End point - brighter flash
+    // 终点 - 更亮闪光
     ctx.globalAlpha = alpha * 1.0;
     ctx.fillStyle = '#ffffff';
     ctx.shadowBlur = 30 * alpha;
@@ -126,7 +126,7 @@ export class MoveTrail extends BaseAnimation {
     ctx.arc(this.toX, this.toY, 7, 0, Math.PI * 2);
     ctx.fill();
     
-    // End point outer ring
+    // 终点外环
     ctx.globalAlpha = alpha * 0.6;
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;

@@ -1,27 +1,27 @@
 /**
- * @file StarfieldEffect - Animated starfield background
- * Renders moving stars with random glow effects (bar or circle).
+ * @file StarfieldEffect - 动态星空背景
+ * 渲染带随机发光效果（条形或圆形）的移动星星。
  */
 
 import { BaseAnimation } from '../animations/BaseAnimation';
 import { BoardMetrics, Star } from '../types/canvas';
 
 /**
- * Animated starfield with moving stars and random glow effects.
- * Stars move in a consistent direction with varying speeds and brightness.
+ * 带移动星星和随机发光效果的动态星空。
+ * 星星以一致的方向移动，具有不同的速度和亮度。
  */
 export class StarfieldEffect extends BaseAnimation {
   readonly id = 'starfield';
   private stars: Star[] = [];
   private starCount: number = 80;
-  private moveDirection: { x: number; y: number } = { x: 0.3, y: 0.8 }; // Down-right direction
+  private moveDirection: { x: number; y: number } = { x: 0.3, y: 0.8 }; // 右下方向
 
   constructor() {
     super('starfield');
   }
 
   /**
-   * Initialize stars when first rendered with metrics.
+   * 首次渲染时使用度量初始化星星。
    */
   private initStars(metrics: BoardMetrics): void {
     if (this.stars.length > 0) return;
@@ -32,9 +32,9 @@ export class StarfieldEffect extends BaseAnimation {
   }
 
   /**
-   * Create a single star with random properties.
-   * @param metrics - Board metrics for positioning
-   * @param randomPosition - Whether to place star randomly or at spawn edge
+   * 创建具有随机属性的单个星星。
+   * @param metrics - 用于定位的棋盘度量
+   * @param randomPosition - 随机放置星星还是在生成边缘放置
    */
   private createStar(metrics: BoardMetrics, randomPosition: boolean = false): Star {
     const { width, height } = metrics;
@@ -46,7 +46,7 @@ export class StarfieldEffect extends BaseAnimation {
       x = Math.random() * width;
       y = Math.random() * height;
     } else {
-      // Spawn at the edge opposite to movement direction
+      // 在背向移动方向边缘生成
       if (Math.abs(this.moveDirection.x) > Math.abs(this.moveDirection.y)) {
         x = this.moveDirection.x > 0 ? 0 : width;
         y = Math.random() * height;
@@ -56,7 +56,7 @@ export class StarfieldEffect extends BaseAnimation {
       }
     }
 
-    // Random glow type: 50% none, 25% bar, 25% circle
+    // 随机发光类型：50% 无，25% 条形，25% 圆形
     const glowRoll = Math.random();
     let glowType: 'none' | 'bar' | 'circle';
     if (glowRoll < 0.5) {
@@ -96,12 +96,12 @@ export class StarfieldEffect extends BaseAnimation {
   update(deltaTime: number): void {
     super.update(deltaTime);
 
-    // Update star positions
+    // 更新星星位置
     for (const star of this.stars) {
       star.x += this.moveDirection.x * star.speed * deltaTime * 0.015;
       star.y += this.moveDirection.y * star.speed * deltaTime * 0.015;
 
-      // Update twinkle phase
+      // 更新闪烁相位
       star.twinklePhase += star.twinkleSpeed * deltaTime;
     }
   }
@@ -111,7 +111,7 @@ export class StarfieldEffect extends BaseAnimation {
 
     const { width, height } = metrics;
 
-    // Remove stars that moved off-screen and spawn new ones
+    // 移除移出屏幕的星星并生成新的
     this.stars = this.stars.filter(star => {
       const margin = 20;
       const onScreen =
@@ -121,45 +121,45 @@ export class StarfieldEffect extends BaseAnimation {
         star.y < height + margin;
 
       if (!onScreen) {
-        // Replace with new star at spawn edge
+        // 用新的边缘星星替换
         return false;
       }
       return true;
     });
 
-    // Add new stars to maintain count
+    // 添加新星星以维持数量
     while (this.stars.length < this.starCount) {
       this.stars.push(this.createStar(metrics, false));
     }
 
-    // Render each star
+    // 渲染每个星星
     for (const star of this.stars) {
       this.renderStar(ctx, star);
     }
   }
 
   /**
-   * Render a single star with its glow effect.
+   * 使用其发光效果渲染单个星星。
    */
   private renderStar(ctx: CanvasRenderingContext2D, star: Star): void {
-    // Calculate twinkle brightness
+    // 计算闪烁亮度
     const twinkle = Math.sin(star.twinklePhase) * 0.3 + 0.7; // 0.4 - 1.0
     const alpha = star.brightness * twinkle;
 
-    // Draw glow effect based on type
+    // 根据类型绘制发光效果
     if (star.glowType === 'bar') {
       this.renderBarGlow(ctx, star, alpha);
     } else if (star.glowType === 'circle') {
       this.renderCircleGlow(ctx, star, alpha);
     }
 
-    // Draw star core
+    // 绘制星星核心
     ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
     ctx.beginPath();
     ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
     ctx.fill();
 
-    // Add sparkle for brighter stars
+    // 为更亮的星星添加闪光
     if (alpha > 0.8) {
       ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
       ctx.beginPath();
@@ -169,13 +169,13 @@ export class StarfieldEffect extends BaseAnimation {
   }
 
   /**
-   * Render a bar-shaped glow behind the star.
+   * 在星星后方渲染条形发光。
    */
   private renderBarGlow(ctx: CanvasRenderingContext2D, star: Star, alpha: number): void {
     const barLength = star.size * 8;
     const barWidth = star.size * 1.5;
 
-    // Calculate bar angle based on movement direction
+    // 根据移动方向计算条形角度
     const angle = Math.atan2(this.moveDirection.y, this.moveDirection.x);
 
     ctx.save();
@@ -195,7 +195,7 @@ export class StarfieldEffect extends BaseAnimation {
   }
 
   /**
-   * Render a circular glow around the star.
+   * 在星星周围渲染圆形发光。
    */
   private renderCircleGlow(ctx: CanvasRenderingContext2D, star: Star, alpha: number): void {
     const glowRadius = star.size * 6;

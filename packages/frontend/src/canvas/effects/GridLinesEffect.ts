@@ -1,6 +1,6 @@
 /**
- * @file GridLinesEffect - Animated chess board grid lines
- * Renders glowing white grid lines with flowing light effect.
+ * @file GridLinesEffect - 动态棋盘网格线
+ * 渲染带流动光效的发光白色网格线。
  */
 
 import { BaseAnimation } from '../animations/BaseAnimation';
@@ -8,11 +8,11 @@ import { BoardMetrics } from '../types/canvas';
 import { BOARD_ROWS, BOARD_COLS } from '@chess/types';
 
 /**
- * Animated grid lines for the chess board.
- * Features:
- * - White glowing horizontal and vertical lines
- * - Flowing light effect along lines (shimmering brightness)
- * - Decorative border frame
+ * 棋盘的动态网格线。
+ * 功能：
+ * - 白色发光水平和垂直线
+ * - 沿线流动光效（闪烁亮度）
+ * - 装饰性边框框架
  */
 export class GridLinesEffect extends BaseAnimation {
   readonly id = 'grid-lines';
@@ -24,35 +24,35 @@ export class GridLinesEffect extends BaseAnimation {
   render(ctx: CanvasRenderingContext2D, metrics: BoardMetrics): void {
     const { padding, cellSize, width, height } = metrics;
 
-    // Calculate board boundaries
+    // 计算棋盘边界
     const startX = padding;
     const startY = padding;
     const endX = padding + (BOARD_COLS - 1) * cellSize;
     const endY = padding + (BOARD_ROWS - 1) * cellSize;
 
-    // Draw border frame with glow
+    // 绘制带发光效果的边框框架
     this.drawBorder(ctx, startX, startY, endX, endY);
 
-    // Draw horizontal lines with flowing effect
+    // 绘制带流动效果的横向线
     for (let row = 0; row < BOARD_ROWS; row++) {
       const y = padding + row * cellSize;
       this.drawFlowingLine(ctx, startX, y, endX, y, true);
     }
 
-    // Draw vertical lines with flowing effect
+    // 绘制带流动效果的纵向线
     for (let col = 0; col < BOARD_COLS; col++) {
       const x = padding + col * cellSize;
-      // Skip middle section for river (rows 4-5)
+      // 跳过河面部分（4-5 行）
       this.drawFlowingLine(ctx, x, startY, x, padding + 4 * cellSize, false);
       this.drawFlowingLine(ctx, x, padding + 5 * cellSize, x, endY, false);
     }
 
-    // Draw palace diagonal lines
+    // 绘制宫殿对角线
     this.drawPalaceLines(ctx, padding, cellSize);
   }
 
   /**
-   * Draw the outer border frame with glow effect.
+   * 绘制带发光效果的外边框框架。
    */
   private drawBorder(
     ctx: CanvasRenderingContext2D,
@@ -76,8 +76,8 @@ export class GridLinesEffect extends BaseAnimation {
   }
 
   /**
-   * Draw a line with flowing light effect.
-   * Creates a shimmer by varying brightness along the line over time.
+   * 绘制带流动光效的线。
+   * 通过随时间变化的亮度创建闪烁效果。
    */
   private drawFlowingLine(
     ctx: CanvasRenderingContext2D,
@@ -88,24 +88,24 @@ export class GridLinesEffect extends BaseAnimation {
     isHorizontal: boolean
   ): void {
     const lineWidth = 1.2;
-    const flowSpeed = 0.00045; // Speed of light flow
-    const flowWavelength = 150; // Wavelength of brightness variation
+    const flowSpeed = 0.00045; // 光流速度
+    const flowWavelength = 150; // 亮度变化波长
 
     // Create gradient with flowing effect
     const gradient = isHorizontal
       ? ctx.createLinearGradient(x1, 0, x2, 0)
       : ctx.createLinearGradient(0, y1, 0, y2);
 
-    // Calculate flow offset based on time
+    // 根据时间计算流动偏移
     const flowOffset = (this.elapsedTime * flowSpeed) % 1;
 
-    // Add color stops with flowing brightness
+    // 添加带流动亮度的颜色停止点
     const stops = 8;
     for (let i = 0; i <= stops; i++) {
       const pos = i / stops;
-      // Create wave pattern that moves over time
+      // 创建随时间移动的波形
       const wave = Math.sin((pos + flowOffset) * Math.PI * 4) * 0.5 + 0.5;
-      const brightness = 0.4 + wave * 0.6; // Range from 0.4 to 1.0
+      const brightness = 0.4 + wave * 0.6; // 范围从 0.4 到 1.0
       const alpha = 0.5 + wave * 0.5;
 
       gradient.addColorStop(pos, `rgba(255, 255, 255, ${alpha})`);
@@ -119,7 +119,7 @@ export class GridLinesEffect extends BaseAnimation {
     ctx.lineTo(x2, y2);
     ctx.stroke();
 
-    // Add subtle glow on brighter sections
+    // 在更亮的段落上添加微妙发光
     const glowGradient = isHorizontal
       ? ctx.createLinearGradient(x1, 0, x2, 0)
       : ctx.createLinearGradient(0, y1, 0, y2);
@@ -127,7 +127,7 @@ export class GridLinesEffect extends BaseAnimation {
     for (let i = 0; i <= stops; i++) {
       const pos = i / stops;
       const wave = Math.sin((pos + flowOffset) * Math.PI * 4) * 0.5 + 0.5;
-      const alpha = wave * 0.3; // Subtle glow
+      const alpha = wave * 0.3; // 微妙发光
       glowGradient.addColorStop(pos, `rgba(200, 220, 255, ${alpha})`);
     }
 
@@ -140,24 +140,24 @@ export class GridLinesEffect extends BaseAnimation {
   }
 
   /**
-   * Draw palace diagonal lines (X markings in palace area).
+   * 绘制宫殿对角线（宫殿区域的 X 标记）。
    */
   private drawPalaceLines(ctx: CanvasRenderingContext2D, padding: number, cellSize: number): void {
-    const palaceSize = 2; // 3x3 palace = 2 cell spans
+    const palaceSize = 2; // 3x3 宫殿 = 2 格跨度
 
-    // Red palace (top): rows 0-2, cols 3-5
+    // 红方宫殿（顶部）：行 0-2，列 3-5
     const redPalaceY = padding;
     const redPalaceX = padding + 3 * cellSize;
     this.drawPalaceDiagonal(ctx, redPalaceX, redPalaceY, cellSize * palaceSize, true);
 
-    // Black palace (bottom): rows 7-9, cols 3-5
+    // 黑方宫殿（底部）：行 7-9，列 3-5
     const blackPalaceY = padding + 7 * cellSize;
     const blackPalaceX = padding + 3 * cellSize;
     this.drawPalaceDiagonal(ctx, blackPalaceX, blackPalaceY, cellSize * palaceSize, false);
   }
 
   /**
-   * Draw diagonal lines for a palace.
+   * 绘制宫殿的对角线。
    */
   private drawPalaceDiagonal(
     ctx: CanvasRenderingContext2D,
@@ -169,13 +169,13 @@ export class GridLinesEffect extends BaseAnimation {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 1;
 
-    // Top-left to bottom-right
+    // 左上到右下
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x + size, y + size);
     ctx.stroke();
 
-    // Top-right to bottom-left
+    // 右上到左下
     ctx.beginPath();
     ctx.moveTo(x + size, y);
     ctx.lineTo(x, y + size);

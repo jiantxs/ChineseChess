@@ -1,13 +1,13 @@
 /**
- * @file Render loop manager using requestAnimationFrame
- * Manages the continuous rendering cycle for canvas animations.
+ * @file 使用 requestAnimationFrame 的渲染循环管理器
+ * 管理画布动画的连续渲染周期。
  */
 
 export type RenderCallback = (deltaTime: number, elapsedTime: number) => void;
 
 /**
- * Manages the requestAnimationFrame loop for canvas rendering.
- * Provides smooth animation timing with delta time calculations.
+ * 管理画布渲染的 requestAnimationFrame 循环。
+ * 提供带增量时间计算的平滑动画计时。
  */
 export class RenderLoop {
   private animationId: number | null = null;
@@ -17,9 +17,9 @@ export class RenderLoop {
   private callbacks: Set<RenderCallback> = new Set();
 
   /**
-   * Register a callback to be called on each animation frame.
-   * @param callback - Function receiving (deltaTime, elapsedTime)
-   * @returns Unregister function
+   * 注册每个动画帧调用的回调。
+   * @param callback - 接收 (deltaTime, elapsedTime) 的函数
+   * @returns 取消注册函数
    */
   onFrame(callback: RenderCallback): () => void {
     this.callbacks.add(callback);
@@ -29,7 +29,7 @@ export class RenderLoop {
   }
 
   /**
-   * Start the render loop.
+   * 启动渲染循环。
    */
   start(): void {
     if (this.isRunning) return;
@@ -40,7 +40,7 @@ export class RenderLoop {
   }
 
   /**
-   * Stop the render loop.
+   * 停止渲染循环。
    */
   stop(): void {
     this.isRunning = false;
@@ -51,7 +51,7 @@ export class RenderLoop {
   }
 
   /**
-   * Check if the loop is currently running.
+   * 检查循环是否正在运行。
    */
   get running(): boolean {
     return this.isRunning;
@@ -64,7 +64,7 @@ export class RenderLoop {
     this.lastTimestamp = timestamp;
     const elapsedTime = timestamp - this.startTime;
 
-    // Notify all registered callbacks
+    // 通知所有已注册的回调
     this.callbacks.forEach(cb => cb(deltaTime, elapsedTime));
 
     this.animationId = requestAnimationFrame(this.tick);

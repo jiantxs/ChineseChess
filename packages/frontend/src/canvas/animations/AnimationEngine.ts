@@ -1,28 +1,28 @@
 /**
- * @file Animation engine - manages all active animations
- * Provides centralized animation lifecycle management.
+ * @file 动画引擎 - 管理所有活动动画
+ * 提供集中的动画生命周期管理。
  */
 
 import { IAnimation, BoardMetrics } from '../types/canvas';
 
 /**
- * Central manager for all canvas animations.
- * Handles animation registration, updates, and rendering.
+ * 所有画布动画的中央管理器。
+ * 处理动画的注册、更新和渲染。
  */
 export class AnimationEngine {
   private animations: Map<string, IAnimation> = new Map();
 
   /**
-   * Add an animation to the engine.
-   * @param animation - The animation instance to manage
+   * 向引擎添加动画。
+   * @param animation - 要管理的动画实例
    */
   add(animation: IAnimation): void {
     this.animations.set(animation.id, animation);
   }
 
   /**
-   * Remove an animation by ID.
-   * @param id - Animation identifier
+   * 通过 ID 移除动画。
+   * @param id - 动画标识符
    */
   remove(id: string): void {
     const anim = this.animations.get(id);
@@ -33,7 +33,7 @@ export class AnimationEngine {
   }
 
   /**
-   * Remove all animations.
+   * 移除所有动画。
    */
   clear(): void {
     this.animations.forEach(anim => {
@@ -43,8 +43,8 @@ export class AnimationEngine {
   }
 
   /**
-   * Update all active animations.
-   * @param deltaTime - Time since last frame (ms)
+   * 更新所有活动动画。
+   * @param deltaTime - 距上一帧的时间 (ms)
    */
   update(deltaTime: number): void {
     for (const [id, anim] of this.animations) {
@@ -57,9 +57,9 @@ export class AnimationEngine {
   }
 
   /**
-   * Render all active animations.
-   * @param ctx - Canvas 2D context
-   * @param metrics - Board layout metrics
+   * 渲染所有活动动画。
+   * @param ctx - 画布 2D 上下文
+   * @param metrics - 棋盘布局度量
    */
   render(ctx: CanvasRenderingContext2D, metrics: BoardMetrics): void {
     for (const anim of this.animations.values()) {
@@ -70,7 +70,7 @@ export class AnimationEngine {
   }
 
   /**
-   * Get count of active animations.
+   * 获取活动动画的数量。
    */
   get activeCount(): number {
     return this.animations.size;

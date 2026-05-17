@@ -1,13 +1,13 @@
 /**
- * @file Client-side logger that sends logs to backend for persistent storage
+ * @file 客户端日志记录器，将日志发送到后端进行持久化存储
  *
- * Provides structured logging for frontend errors and events that need to be
- * logged server-side for monitoring and debugging.
+ * 为需要服务端记录的前端错误和事件提供结构化日志，
+ * 用于监控和调试。
  *
- * Usage:
+ * 用法：
  *   import { clientLogger } from './clientLogger';
- *   clientLogger.error('Failed to parse message', { error: err.message });
- *   clientLogger.warn('Unhandled message type', { type: message.type });
+ *   clientLogger.error('消息解析失败', { error: err.message });
+ *   clientLogger.warn('未处理的消息类型', { type: message.type });
  *
  * @module clientLogger
  */
@@ -25,7 +25,7 @@ export interface ClientLogEntry {
 import { apiPath } from './api';
 
 /**
- * Sends a log entry to the backend server via fetch
+ * 通过 fetch 向后端服务器发送日志条目
  */
 async function sendToBackend(entry: ClientLogEntry): Promise<void> {
   try {
@@ -35,18 +35,18 @@ async function sendToBackend(entry: ClientLogEntry): Promise<void> {
       body: JSON.stringify(entry),
     });
   } catch {
-    // Silently fail - we don't want logging to cause more errors
+    // 静默失败 - 我们不希望日志记录导致更多错误
   }
 }
 
 /**
- * Queue of logs to send when connection is available
+ * 日志队列，用于在连接可用时发送
  */
 const logQueue: ClientLogEntry[] = [];
 let isOnline = true;
 
 /**
- * Process the log queue, sending all pending logs to backend
+ * 处理日志队列，将所有待发送的日志发送到后端
  */
 async function processQueue(): Promise<void> {
   if (!isOnline || logQueue.length === 0) return;
@@ -60,7 +60,7 @@ async function processQueue(): Promise<void> {
 }
 
 /**
- * Log a debug message
+ * 记录调试消息
  */
 function debug(message: string, metadata?: Record<string, unknown>): void {
   const entry: ClientLogEntry = {
@@ -71,7 +71,7 @@ function debug(message: string, metadata?: Record<string, unknown>): void {
     metadata,
   };
 
-  // Also log to console in development
+  // 在开发环境中也输出到控制台
   if (process.env.NODE_ENV !== 'production') {
     console.debug(`[CLIENT:DEBUG] ${message}`, metadata || '');
   }
@@ -81,7 +81,7 @@ function debug(message: string, metadata?: Record<string, unknown>): void {
 }
 
 /**
- * Log an informational message
+ * 记录信息消息
  */
 function info(message: string, metadata?: Record<string, unknown>): void {
   const entry: ClientLogEntry = {
@@ -101,7 +101,7 @@ function info(message: string, metadata?: Record<string, unknown>): void {
 }
 
 /**
- * Log a warning message
+ * 记录警告消息
  */
 function warn(message: string, metadata?: Record<string, unknown>): void {
   const entry: ClientLogEntry = {
@@ -121,7 +121,7 @@ function warn(message: string, metadata?: Record<string, unknown>): void {
 }
 
 /**
- * Log an error message
+ * 记录错误消息
  */
 function error(message: string, metadata?: Record<string, unknown>): void {
   const entry: ClientLogEntry = {
@@ -132,7 +132,7 @@ function error(message: string, metadata?: Record<string, unknown>): void {
     metadata,
   };
 
-  // Always log to console
+  // 始终输出到控制台
   console.error(`[CLIENT:ERROR] ${message}`, metadata || '');
 
   logQueue.push(entry);
@@ -140,7 +140,7 @@ function error(message: string, metadata?: Record<string, unknown>): void {
 }
 
 /**
- * Set online status - when offline, logs are queued
+ * 设置在线状态 - 离线时，日志会被排队
  */
 function setOnline(online: boolean): void {
   isOnline = online;

@@ -1,19 +1,19 @@
 /**
- * @file BoardLayer - Layer 0: Board background
- * Renders the static chess board background.
+ * @file BoardLayer - 第0层：棋盘背景
+ * 渲染静态棋盘背景。
  */
 
 import { BaseLayer } from './BaseLayer';
 import { BoardMetrics } from '../types/canvas';
 import { clientLogger } from '../../utils/clientLogger';
 
-/** Cached board SVG image */
+/** 缓存的棋盘 SVG 图片 */
 let boardImage: HTMLImageElement | null = null;
 let boardImageLoaded = false;
 
 /**
- * Loads the board SVG image.
- * @returns Promise that resolves when image is loaded
+ * 加载棋盘 SVG 图片。
+ * @returns 图片加载完成时解析的 Promise
  */
 function loadBoardImage(): Promise<void> {
   if (boardImageLoaded) return Promise.resolve();
@@ -34,8 +34,8 @@ function loadBoardImage(): Promise<void> {
 }
 
 /**
- * Layer 0: Renders the chess board background.
- * Uses SVG image if available, otherwise falls back to solid color.
+ * 第0层：渲染棋盘背景。
+ * 如果 SVG 图片可用则使用它，否则回退到纯色。
  */
 export class BoardLayer extends BaseLayer {
   readonly zIndex = 0;
@@ -57,7 +57,7 @@ export class BoardLayer extends BaseLayer {
     if (boardImage && this.imageReady) {
       ctx.drawImage(boardImage, 0, 0, metrics.width, metrics.height);
     } else {
-      // Fallback: black background (as per user's new board design)
+      // 回退：黑色背景（根据用户的新棋盘设计）
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, metrics.width, metrics.height);
     }
