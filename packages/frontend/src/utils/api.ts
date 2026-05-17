@@ -54,4 +54,10 @@ export function wsPath(path: string): string {
   return `${protocol}//${hostname}${fullPath}`;
 }
 
-export default { apiPath, wsPath };
+export function assetPath(path: string): string {
+  const pathname = window.location.pathname;
+  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+  return pathPrefix ? `${pathPrefix}${path}` : path;
+}
+
+export default { apiPath, wsPath, assetPath };
