@@ -23,6 +23,7 @@ function App() {
   const gameIdInputRef = useRef<HTMLInputElement>(null);
 
   const [gameMode, setGameMode] = useState<'local' | 'online'>('local');
+  const [boardStyle, setBoardStyle] = useState<string>('cyber');
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -63,6 +64,15 @@ function App() {
 
   const handleStartLocal = useCallback(() => {
     setGameMode('local');
+    setBoardStyle('cyber');
+    setScreen('game');
+    resetSelection();
+    localGame.resetGame();
+  }, [localGame, resetSelection]);
+
+  const handleStartLocal3D = useCallback(() => {
+    setGameMode('local');
+    setBoardStyle('cyber3d');
     setScreen('game');
     resetSelection();
     localGame.resetGame();
@@ -70,6 +80,7 @@ function App() {
 
   const handleStartOnline = useCallback(() => {
     setGameMode('online');
+    setBoardStyle('cyber');
     setScreen('game');
     resetSelection();
     onlineGame.createGame();
@@ -77,6 +88,7 @@ function App() {
 
   const handleJoinGame = useCallback((gameId: string) => {
     setGameMode('online');
+    setBoardStyle('cyber');
     setScreen('game');
     resetSelection();
     onlineGame.joinGame(gameId);
@@ -92,6 +104,7 @@ function App() {
 
   const handleReset = useCallback(() => {
     setScreen('menu');
+    setBoardStyle('cyber');
     resetSelection();
     onlineGame.resetGame();
     localGame.resetGame();
@@ -107,6 +120,7 @@ function App() {
     return (
       <MenuScreen
         onStartLocal={handleStartLocal}
+        onStartLocal3D={handleStartLocal3D}
         onStartOnline={handleStartOnline}
         onJoinGame={handleJoinGame}
         onExit={handleExit}
@@ -124,6 +138,7 @@ function App() {
       validMoves={activeGame.validMoves}
       selectedPosition={boardState.selectedPosition}
       boardSize={boardSize}
+      boardStyle={boardStyle}
       onBoardClick={onBoardClick}
       onReset={handleReset}
       error={error}

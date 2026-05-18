@@ -20,15 +20,26 @@ export class BoardRenderingKit {
   private piecesLayer: PiecesLayerInterface;
   private aboveEffectsLayer: AboveEffectsLayerInterface;
   private unsubscribeAnimUpdate: (() => void) | null = null;
+  private styleName: string;
+  private currentMetrics: BoardMetrics;
 
   constructor(canvas: HTMLCanvasElement, metrics: BoardMetrics, styleName: string = 'cyber') {
+    this.styleName = styleName;
     const style = getStyle(styleName);
+
+    // 若风格提供投影，注入到 metrics
+    let projection = style.createProjection?.(metrics);
+    if (projection) {
+      projection.calibrate(metrics);
+    }
+    const finalMetrics = projection ? { ...metrics, projection } : metrics;
+    this.currentMetrics = finalMetrics;
 
     // 创建通用动画引擎
     this.animEngine = new AnimationEngine();
 
     // 创建独立渲染器（不包含任何风格逻辑）
-    this.renderer = new LayeredRenderer(canvas, metrics);
+    this.renderer = new LayeredRenderer(canvas, finalMetrics);
 
     // 创建风格特定的分层（传入共享的动画引擎）
     const layers = style.createLayers(this.animEngine);
@@ -72,7 +83,21 @@ export class BoardRenderingKit {
    * 更新棋盘尺寸。
    */
   setMetrics(metrics: BoardMetrics): void {
-    this.renderer.setMetrics(metrics);
+    const style = getStyle(this.styleName);
+    let projection = style.createProjection?.(metrics);
+    if (projection) {
+      projection.calibrate(metrics);
+    }
+    const finalMetrics = projection ? { ...metrics, projection } : metrics;
+    this.currentMetrics = finalMetrics;
+    this.renderer.setMetrics(finalMetrics);
+  }
+
+  /**
+   * 获取当前带投影的 metrics。
+   */
+  getMetrics(): BoardMetrics {
+    return this.currentMetrics;
   }
 
   /**
@@ -107,7 +132,7 @@ export class BoardRenderingKit {
    * 添加吃子特效。
    */
   addCaptureEffect(x: number, y: number, side: Side, uniqueId: string): void {
-    const style = getStyle('cyber'); // TODO: 保存当前风格名以支持运行时切换
+    const style = getStyle(this.styleName);
     this.animEngine.add(style.createCaptureEffect(x, y, side, uniqueId));
   }
 
@@ -122,7 +147,7 @@ export class BoardRenderingKit {
     side: Side,
     uniqueId: string
   ): void {
-    const style = getStyle('cyber'); // TODO: 保存当前风格名以支持运行时切换
+    const style = getStyle(this.styleName);
     this.animEngine.add(style.createMoveTrail(fromX, fromY, toX, toY, side, uniqueId));
   }
 

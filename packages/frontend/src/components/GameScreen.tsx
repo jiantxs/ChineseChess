@@ -12,6 +12,7 @@ export interface GameScreenProps {
   validMoves: Position[];
   selectedPosition: Position | null;
   boardSize: ChessBoardSize;
+  boardStyle?: string;
   onBoardClick: (pos: Position, hasPiece: boolean) => void;
   onReset: () => void;
   error?: string | null;
@@ -106,6 +107,7 @@ export default function GameScreen({
   validMoves,
   selectedPosition,
   boardSize,
+  boardStyle = 'cyber',
   onBoardClick,
   onReset,
   error,
@@ -150,6 +152,7 @@ export default function GameScreen({
             validMoves={validMoves}
             selectedPosition={selectedPosition}
             size={boardSize}
+            style={boardStyle}
             onCellClick={(pos, hasPiece) => {
               onBoardClick(pos, hasPiece);
             }}

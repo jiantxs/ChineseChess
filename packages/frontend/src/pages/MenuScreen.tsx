@@ -7,6 +7,7 @@ const BGM_PATH = assetPath('/assets/music/main_bgm.mp3');
 
 interface MenuScreenProps {
   onStartLocal: () => void;
+  onStartLocal3D: () => void;
   onStartOnline: () => void;
   onJoinGame: (gameId: string) => void;
   onExit: () => void;
@@ -17,7 +18,7 @@ interface MenuScreenProps {
  * 主菜单界面。
  * 显示开始本地游戏、创建在线房间、加入已有房间的选项。
  */
-export default function MenuScreen({ onStartLocal, onStartOnline, onJoinGame, onExit, error }: MenuScreenProps) {
+export default function MenuScreen({ onStartLocal, onStartLocal3D, onStartOnline, onJoinGame, onExit, error }: MenuScreenProps) {
   const gameIdInputRef = useRef<HTMLInputElement>(null);
 
   // 背景音乐控制
@@ -60,6 +61,11 @@ export default function MenuScreen({ onStartLocal, onStartOnline, onJoinGame, on
           <button className="menu-btn" onClick={onStartLocal}>
             <span className="btn-line" />
             <span className="btn-text">单机对战</span>
+          </button>
+
+          <button className="menu-btn" onClick={onStartLocal3D}>
+            <span className="btn-line" />
+            <span className="btn-text">3D 单机对战</span>
           </button>
 
           <button className="menu-btn" onClick={onStartOnline}>

@@ -151,8 +151,14 @@ export default function ChessBoard({
 
         // 如果目的地有棋子且与移动棋子不同，则是吃子
         if (prevPieceAtDest && prevPieceAtDest.id !== lastMove.piece.id) {
-          const x = padding + toCol * cellSize;
-          const y = padding + toRow * cellSize;
+          let x = padding + toCol * cellSize;
+          let y = padding + toRow * cellSize;
+          const currentMetrics = kitRef.current?.getMetrics?.();
+          if (currentMetrics?.projection) {
+            const p = currentMetrics.projection.project(currentMetrics, toCol, toRow);
+            x = p.x;
+            y = p.y;
+          }
           effectIdCounter.current++;
           kitRef.current.addCaptureEffect(
             x,
@@ -163,10 +169,19 @@ export default function ChessBoard({
         }
 
         // 为每步移动添加移动轨迹
-        const fromX = padding + lastMove.from.col * cellSize;
-        const fromY = padding + lastMove.from.row * cellSize;
-        const toX = padding + lastMove.to.col * cellSize;
-        const toY = padding + lastMove.to.row * cellSize;
+        let fromX = padding + lastMove.from.col * cellSize;
+        let fromY = padding + lastMove.from.row * cellSize;
+        let toX = padding + lastMove.to.col * cellSize;
+        let toY = padding + lastMove.to.row * cellSize;
+        const currentMetrics = kitRef.current?.getMetrics?.();
+        if (currentMetrics?.projection) {
+          const pFrom = currentMetrics.projection.project(currentMetrics, lastMove.from.col, lastMove.from.row);
+          const pTo = currentMetrics.projection.project(currentMetrics, lastMove.to.col, lastMove.to.row);
+          fromX = pFrom.x;
+          fromY = pFrom.y;
+          toX = pTo.x;
+          toY = pTo.y;
+        }
         effectIdCounter.current++;
         kitRef.current.addMoveTrail(
           fromX,
@@ -205,6 +220,19 @@ export default function ChessBoard({
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
 
+    // 若存在 3D 投影，使用逆投影计算棋盘坐标
+    const currentMetrics = kitRef.current?.getMetrics?.();
+    if (currentMetrics?.projection) {
+      const result = currentMetrics.projection.unproject(currentMetrics, x, y);
+      if (!result) return null;
+      const col = Math.round(result.col);
+      const row = Math.round(result.row);
+      if (row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS) {
+        return { row, col };
+      }
+      return null;
+    }
+
     const col = Math.round((x - padding) / cellSize);
     const row = Math.round((y - padding) / cellSize);
 
@@ -213,7 +241,7 @@ export default function ChessBoard({
     }
 
     return null;
-  }, [padding, cellSize]);
+  }, [padding, cellSize, metrics]);
 
   /**
    * 处理画布点击：选中棋子或执行移动。

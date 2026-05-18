@@ -20,6 +20,8 @@ export interface BoardMetrics {
   pieceSize: number;
   cols: number;
   rows: number;
+  /** 可选的 3D 透视投影。若提供，所有层在此投影下绘制 */
+  projection?: import('../projection/PerspectiveProjection').PerspectiveProjection;
 }
 
 /** 每帧传递的动画状态快照 */

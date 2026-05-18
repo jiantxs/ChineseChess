@@ -5,7 +5,7 @@
 
 import { BaseLayer } from '../layers/BaseLayer';
 import { AnimationEngine } from '../animations/AnimationEngine';
-import { IAnimation } from '../types/canvas';
+import { IAnimation, BoardMetrics } from '../types/canvas';
 import { GameState, Position, Side } from '@chess/types';
 
 /**
@@ -67,4 +67,10 @@ export interface BoardStyle {
     side: Side,
     uniqueId: string
   ): IAnimation;
+
+  /**
+   * 可选：为此风格创建 3D 透视投影。
+   * 若返回投影对象，LayeredRenderer 会将其注入 BoardMetrics。
+   */
+  createProjection?(metrics: BoardMetrics): import('../projection/PerspectiveProjection').PerspectiveProjection | undefined;
 }
