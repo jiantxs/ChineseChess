@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { assetPath } from '../utils/api';
 import { clientLogger } from '../utils/clientLogger';
 import './MenuScreen.css';
@@ -6,22 +7,13 @@ import './MenuScreen.css';
 const BGM_PATH = assetPath('/assets/music/main_bgm.mp3');
 
 interface MenuScreenProps {
-  onStartLocal: () => void;
-  onStartLocal3D: () => void;
-  onStartOnline: () => void;
-  onJoinGame: (gameId: string) => void;
-  onExit: () => void;
   error?: string | null;
 }
 
-/**
- * 主菜单界面。
- * 显示开始本地游戏、创建在线房间、加入已有房间的选项。
- */
-export default function MenuScreen({ onStartLocal, onStartLocal3D, onStartOnline, onJoinGame, onExit, error }: MenuScreenProps) {
+export default function MenuScreen({ error }: MenuScreenProps) {
+  const navigate = useNavigate();
   const gameIdInputRef = useRef<HTMLInputElement>(null);
 
-  // 背景音乐控制
   useEffect(() => {
     const audio = new Audio(BGM_PATH);
     audio.loop = true;
@@ -32,19 +24,38 @@ export default function MenuScreen({ onStartLocal, onStartLocal3D, onStartOnline
     };
   }, []);
 
-  const handleJoin = useCallback(() => {
+  const handleStartLocal = useCallback(() => {
+    navigate('/game/local');
+  }, [navigate]);
+
+  const handleStartLocal3D = useCallback(() => {
+    navigate('/game/local3d');
+  }, [navigate]);
+
+  const handleStartOnline = useCallback(() => {
+    navigate('/game/online');
+  }, [navigate]);
+
+  const handleJoinGame = useCallback(() => {
     const input = gameIdInputRef.current;
-    if (input?.value) onJoinGame(input.value);
-  }, [onJoinGame]);
+    if (input?.value) {
+      navigate(`/game/join/${input.value}`);
+    }
+  }, [navigate]);
+
+  const handleExit = useCallback(async () => {
+    try {
+      await fetch(assetPath('/api/game/exit'), { method: 'POST' });
+    } catch (err) {
+      clientLogger.error('Exit button error', { error: err instanceof Error ? err.message : String(err) });
+    }
+  }, []);
 
   return (
     <div className="app menu-app">
-      {/* 动态背景图片 */}
       <div className="background-layer" />
-      {/* 扫描线 overlay */}
       <div className="scanlines" />
       <div className="menu-container">
-        {/* 面板四角装饰 */}
         <div className="corner corner-tl" />
         <div className="corner corner-tr" />
         <div className="corner corner-bl" />
@@ -58,17 +69,17 @@ export default function MenuScreen({ onStartLocal, onStartLocal3D, onStartOnline
         <div className="menu-divider" />
 
         <div className="menu-buttons">
-          <button className="menu-btn" onClick={onStartLocal}>
+          <button className="menu-btn" onClick={handleStartLocal}>
             <span className="btn-line" />
             <span className="btn-text">单机对战</span>
           </button>
 
-          <button className="menu-btn" onClick={onStartLocal3D}>
+          <button className="menu-btn" onClick={handleStartLocal3D}>
             <span className="btn-line" />
             <span className="btn-text">3D 单机对战</span>
           </button>
 
-          <button className="menu-btn" onClick={onStartOnline}>
+          <button className="menu-btn" onClick={handleStartOnline}>
             <span className="btn-line" />
             <span className="btn-text">开始联机</span>
           </button>
@@ -81,17 +92,17 @@ export default function MenuScreen({ onStartLocal, onStartLocal3D, onStartOnline
               className="join-input"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleJoin();
+                  handleJoinGame();
                 }
               }}
             />
-            <button className="menu-btn" onClick={handleJoin}>
+            <button className="menu-btn" onClick={handleJoinGame}>
               <span className="btn-line" />
               <span className="btn-text">加入房间</span>
             </button>
           </div>
 
-          <button className="menu-btn exit-btn" onClick={onExit}>
+          <button className="menu-btn exit-btn" onClick={handleExit}>
             <span className="btn-line" />
             <span className="btn-text">退出游戏</span>
           </button>

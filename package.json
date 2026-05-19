@@ -22,10 +22,15 @@
     "lint": "pnpm -r lint"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["electron"]
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   },
   "devDependencies": {
     "@types/node": "^20.19.39",
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.15.1"
   }
 }

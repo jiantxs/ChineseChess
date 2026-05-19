@@ -6,6 +6,7 @@
 import { BaseLayer } from '../../../layers/BaseLayer';
 import { BoardMetrics } from '../../../types/canvas';
 import { clientLogger } from '../../../../utils/clientLogger';
+import { assetPath } from '../../../../utils/api';
 
 /** 缓存的棋盘 SVG 图片 */
 let boardImage: HTMLImageElement | null = null;
@@ -29,7 +30,7 @@ function loadBoardImage(): Promise<void> {
       clientLogger.error('Failed to load board image');
       resolve();
     };
-    img.src = './assets/svg/cyber/board.svg';
+    img.src = assetPath('/assets/svg/cyber/board.svg');
   });
 }
 

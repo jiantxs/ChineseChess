@@ -7,6 +7,7 @@ import { BaseLayer } from '../../../layers/BaseLayer';
 import { BoardMetrics } from '../../../types/canvas';
 import { GameState, Piece, PieceType, Side, BOARD_ROWS, BOARD_COLS } from '@chess/types';
 import { clientLogger } from '../../../../utils/clientLogger';
+import { assetPath } from '../../../../utils/api';
 import { PiecesLayerInterface } from '../../types';
 
 /** 已加载棋子 SVG 图片的内存缓存 */
@@ -29,7 +30,7 @@ function loadPieceImages(): Promise<void> {
         clientLogger.error('Failed to load piece image', { pieceName: name });
         resolve();
       };
-      img.src = `./assets/svg/cyber/${name}.svg`;
+      img.src = assetPath(`/assets/svg/cyber/${name}.svg`);
       PIECE_IMAGES[name] = img;
     });
   });

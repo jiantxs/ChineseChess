@@ -28,7 +28,8 @@
  */
 export function apiPath(path: string): string {
   const pathname = window.location.pathname;
-  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+  const match = pathname.match(/^\/[^\/]+/);
+  const pathPrefix = match && match[0] !== '' ? match[0] : '';
   return pathPrefix ? `${pathPrefix}${path}` : path;
 }
 
@@ -49,14 +50,16 @@ export function wsPath(path: string): string {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const hostname = window.location.host;
   const pathname = window.location.pathname;
-  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+  const match = pathname.match(/^\/[^\/]+/);
+  const pathPrefix = match && match[0] !== '' ? match[0] : '';
   const fullPath = pathPrefix ? `${pathPrefix}${path}` : path;
   return `${protocol}//${hostname}${fullPath}`;
 }
 
 export function assetPath(path: string): string {
   const pathname = window.location.pathname;
-  const pathPrefix = pathname === '/' ? '' : pathname.replace(/\/[^\/]*$/, '');
+  const match = pathname.match(/^\/[^\/]+/);
+  const pathPrefix = match && match[0] !== '' ? match[0] : '';
   return pathPrefix ? `${pathPrefix}${path}` : path;
 }
 
