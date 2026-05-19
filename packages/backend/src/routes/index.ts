@@ -64,9 +64,12 @@ export function createAppRouter(): Router {
   // 中间件：从前端构建目录提供静态文件
   router.use(express.static(publicPath));
 
-  // 捕获所有路由，用于 SPA 导航
   router.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    if (req.path.startsWith('/api/') || req.path.match(/\.\w+$/)) {
+      return res.status(404).send('Not found');
+    }
+    const prefix = chessConfig.server.prefix;
+    res.redirect(prefix || '/');
   });
 
   // 全局错误处理中间件
