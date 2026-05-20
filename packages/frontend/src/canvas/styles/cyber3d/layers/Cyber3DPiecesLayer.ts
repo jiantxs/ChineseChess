@@ -93,7 +93,8 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.scale(totalScale, totalScale);
-        ctx.rotate(idleAnim.rotation);
+        const perspectiveTilt = this.calculatePerspectiveTilt(row, metrics);
+        ctx.rotate(idleAnim.rotation + perspectiveTilt);
 
         this.drawPieceGlow(ctx, piece, pieceSize, idleAnim.glowIntensity);
 
@@ -132,6 +133,11 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
       };
     }
     return { scale, rotation, glowIntensity };
+  }
+
+  private calculatePerspectiveTilt(row: number, _metrics: BoardMetrics): number {
+    const rowOffset = (row - (BOARD_ROWS - 1) / 2) / ((BOARD_ROWS - 1) / 2);
+    return rowOffset * 0.12;
   }
 
   private drawPieceGlow(
