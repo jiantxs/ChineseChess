@@ -59,7 +59,7 @@ export function createAppRouter(): Router {
   });
 
   // 前端构建输出目录的路径
-  const publicPath = path.resolve(__dirname, '../../node_modules/@chess/frontend/dist');
+  const publicPath = path.resolve(__dirname, '../../public');
 
   // 中间件：从前端构建目录提供静态文件
   router.use(express.static(publicPath));

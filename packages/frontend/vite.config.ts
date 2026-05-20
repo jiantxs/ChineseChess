@@ -21,7 +21,7 @@ export default defineConfig({
   base: './',
   build: {
     // Output directory (served by Express in production)
-    outDir: './dist',
+    outDir: '../backend/public',
     // Clean build directory before each build
     emptyOutDir: true,
     // Enable sourcemaps for debugging

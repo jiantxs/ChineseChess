@@ -10,68 +10,97 @@
  */
 
 import express from 'express';
-import { createServer } from 'http';
+import { createServer, Server as HttpServer } from 'http';
 import { chessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import { gameManager } from '@chess/core';
 import { createAppRouter } from './routes';
 import { requestLogger, logSystemEvent } from './services/logger';
 
-/** Express 应用实例 */
-const app = express();
-
-/** HTTP 服务器实例，包装 Express 应用 */
-const server = createServer(app);
-
-/** 配置中的 URL 前缀（例如 '/aabbcc'） */
-const PREFIX = chessConfig.server.prefix;
-
-// 创建并挂载应用路由器
-const appRouter = createAppRouter();
-
-if (PREFIX) {
-  app.use(PREFIX, appRouter);
-  logSystemEvent('Routes mounted at prefix', { prefix: PREFIX });
-} else {
-  app.use(appRouter);
+/**
+ * 启动服务器的可选参数
+ * @interface StartServerOptions
+ * @description 允许自定义服务器端口、主机和 URL 前缀。
+ *              如果未提供，则使用 chessConfig 中的默认值。
+ */
+export interface StartServerOptions {
+  /** 服务器端口（默认：从 chessConfig 获取） */
+  port?: number;
+  /** 服务器主机（默认：从 chessConfig 获取） */
+  host?: string;
+  /** URL 前缀例如 '/aabbcc'（默认：从 chessConfig 获取） */
+  prefix?: string;
 }
 
 /**
- * WebSocket 游戏服务器实例
- * @remarks 通过 /ws 路径处理实时多人游戏逻辑
- * @see {@link GameServer}
+ * startServer 返回的服务器结果
+ * @interface StartServerResult
+ * @description 包含启动的服务器实例和停止函数。
+ *              用于优雅关闭和测试。
  */
-const gameServer = new GameServer(server, gameManager, PREFIX);
-
-// 在 app.locals 中存储 gameServer 引用，以便路由访问
-app.locals.gameServer = gameServer;
-
-/** 服务器端口来自配置（默认：3000） */
-const PORT = chessConfig.server.port;
-
-/** 服务器主机来自配置（默认：0.0.0.0） */
-const HOST = chessConfig.server.host;
+export interface StartServerResult {
+  /** Express 应用实例 */
+  app: express.Application;
+  /** HTTP 服务器实例 */
+  server: HttpServer;
+  /** WebSocket 游戏服务器实例 */
+  gameServer: GameServer;
+  /** 停止所有服务器的函数 */
+  stop: () => void;
+}
 
 /**
  * 启动 HTTP 和 WebSocket 服务器
- * @remarks 开始监听配置的主机和端口，记录启动消息
+ * @description 创建 Express 应用、HTTP 服务器、挂载路由、
+ *              初始化 GameServer，并开始监听。
+ *              设置 SIGTERM 处理器以实现优雅关闭。
+ *
+ * @param options - 可选的服务器配置
+ * @param options.port - 服务器端口（默认：chessConfig.server.port）
+ * @param options.host - 服务器主机（默认：chessConfig.server.host）
+ * @param options.prefix - URL 前缀（默认：chessConfig.server.prefix）
+ * @returns 包含 app、server、gameServer 和 stop 函数的结果对象
+ *
+ * @remarks
+ * - 所有配置均通过 options 参数或 chessConfig 默认值进行
+ * - stop() 函数会停止 GameServer、关闭 HTTP 服务器并记录关闭
+ * - 启动后记录服务器 URL 到系统日志
  */
-server.listen(PORT, HOST, () => {
-  requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
-  logSystemEvent('Chinese Chess server started', { host: HOST, port: PORT, url: `http://${HOST}:${PORT}${PREFIX}` });
-});
+export function startServer(options?: StartServerOptions): StartServerResult {
+  const PORT = options?.port ?? chessConfig.server.port;
+  const HOST = options?.host ?? chessConfig.server.host;
+  const PREFIX = options?.prefix ?? chessConfig.server.prefix;
 
-/**
- * 优雅关闭处理器
- * @remarks 监听 SIGTERM 信号，停止 GameServer 间隔，关闭 HTTP 服务器，
- * 然后干净地退出进程。确保 WebSocket 连接和定时器的正确清理。
- * @param signal - 接收到的信号（SIGTERM）
- */
-process.on('SIGTERM', () => {
-  logSystemEvent('SIGTERM received, shutting down gracefully');
-  gameServer.stop();
-  server.close(() => {
-    logSystemEvent('Server closed');
-    process.exit(0);
+  const app = express();
+  const server = createServer(app);
+
+  const appRouter = createAppRouter();
+
+  if (PREFIX) {
+    app.use(PREFIX, appRouter);
+    logSystemEvent('Routes mounted at prefix', { prefix: PREFIX });
+  } else {
+    app.use(appRouter);
+  }
+
+  const gameServer = new GameServer(server, gameManager, PREFIX);
+
+  app.locals.gameServer = gameServer;
+
+  server.listen(PORT, HOST, () => {
+    requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
+    logSystemEvent('Chinese Chess server started', { host: HOST, port: PORT, url: `http://${HOST}:${PORT}${PREFIX}` });
   });
-});
+
+  const stop = () => {
+    logSystemEvent('SIGTERM received, shutting down gracefully');
+    gameServer.stop();
+    server.close(() => {
+      logSystemEvent('Server closed');
+    });
+  };
+
+  process.on('SIGTERM', stop);
+
+  return { app, server, gameServer, stop };
+}

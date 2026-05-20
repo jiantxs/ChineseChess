@@ -9,3 +9,4 @@ backend-dist/
 node-dist/
 winapp/
 .sisyphus/
+packages/backend/public/
