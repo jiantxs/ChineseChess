@@ -93,7 +93,7 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.scale(totalScale, totalScale);
-        const perspectiveTilt = this.calculatePerspectiveTilt(row, metrics);
+        const perspectiveTilt = this.calculatePerspectiveTilt(row, col, metrics);
         ctx.rotate(idleAnim.rotation + perspectiveTilt);
 
         this.drawPieceGlow(ctx, piece, pieceSize, idleAnim.glowIntensity);
@@ -135,9 +135,21 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
     return { scale, rotation, glowIntensity };
   }
 
-  private calculatePerspectiveTilt(row: number, _metrics: BoardMetrics): number {
-    const rowOffset = (row - (BOARD_ROWS - 1) / 2) / ((BOARD_ROWS - 1) / 2);
-    return rowOffset * 0.12;
+  private calculatePerspectiveTilt(row: number, col: number, metrics: BoardMetrics): number {
+    const { projection } = metrics;
+    if (!projection) return 0;
+
+    const pCurr = projection.project(metrics, col, row);
+
+    const hCol = col < BOARD_COLS - 1 ? col + 1 : col - 1;
+    const pHoriz = projection.project(metrics, hCol, row);
+    const horizAngle = Math.atan2(pHoriz.y - pCurr.y, pHoriz.x - pCurr.x) - Math.PI / 2;
+
+    const hRow = row < BOARD_ROWS - 1 ? row + 1 : row - 1;
+    const pVert = projection.project(metrics, col, hRow);
+    const vertAngle = Math.atan2(pVert.y - pCurr.y, pVert.x - pCurr.x);
+
+    return (horizAngle + vertAngle) / 2;
   }
 
   private drawPieceGlow(
