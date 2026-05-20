@@ -12,11 +12,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@chess/types": "workspace:*",
-    "@chess/core": "workspace:*",
     "@chess/config": "workspace:*",
+    "@chess/core": "workspace:*",
     "@chess/game-records": "workspace:*",
     "@chess/logger": "workspace:*",
+    "@chess/types": "workspace:*",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "uuid": "^9.0.1",
@@ -24,6 +24,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.17.10",
     "@types/node": "^20.10.5",
@@ -31,6 +32,7 @@
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
+    "adm-zip": "^0.5.17",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }
