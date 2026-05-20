@@ -24,6 +24,7 @@ function loadBoardImage(): Promise<void> {
     img.onload = () => {
       boardImage = img;
       boardImageLoaded = true;
+      clientLogger.debug('Board image loaded successfully');
       resolve();
     };
     img.onerror = () => {

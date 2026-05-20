@@ -43,6 +43,7 @@ function loadPieceImages(): Promise<void> {
 
   return Promise.all(promises).then(() => {
     imagesLoaded = true;
+    clientLogger.info('Piece images loaded', { pieceCount: pieces.length });
   });
 }
 

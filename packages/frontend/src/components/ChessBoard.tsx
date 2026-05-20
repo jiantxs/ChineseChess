@@ -9,6 +9,7 @@ import {
 } from '@chess/types';
 import { BoardRenderingKit } from '../canvas/BoardRenderingKit';
 import { BoardMetrics } from '../canvas/types/canvas';
+import { clientLogger } from '../utils/clientLogger';
 
 /** 默认棋子尺寸（像素）。 */
 const PIECE_SIZE = 60;
@@ -106,14 +107,17 @@ export default function ChessBoard({
     if (!canvas) return;
 
     // 创建渲染套件（风格由 styleName 参数决定）
+    clientLogger.info('ChessBoard initializing', { styleName, width: metrics.width, height: metrics.height });
     const kit = new BoardRenderingKit(canvas, metrics, styleName);
     kitRef.current = kit;
 
     // 启动渲染循环
     kit.start();
+    clientLogger.info('ChessBoard render loop started', { styleName });
 
     // 清理
     return () => {
+      clientLogger.info('ChessBoard unmounting', { styleName });
       kit.destroy();
       kitRef.current = null;
     };
@@ -255,6 +259,7 @@ export default function ChessBoard({
     if (!pos) return;
 
     const piece = gameState.board[pos.row][pos.col];
+    clientLogger.debug('Canvas clicked', { pos, hasPiece: !!piece, gameMode });
 
     if (onCellClick) {
       onCellClick(pos, !!piece);
@@ -265,6 +270,7 @@ export default function ChessBoard({
       const isValidMove = displayValidMoves.some(m => m.row === pos.row && m.col === pos.col);
 
       if (isValidMove) {
+        clientLogger.info('Move executed', { from: selectedPiece, to: pos, gameMode });
         onMove?.(selectedPiece, pos);
         setInternalSelectedPiece(null);
         if (!isExternalMode) {
@@ -279,6 +285,7 @@ export default function ChessBoard({
       const canControl = gameMode === 'local' || playerSide === piece.side;
 
       if (isMyTurn && canControl) {
+        clientLogger.debug('Piece selected', { pos, pieceType: piece.type, pieceSide: piece.side });
         setInternalSelectedPiece(pos);
         if (onGetValidMoves) {
           onGetValidMoves(pos);

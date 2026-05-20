@@ -9,6 +9,7 @@ import { BoardMetrics } from './types/canvas';
 import { GameState, Position, Side } from '@chess/types';
 import { getStyle } from './styles';
 import { PiecesLayerInterface, AboveEffectsLayerInterface } from './styles/types';
+import { clientLogger } from '../utils/clientLogger';
 
 /**
  * 组装并管理棋盘渲染所需的所有组件。
@@ -25,12 +26,15 @@ export class BoardRenderingKit {
 
   constructor(canvas: HTMLCanvasElement, metrics: BoardMetrics, styleName: string = 'cyber') {
     this.styleName = styleName;
+    clientLogger.info('BoardRenderingKit initializing', { styleName, width: metrics.width, height: metrics.height });
+
     const style = getStyle(styleName);
 
     // 若风格提供投影，注入到 metrics
     let projection = style.createProjection?.(metrics);
     if (projection) {
       projection.calibrate(metrics);
+      clientLogger.debug('Perspective projection calibrated', { styleName });
     }
     const finalMetrics = projection ? { ...metrics, projection } : metrics;
     this.currentMetrics = finalMetrics;
@@ -63,6 +67,8 @@ export class BoardRenderingKit {
     for (const anim of bgAnimations) {
       this.animEngine.add(anim);
     }
+
+    clientLogger.info('BoardRenderingKit initialized', { styleName, layerCount: 4, hasProjection: !!projection });
   }
 
   /**
@@ -105,6 +111,13 @@ export class BoardRenderingKit {
    */
   setGameState(state: GameState | null): void {
     this.piecesLayer.setGameState(state);
+    if (state) {
+      clientLogger.debug('Game state updated', {
+        moveCount: state.moves.length,
+        currentTurn: state.currentTurn,
+        status: state.status,
+      });
+    }
   }
 
   /**
@@ -134,6 +147,7 @@ export class BoardRenderingKit {
   addCaptureEffect(x: number, y: number, side: Side, uniqueId: string): void {
     const style = getStyle(this.styleName);
     this.animEngine.add(style.createCaptureEffect(x, y, side, uniqueId));
+    clientLogger.info('Capture effect added', { x, y, side, uniqueId });
   }
 
   /**
@@ -149,17 +163,20 @@ export class BoardRenderingKit {
   ): void {
     const style = getStyle(this.styleName);
     this.animEngine.add(style.createMoveTrail(fromX, fromY, toX, toY, side, uniqueId));
+    clientLogger.info('Move trail effect added', { fromX, fromY, toX, toY, side, uniqueId });
   }
 
   /**
    * 清理所有资源。
    */
   destroy(): void {
+    clientLogger.info('BoardRenderingKit destroying', { styleName: this.styleName });
     if (this.unsubscribeAnimUpdate) {
       this.unsubscribeAnimUpdate();
       this.unsubscribeAnimUpdate = null;
     }
     this.animEngine.clear();
     this.renderer.destroy();
+    clientLogger.info('BoardRenderingKit destroyed', { styleName: this.styleName });
   }
 }

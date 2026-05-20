@@ -4,6 +4,7 @@
  */
 
 import { BoardMetrics } from '../types/canvas';
+import { clientLogger } from '../../utils/clientLogger';
 
 /**
  * 3D 透视投影器。
@@ -100,6 +101,14 @@ export class PerspectiveProjection {
 
     this.displayOffsetX = width / 2 - centerX * this.displayScale;
     this.displayOffsetY = height / 2 - centerY * this.displayScale;
+
+    clientLogger.debug('PerspectiveProjection calibrated', {
+      displayScale: this.displayScale,
+      displayOffsetX: this.displayOffsetX,
+      displayOffsetY: this.displayOffsetY,
+      contentW,
+      contentH,
+    });
   }
 
   /**
@@ -141,10 +150,16 @@ export class PerspectiveProjection {
     const dirY = this.ry * ndcX + this.uy * ndcY + this.fy;
     const dirZ = this.rz * ndcX + this.uz * ndcY + this.fz;
 
-    if (Math.abs(dirY) < 1e-6) return null;
+    if (Math.abs(dirY) < 1e-6) {
+      clientLogger.warn('Unproject failed: ray parallel to board plane', { screenX, screenY });
+      return null;
+    }
 
     const t = -this.camY / dirY;
-    if (t < 0.1) return null;
+    if (t < 0.1) {
+      clientLogger.warn('Unproject failed: ray does not hit board plane', { screenX, screenY, t });
+      return null;
+    }
 
     const worldX = this.camX + t * dirX;
     const worldZ = this.camZ + t * dirZ;

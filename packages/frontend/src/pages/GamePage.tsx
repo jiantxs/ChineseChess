@@ -56,16 +56,19 @@ export default function GamePage() {
 
   useEffect(() => {
     resetSelection();
+    clientLogger.info('GamePage mode changed', { mode, gameId, boardStyle });
     if (mode === 'online') {
       onlineGame.createGame();
     } else if (mode === 'local' || mode === 'local3d') {
       localGame.resetGame();
     } else if (mode === 'join' && gameId) {
+      clientLogger.info('Joining game', { gameId });
       onlineGame.joinGame(gameId);
     }
   }, [mode, gameId]);
 
   const handleReset = useCallback(() => {
+    clientLogger.info('Game reset, returning to menu');
     resetSelection();
     onlineGame.resetGame();
     localGame.resetGame();

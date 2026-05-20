@@ -25,20 +25,24 @@ export default function MenuScreen({ error }: MenuScreenProps) {
   }, []);
 
   const handleStartLocal = useCallback(() => {
+    clientLogger.info('Menu: start local game');
     navigate('/game/local');
   }, [navigate]);
 
   const handleStartLocal3D = useCallback(() => {
+    clientLogger.info('Menu: start local 3D game');
     navigate('/game/local3d');
   }, [navigate]);
 
   const handleStartOnline = useCallback(() => {
+    clientLogger.info('Menu: start online game');
     navigate('/game/online');
   }, [navigate]);
 
   const handleJoinGame = useCallback(() => {
     const input = gameIdInputRef.current;
     if (input?.value) {
+      clientLogger.info('Menu: join game', { gameId: input.value });
       navigate(`/game/join/${input.value}`);
     }
   }, [navigate]);

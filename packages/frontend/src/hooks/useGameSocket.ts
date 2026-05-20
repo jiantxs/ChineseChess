@@ -86,6 +86,7 @@ export function useGameSocket(): UseGameSocketReturn {
           setConnectionStatus('connected');
           setError(null);
           isConnectingRef.current = false;
+          clientLogger.info('WebSocket connected', { playerId: playerIdRef.current });
           resolve();
         };
         
@@ -225,6 +226,7 @@ case MessageType.VALID_MOVES:
   const makeMove = useCallback((from: Position, to: Position) => {
     if (!gameState) return;
 
+    clientLogger.info('Sending move', { from, to, gameId: gameState.id });
     setValidMoves([]);
     sendMessage({
       type: MessageType.MAKE_MOVE,
@@ -244,6 +246,7 @@ case MessageType.VALID_MOVES:
   }, [gameState, sendMessage]);
 
   const resetGame = useCallback(() => {
+    clientLogger.info('Resetting game state');
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;

@@ -3,6 +3,8 @@
  * 管理画布动画的连续渲染周期。
  */
 
+import { clientLogger } from '../../utils/clientLogger';
+
 export type RenderCallback = (deltaTime: number, elapsedTime: number) => void;
 
 /**
@@ -36,6 +38,7 @@ export class RenderLoop {
     this.isRunning = true;
     this.startTime = performance.now();
     this.lastTimestamp = this.startTime;
+    clientLogger.debug('RenderLoop started');
     this.tick(this.startTime);
   }
 
@@ -47,6 +50,7 @@ export class RenderLoop {
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
+      clientLogger.debug('RenderLoop stopped');
     }
   }
 

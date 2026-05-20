@@ -6,6 +6,7 @@
 import { BaseLayer } from '../layers/BaseLayer';
 import { RenderLoop, RenderCallback } from '../renderer/RenderLoop';
 import { BoardMetrics } from '../types/canvas';
+import { clientLogger } from '../../utils/clientLogger';
 
 /**
  * 协调多层画布渲染。
@@ -24,6 +25,7 @@ export class LayeredRenderer {
     this.canvas = canvas;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
+      clientLogger.error('Failed to get 2D context from canvas');
       throw new Error('Failed to get 2D context from canvas');
     }
     this.ctx = ctx;
@@ -33,6 +35,12 @@ export class LayeredRenderer {
     // 设置画布尺寸
     this.canvas.width = metrics.width;
     this.canvas.height = metrics.height;
+
+    clientLogger.debug('LayeredRenderer initialized', {
+      width: metrics.width,
+      height: metrics.height,
+      layerCount: 0,
+    });
   }
 
   /**
@@ -44,6 +52,7 @@ export class LayeredRenderer {
     // 按 z-index 排序（升序 - 较低 z-index 先绘制）
     this.layers.sort((a, b) => a.zIndex - b.zIndex);
     layer.onAttach?.();
+    clientLogger.debug('Layer added', { zIndex: layer.zIndex, totalLayers: this.layers.length });
   }
 
   /**
@@ -91,6 +100,7 @@ export class LayeredRenderer {
       this.render(deltaTime, elapsedTime);
     });
     this.renderLoop.start();
+    clientLogger.info('Render loop started', { layerCount: this.layers.length });
   }
 
   /**
@@ -101,6 +111,7 @@ export class LayeredRenderer {
     if (this.unsubscribeFrame) {
       this.unsubscribeFrame();
       this.unsubscribeFrame = null;
+      clientLogger.info('Render loop stopped');
     }
   }
 
@@ -135,6 +146,7 @@ export class LayeredRenderer {
     this.stop();
     this.beforeRenderCallbacks.clear();
     this.layers.forEach(layer => layer.onDetach?.());
+    clientLogger.debug('LayeredRenderer destroyed', { totalLayers: this.layers.length });
     this.layers = [];
   }
 }

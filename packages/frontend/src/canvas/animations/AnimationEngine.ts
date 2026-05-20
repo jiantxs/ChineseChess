@@ -4,6 +4,7 @@
  */
 
 import { IAnimation, BoardMetrics } from '../types/canvas';
+import { clientLogger } from '../../utils/clientLogger';
 
 /**
  * 所有画布动画的中央管理器。
@@ -18,6 +19,7 @@ export class AnimationEngine {
    */
   add(animation: IAnimation): void {
     this.animations.set(animation.id, animation);
+    clientLogger.debug('Animation added', { animationId: animation.id, activeCount: this.animations.size });
   }
 
   /**
@@ -36,10 +38,12 @@ export class AnimationEngine {
    * 移除所有动画。
    */
   clear(): void {
+    const count = this.animations.size;
     this.animations.forEach(anim => {
       if (anim.destroy) anim.destroy();
     });
     this.animations.clear();
+    clientLogger.debug('AnimationEngine cleared', { clearedCount: count });
   }
 
   /**

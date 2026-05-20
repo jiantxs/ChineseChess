@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { clientLogger } from '../utils/clientLogger';
 import './SplashScreen.css';
 
 export default function SplashScreen() {
@@ -8,6 +9,7 @@ export default function SplashScreen() {
 
   const handleClick = useCallback(() => {
     if (fading) return;
+    clientLogger.info('SplashScreen clicked, navigating to menu');
     setFading(true);
     setTimeout(() => {
       navigate('/menu');

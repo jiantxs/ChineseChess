@@ -6,6 +6,7 @@
 import { BoardStyle } from './types';
 import { cyberStyle } from './cyber';
 import { cyber3dStyle } from './cyber3d';
+import { clientLogger } from '../../utils/clientLogger';
 
 /**
  * 风格名称到风格实现的映射。
@@ -18,6 +19,7 @@ const styleRegistry: Map<string, BoardStyle> = new Map();
  */
 export function registerStyle(style: BoardStyle): void {
   styleRegistry.set(style.name, style);
+  clientLogger.debug('Board style registered', { styleName: style.name });
 }
 
 /**
@@ -28,7 +30,7 @@ export function registerStyle(style: BoardStyle): void {
 export function getStyle(name: string): BoardStyle {
   const style = styleRegistry.get(name);
   if (!style) {
-    console.warn(`[Canvas] Unknown board style "${name}", falling back to "cyber".`);
+    clientLogger.warn('Unknown board style, falling back to cyber', { requestedStyle: name });
     return styleRegistry.get('cyber')!;
   }
   return style;

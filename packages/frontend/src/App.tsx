@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import SplashScreen from './pages/SplashScreen';
 import MenuScreen from './pages/MenuScreen';
 import GamePage from './pages/GamePage';
+import { clientLogger } from './utils/clientLogger';
 import './App.css';
 
 function getBasename() {
@@ -11,6 +12,7 @@ function getBasename() {
 }
 
 function App() {
+  clientLogger.info('App mounted', { basename: getBasename() });
   return (
     <BrowserRouter basename={getBasename()}>
       <Routes>
