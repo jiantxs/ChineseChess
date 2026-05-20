@@ -3,13 +3,13 @@
  *
  * Features:
  * - Scans for an available high port (30000+)
- * - Requires backend server directly (same Node.js process)
+ * - Starts backend server directly (same Node.js process)
  * - Opens a window pointing to the local server
  * - Manages process lifecycle (cleanup on exit)
  */
 
 import { app, BrowserWindow } from 'electron';
-import { spawn } from 'child_process';
+import { startServer } from '@chess/backend';
 import * as net from 'net';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
@@ -41,27 +41,8 @@ function findAvailablePort(startPort: number = 30000): Promise<number> {
   });
 }
 
-/**
- * Gets the path to the backend entry point.
- * In development: uses the monorepo backend dist
- * In production: uses the packaged backend-dist
- */
-function getBackendPath(): string {
-  if (process.env.NODE_ENV === 'development') {
-    return path.resolve(__dirname, '../../backend/dist/index.js');
-  }
-  return path.resolve(process.resourcesPath, 'backend-dist/dist/index.js');
-}
-
-function getNodePath(): string {
-  if (process.env.NODE_ENV === 'development') {
-    return 'node';
-  }
-  return path.resolve(process.resourcesPath, 'node-dist/node.exe');
-}
-
 let mainWindow: BrowserWindow | null = null;
-let backendProcess: ReturnType<typeof spawn> | null = null;
+let stopServer: (() => void) | null = null;
 
 /**
  * Creates the main application window.
@@ -99,42 +80,6 @@ function createWindow(port: number, prefix: string = ''): void {
 }
 
 /**
- * Waits for the backend to be ready by polling the health endpoint.
- *
- * @param port - The port the backend is running on
- * @param prefix - The URL prefix (e.g., '/uuid')
- * @param timeout - Maximum time to wait in milliseconds
- * @returns A promise that resolves when the backend is ready
- */
-function waitForBackend(port: number, prefix: string = '', timeout: number = 30000): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
-    const healthPath = prefix ? `${prefix}/api/config` : '/api/config';
-    const interval = setInterval(() => {
-      const socket = net.createConnection(port, '127.0.0.1');
-
-      socket.on('connect', () => {
-        socket.write(`GET ${healthPath} HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n`);
-      });
-
-      socket.on('data', () => {
-        clearInterval(interval);
-        socket.destroy();
-        resolve();
-      });
-
-      socket.on('error', () => {
-        socket.destroy();
-        if (Date.now() - startTime > timeout) {
-          clearInterval(interval);
-          reject(new Error('Backend failed to start within timeout'));
-        }
-      });
-    }, 500);
-  });
-}
-
-/**
  * Main application entry point.
  */
 async function main(): Promise<void> {
@@ -147,48 +92,11 @@ async function main(): Promise<void> {
     const basePrefix = `/${randomUUID()}`;
     console.log(`Generated base prefix: ${basePrefix}`);
 
-    // Start backend as child process using bundled Node.js
-    const backendPath = getBackendPath();
-    const nodePath = getNodePath();
-    
-    console.log(`Starting backend with: ${nodePath} ${backendPath}`);
-    
-    const env = {
-      ...process.env,
-      CCHESSPORT: port.toString(),
-      CCHESSHOST: '127.0.0.1',
-      CCHESSPREFIX: basePrefix,
-      NODE_ENV: 'production',
-    };
-
-    const proc = spawn(nodePath, [backendPath], {
-      env,
-      cwd: path.dirname(backendPath),
-      stdio: 'pipe',
-    });
-
-    proc.stdout?.on('data', (data) => {
-      console.log(`[Backend] ${data.toString().trim()}`);
-    });
-
-    proc.stderr?.on('data', (data) => {
-      console.error(`[Backend Error] ${data.toString().trim()}`);
-    });
-
-    proc.on('exit', (code) => {
-      console.log(`Backend process exited with code ${code}`);
-      // Backend died — close the app so we don't leave a zombie Electron window
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.close();
-      }
-      app.quit();
-    });
-
-    backendProcess = proc;
-
-    // Wait for backend to be ready
-    await waitForBackend(port, basePrefix);
-    console.log('Backend is ready');
+    // Start backend server directly in the same process
+    console.log('Starting backend server...');
+    const result = startServer({ port, host: '127.0.0.1', prefix: basePrefix });
+    stopServer = result.stop;
+    console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
 
     // Create the window with prefix URL
     createWindow(port, basePrefix);
@@ -202,9 +110,9 @@ async function main(): Promise<void> {
 app.on('ready', main);
 
 app.on('window-all-closed', () => {
-  // Kill the backend child process when the window is closed
-  if (backendProcess && !backendProcess.killed) {
-    backendProcess.kill();
+  // Stop the backend server when the window is closed
+  if (stopServer) {
+    stopServer();
   }
   if (process.platform !== 'darwin') {
     app.quit();
