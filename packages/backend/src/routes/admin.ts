@@ -1,4 +1,4 @@
-import express, { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
 import { chessConfig } from '@chess/config';
@@ -49,42 +49,8 @@ function sanitizePath(basePath: string, userPath: string): string {
   return path.join(basePath, normalized);
 }
 
-function parseBasicAuth(authHeader: string | undefined): { valid: boolean; error?: string } {
-  if (!authHeader || !authHeader.startsWith('Basic ')) {
-    return { valid: false, error: 'Missing or invalid Authorization header' };
-  }
-
-  try {
-    const base64Credentials = authHeader.slice(6);
-    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    const [username, password] = credentials.split(':');
-
-    if (username !== 'admin' || password !== chessConfig.admin.password) {
-      return { valid: false, error: 'Invalid credentials' };
-    }
-
-    return { valid: true };
-  } catch {
-    return { valid: false, error: 'Failed to parse Authorization header' };
-  }
-}
-
-function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  const authResult = parseBasicAuth(req.headers.authorization);
-
-  if (!authResult.valid) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Admin Dashboard"');
-    res.status(401).json({ error: authResult.error || 'Unauthorized' });
-    return;
-  }
-
-  next();
-}
-
 function createAdminRouter(): Router {
   const router = Router();
-
-  router.use(requireAuth);
 
   router.get('/logs', async (req, res) => {
     try {
@@ -127,7 +93,16 @@ function createAdminRouter(): Router {
         logDir = dirMap[logType];
       }
 
-      const fileName = `${logType === 'events' ? 'game-events' : logType}-${date}.log`;
+      const fileNameMap: Record<string, string> = {
+        requests: 'request',
+        errors: 'error',
+        events: 'events',
+        games: '',
+      };
+      const filePrefix = fileNameMap[logType];
+      const fileName = logType === 'games'
+        ? `${date}.log`
+        : `${filePrefix}-${date}.log`;
       const filePath = sanitizePath(logDir, fileName);
 
       const resolvedPath = path.resolve(filePath);
@@ -142,7 +117,7 @@ function createAdminRouter(): Router {
         fileContent = await fs.readFile(filePath, 'utf-8');
       } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-          res.json({ entries: [], total: 0, hasMore: false });
+          res.json({ logs: [], total: 0, hasMore: false, availableDates: [] });
           return;
         }
         throw err;
@@ -163,8 +138,25 @@ function createAdminRouter(): Router {
       const total = entries.length;
       const paginatedEntries = entries.slice(offset, offset + limit);
 
+      const availableDates: string[] = [];
+      try {
+        const dirEntries = await fs.readdir(logDir, { withFileTypes: true });
+        for (const entry of dirEntries) {
+          if (entry.isFile() && entry.name.endsWith('.log')) {
+            const dateMatch = entry.name.match(/(\d{4}-\d{2}-\d{2})\.log$/);
+            if (dateMatch) {
+              availableDates.push(dateMatch[1]);
+            }
+          }
+        }
+      } catch {
+        // eslint-disable-next-line no-empty
+      }
+      availableDates.sort().reverse();
+
       res.json({
-        entries: paginatedEntries,
+        logs: paginatedEntries,
+        availableDates,
         total,
         limit,
         offset,
