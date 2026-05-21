@@ -26,14 +26,9 @@ export default function LogsPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [showAuthModal, setShowAuthModal] = useState(true);
 
   const fetchLogs = useCallback(async () => {
-    if (!isAuthenticated) return;
-
     setLoading(true);
     setError(null);
 
@@ -44,18 +39,7 @@ export default function LogsPage() {
         url.searchParams.set('date', selectedDate);
       }
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'Authorization': `Basic ${btoa('admin:' + adminPassword)}`,
-        },
-      });
-
-      if (response.status === 401) {
-        setIsAuthenticated(false);
-        setShowAuthModal(true);
-        setError('认证失败，请输入正确的管理员密码');
-        return;
-      }
+      const response = await fetch(url.toString());
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -69,37 +53,17 @@ export default function LogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, selectedDate, adminPassword, isAuthenticated]);
+  }, [activeTab, selectedDate]);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  const handleAuthSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminPassword.trim()) {
-      setIsAuthenticated(true);
-      setShowAuthModal(false);
-    }
-  }, [adminPassword]);
-
   const handleExportAll = useCallback(async () => {
-    if (!isAuthenticated || !adminPassword) return;
-
     try {
       const response = await fetch(apiPath('/api/admin/logs/export'), {
         method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa('admin:' + adminPassword)}`,
-        },
       });
-
-      if (response.status === 401) {
-        setIsAuthenticated(false);
-        setShowAuthModal(true);
-        setError('认证失败，请输入正确的管理员密码');
-        return;
-      }
 
       if (!response.ok) {
         throw new Error(`Export failed: HTTP ${response.status}`);
@@ -117,7 +81,7 @@ export default function LogsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : '导出失败');
     }
-  }, [adminPassword, isAuthenticated, selectedDate]);
+  }, [selectedDate]);
 
   const toggleRowExpansion = useCallback((index: number) => {
     setExpandedRows((prev) => {
@@ -185,26 +149,7 @@ export default function LogsPage() {
           </button>
         </div>
 
-        {showAuthModal ? (
-          <div className="auth-modal">
-            <form onSubmit={handleAuthSubmit} className="auth-form">
-              <h2 className="auth-title">管理员认证</h2>
-              <input
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="输入管理员密码"
-                className="auth-input"
-                autoFocus
-              />
-              <button type="submit" className="auth-submit">
-                确定
-              </button>
-            </form>
-          </div>
-        ) : (
-          <>
-            <div className="logs-controls">
+        <div className="logs-controls">
               <div className="tabs">
                 {(Object.keys(tabLabels) as LogType[]).map((tab) => (
                   <button
@@ -308,8 +253,6 @@ export default function LogsPage() {
                 </table>
               )}
             </div>
-          </>
-        )}
       </div>
     </div>
   );
