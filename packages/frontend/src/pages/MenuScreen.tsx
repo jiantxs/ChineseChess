@@ -47,6 +47,11 @@ export default function MenuScreen({ error }: MenuScreenProps) {
     }
   }, [navigate]);
 
+  const handleViewLogs = useCallback(() => {
+    clientLogger.info('Menu: view logs');
+    navigate('/logs');
+  }, [navigate]);
+
   const handleExit = useCallback(async () => {
     try {
       await fetch(assetPath('/api/game/exit'), { method: 'POST' });
@@ -105,6 +110,11 @@ export default function MenuScreen({ error }: MenuScreenProps) {
               <span className="btn-text">加入房间</span>
             </button>
           </div>
+
+          <button className="menu-btn" onClick={handleViewLogs}>
+            <span className="btn-line" />
+            <span className="btn-text">查看日志</span>
+          </button>
 
           <button className="menu-btn exit-btn" onClick={handleExit}>
             <span className="btn-line" />

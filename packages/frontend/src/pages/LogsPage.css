@@ -1,0 +1,505 @@
+/* ============================================================
+   日志查看器页面
+   ============================================================ */
+.logs-page {
+  background: #000000;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.logs-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(ellipse at center, rgba(10, 20, 15, 0.8) 0%, #000000 70%);
+}
+
+/* 容器 */
+.logs-container {
+  position: relative;
+  width: calc(100vw - 48px);
+  max-width: 1400px;
+  height: calc(100vh - 48px);
+  margin: 24px;
+  padding: 32px;
+  background: rgba(10, 10, 12, 0.7);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  animation: containerFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes containerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 头部 */
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.logs-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: rgba(0, 255, 170, 0.9);
+  margin: 0;
+  letter-spacing: 4px;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  text-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+}
+
+.back-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.7);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+}
+
+/* 认证弹窗 */
+.auth-modal {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-form {
+  width: 320px;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: rgba(0, 255, 170, 0.9);
+  margin: 0 0 24px 0;
+  letter-spacing: 4px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 15px;
+  outline: none;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.auth-input::placeholder {
+  color: rgba(160, 170, 180, 0.3);
+}
+
+.auth-input:focus {
+  border-color: rgba(0, 255, 170, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.1);
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 14px 0;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 15px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.auth-submit:hover {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+}
+
+/* 控制栏 */
+.logs-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* 标签页 */
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  color: rgba(160, 170, 180, 0.6);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+.tab-btn:hover {
+  color: rgba(0, 255, 170, 0.8);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.tab-btn.active {
+  color: rgba(0, 255, 170, 0.95);
+  border-color: rgba(0, 255, 170, 0.5);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+.tab-btn.active::after {
+  width: 100%;
+  left: 0;
+}
+
+/* 过滤器 */
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.date-select {
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  outline: none;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  min-width: 140px;
+}
+
+.date-select:focus {
+  border-color: rgba(0, 255, 170, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.15);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  outline: none;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: border-color 0.3s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(160, 170, 180, 0.3);
+}
+
+.search-input:focus {
+  border-color: rgba(0, 255, 170, 0.5);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.1);
+}
+
+.export-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 错误信息 */
+.error-message {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  color: rgba(255, 100, 100, 0.9);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 100, 100, 0.2);
+  background: rgba(255, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+.error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 100, 100, 0.5);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes errorPulse {
+  0%, 100% { border-color: rgba(255, 100, 100, 0.2); }
+  50% { border-color: rgba(255, 100, 100, 0.4); }
+}
+
+/* 表格容器 */
+.logs-table-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid rgba(0, 255, 170, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.loading,
+.no-logs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: rgba(160, 170, 180, 0.5);
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+/* 表格 */
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.logs-table th {
+  position: sticky;
+  top: 0;
+  padding: 12px 16px;
+  text-align: left;
+  color: rgba(0, 255, 170, 0.7);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 1px;
+  background: rgba(10, 10, 12, 0.9);
+  border-bottom: 1px solid rgba(0, 255, 170, 0.2);
+}
+
+.col-expand {
+  width: 40px;
+  text-align: center;
+}
+
+.col-time {
+  width: 180px;
+}
+
+.col-level {
+  width: 80px;
+}
+
+.col-message {
+  min-width: 200px;
+}
+
+/* 日志行 */
+.log-row {
+  transition: background 0.2s ease;
+}
+
+.log-row:hover {
+  background: rgba(0, 255, 170, 0.03);
+}
+
+.log-row td {
+  padding: 10px 16px;
+  color: rgba(160, 170, 180, 0.8);
+  border-bottom: 1px solid rgba(0, 255, 170, 0.05);
+  vertical-align: middle;
+}
+
+.expand-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: rgba(0, 255, 170, 0.5);
+  cursor: pointer;
+  font-size: 10px;
+  transition: color 0.2s ease;
+}
+
+.expand-btn:hover {
+  color: rgba(0, 255, 170, 0.9);
+}
+
+/* 级别标签 */
+.level-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 2px;
+}
+
+.log-level-error {
+  color: rgba(255, 100, 100, 0.9);
+  background: rgba(255, 100, 100, 0.1);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+}
+
+.log-level-warn {
+  color: rgba(255, 200, 100, 0.9);
+  background: rgba(255, 200, 100, 0.1);
+  border: 1px solid rgba(255, 200, 100, 0.3);
+}
+
+.log-level-info {
+  color: rgba(100, 200, 255, 0.9);
+  background: rgba(100, 200, 255, 0.1);
+  border: 1px solid rgba(100, 200, 255, 0.3);
+}
+
+.log-level-default {
+  color: rgba(160, 170, 180, 0.7);
+  background: rgba(160, 170, 180, 0.1);
+  border: 1px solid rgba(160, 170, 180, 0.2);
+}
+
+/* 展开详情行 */
+.log-detail-row td {
+  padding: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.log-detail {
+  margin: 0;
+  padding: 16px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 12px;
+  color: rgba(160, 170, 180, 0.7);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+/* 滚动条样式 */
+.logs-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.logs-table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.logs-table-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 4px;
+}
+
+.logs-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 170, 0.3);
+}
+
+/* ============================================================
+   响应式
+   ============================================================ */
+@media (max-width: 768px) {
+  .logs-container {
+    margin: 16px;
+    padding: 20px;
+  }
+
+  .logs-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .logs-title {
+    font-size: 22px;
+  }
+
+  .tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  .date-select {
+    min-width: 120px;
+  }
+
+  .col-time {
+    width: 140px;
+  }
+}

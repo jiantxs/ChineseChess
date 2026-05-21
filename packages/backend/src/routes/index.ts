@@ -14,6 +14,7 @@ import { chessConfig } from '@chess/config';
 import { gameManager } from '@chess/core';
 import gameRoutes from './game';
 import configRoutes from './config';
+import adminRoutes from './admin';
 import { requestLogMiddleware, logError } from '../services/logger';
 
 /**
@@ -51,6 +52,9 @@ export function createAppRouter(): Router {
 
   // 在 /api 挂载配置路由 - 返回服务器配置和布局
   router.use('/api', configRoutes);
+
+  // 在 /api/admin 挂载管理路由 - 日志查看器
+  router.use('/api/admin', adminRoutes);
 
   // 在路由器的 locals 中存储游戏管理器引用，以便路由访问
   router.use((req, res, next) => {
