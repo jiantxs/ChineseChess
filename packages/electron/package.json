@@ -2,18 +2,44 @@
   "name": "@chess/electron",
   "version": "1.0.0",
   "private": true,
-  "main": "./dist/main.js",
+  "type": "module",
+  "main": "dist/main.js",
+  "author": "Chinese Chess Team",
+  "description": "Chinese Chess Desktop Application",
   "scripts": {
-    "build": "tsc --build",
-    "dev": "tsc --build && electron .",
+    "build": "node build.js",
+    "dist": "node build.js && electron-builder",
+    "dev": "node build.js && electron .",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
-    "@chess/backend": "workspace:*"
+  "build": {
+    "appId": "com.chess.desktop",
+    "productName": "象棋",
+    "directories": {
+      "output": "../../winapp",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/main.js",
+      "dist/main.js.map",
+      "dist/public/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.10.5",
-    "typescript": "^5.9.3",
-    "electron": "^30.0.0"
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.3"
   }
 }

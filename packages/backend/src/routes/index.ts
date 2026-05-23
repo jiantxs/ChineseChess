@@ -22,7 +22,7 @@ import { requestLogMiddleware, logError } from '../services/logger';
  *
  * @returns 配置好的 Express Router 实例
  */
-export function createAppRouter(): Router {
+export function createAppRouter(prefix:string, customPublicPath?: string): Router {
   const router = Router();
 
   // 中间件：解析 JSON 请求体
@@ -59,7 +59,7 @@ export function createAppRouter(): Router {
   });
 
   // 前端构建输出目录的路径
-  const publicPath = path.resolve(__dirname, '../../public');
+  const publicPath = customPublicPath || path.resolve(__dirname, '../../public');
 
   // 中间件：从前端构建目录提供静态文件
   router.use(express.static(publicPath));
@@ -68,7 +68,6 @@ export function createAppRouter(): Router {
     if (req.path.startsWith('/api/') || req.path.match(/\.\w+$/)) {
       return res.status(404).send('Not found');
     }
-    const prefix = chessConfig.server.prefix;
     res.redirect(prefix || '/');
   });
 

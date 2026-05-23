@@ -92,11 +92,20 @@ async function main(): Promise<void> {
     const basePrefix = `/${randomUUID()}`;
     console.log(`Generated base prefix: ${basePrefix}`);
 
-    // Start backend server directly in the same process
-    console.log('Starting backend server...');
-    const result = startServer({ port, host: '127.0.0.1', prefix: basePrefix });
-    stopServer = result.stop;
-    console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
+  // Determine the correct public path for static assets
+  // In packaged app, public files are in dist/public relative to main.js
+  // In development, they are in packages/backend/public
+  const isPackaged = app.isPackaged;
+  const publicPath = isPackaged
+    ? path.resolve(app.getAppPath(), 'dist', 'public')
+    : path.resolve(__dirname, '../../backend/public');
+  console.log(`Public path: ${publicPath} (isPackaged: ${isPackaged})`);
+
+  // Start backend server directly in the same process
+  console.log('Starting backend server...');
+  const result = startServer({ port, host: '127.0.0.1', prefix: basePrefix, publicPath });
+  stopServer = result.stop;
+  console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
 
     // Create the window with prefix URL
     createWindow(port, basePrefix);
