@@ -55,6 +55,7 @@ export interface ChessConfig {
     prefix: string;
     sessionSecret: string;
     sessionMaxAgeMs: number;
+    platform : 'web' | 'win';
   };
   game: {
     turnTimeoutMs: number;
@@ -99,6 +100,7 @@ export const defaultConfig: ChessConfig = {
     prefix: '/abcc',
     sessionSecret: process.env.SESSION_SECRET || 'chinese-chess-secret-key-2024',
     sessionMaxAgeMs: 24 * 60 * 60 * 1000,
+    platform: 'web'
   },
   game: {
     turnTimeoutMs: 60000,

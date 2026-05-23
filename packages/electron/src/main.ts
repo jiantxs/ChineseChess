@@ -126,6 +126,7 @@ async function main(): Promise<void> {
         prefix: basePrefix,
         sessionSecret: 'electron-session-secret',
         sessionMaxAgeMs: 24 * 60 * 60 * 1000,
+        platform: 'win'
       },
       frontend: {
         buildOutput: publicPath
