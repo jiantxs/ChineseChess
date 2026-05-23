@@ -57,9 +57,10 @@ export class GameManager {
    * 在创建之前结束任何仍处于 PLAYING 或 WAITING 状态的游戏。
    * @param layout - 定义初始棋盘布局的 PieceLayout 实例
    * @param local - 如果为 true，则为热座模式（双方为同一玩家）
+   * @param ai - 如果为 true，则为 AI 对战模式（玩家执红，AI 执黑）
    * @returns 新创建的 GameState
    */
-  createGame(layout: PieceLayout, local: boolean = false): GameState {
+  createGame(layout: PieceLayout, local: boolean = false, ai: boolean = false): GameState {
     for (const [gameId, game] of this.games.entries()) {
       if (game.status === GameStatus.PLAYING || game.status === GameStatus.WAITING) {
         game.status = GameStatus.FINISHED;
@@ -81,7 +82,13 @@ export class GameManager {
       lastMoveTime: Date.now(),
       createdAt: Date.now(),
       localGame: local,
+      aiGame: ai,
     };
+
+    if (ai) {
+      game.status = GameStatus.PLAYING;
+      game.blackPlayer = 'ai-player';
+    }
 
     this.games.set(gameId, game);
 
@@ -90,6 +97,7 @@ export class GameManager {
       layout: layout.getName(),
       firstPlayer: layout.getFirstPlayer(),
       local,
+      ai,
       initialBoard: board.map(row => row.map(p => p ? { id: p.id, type: p.type, side: p.side, position: p.position } : null)),
     });
 
@@ -121,7 +129,7 @@ export class GameManager {
       return null;
     }
 
-    if (game.status !== GameStatus.WAITING && !game.localGame) {
+    if (game.status !== GameStatus.WAITING && !game.localGame && !game.aiGame) {
       gameLogger.warn('joinGame failed - game not waiting', { gameId, playerId, side, status: game.status });
       return null;
     }
@@ -134,6 +142,20 @@ export class GameManager {
       game.status = GameStatus.PLAYING;
 
       gameLogger.info('Local game joined', {
+        gameId,
+        playerId,
+        side: Side.RED,
+      });
+      return game;
+    }
+
+    // 对于 AI 游戏，玩家自动加入红方
+    if (game.aiGame) {
+      game.redPlayer = playerId;
+      this.playerGames.set(playerId, gameId);
+      game.status = GameStatus.PLAYING;
+
+      gameLogger.info('AI game joined', {
         gameId,
         playerId,
         side: Side.RED,
@@ -196,7 +218,7 @@ export class GameManager {
     playerId: string,
     from: Position,
     to: Position
-  ): { success: boolean; game?: GameState; error?: string } {
+  ): { success: boolean; game?: GameState; error?: string; needsAIMove?: boolean } {
     const game = this.games.get(gameId);
     if (!game) {
       gameLogger.warn('makeMove failed - game not found', { gameId, playerId, from, to });
@@ -273,7 +295,9 @@ export class GameManager {
       });
     }
 
-    return { success: true, game };
+    const needsAIMove = game.aiGame && game.status === GameStatus.PLAYING && !generalStatus.captured;
+
+    return { success: true, game, needsAIMove };
   }
 
   /**

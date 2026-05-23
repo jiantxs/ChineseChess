@@ -5,7 +5,7 @@ import './GameScreen.css';
 
 /** {@link GameScreen} 组件的属性。 */
 export interface GameScreenProps {
-  gameMode: 'local' | 'online';
+  gameMode: 'local' | 'online' | 'ai';
   gameState: GameState | null;
   playerSide: Side | null;
   connectionStatus?: 'connected' | 'connecting' | 'disconnected';
@@ -196,11 +196,16 @@ export default function GameScreen({
               <span className="player-name">黑方</span>
             </div>
           </div>
-          {gameMode === 'online' && playerSide && (
+          {(gameMode === 'online' || gameMode === 'ai') && playerSide && (
             <div className="your-side">
               你是: <span className={playerSide === Side.RED ? 'side-red' : 'side-black'}>
                 {playerSide === Side.RED ? '红方' : '黑方'}
               </span>
+            </div>
+          )}
+          {gameMode === 'ai' && (
+            <div className="your-side">
+              对手: <span className="side-black">电脑 (黑方)</span>
             </div>
           )}
         </div>

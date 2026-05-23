@@ -31,7 +31,7 @@ export interface ChessBoardProps {
   id?: string;
   gameState: GameState | null;
   playerSide: Side | null;
-  gameMode: 'local' | 'online';
+  gameMode: 'local' | 'online' | 'ai';
   validMoves?: Position[];
   selectedPosition?: Position | null;
   size?: ChessBoardSize;
@@ -282,7 +282,7 @@ export default function ChessBoard({
 
     if (piece) {
       const isMyTurn = gameState.currentTurn === piece.side;
-      const canControl = gameMode === 'local' || playerSide === piece.side;
+      const canControl = gameMode === 'local' || playerSide === piece.side || (gameMode === 'ai' && piece.side === Side.RED);
 
       if (isMyTurn && canControl) {
         clientLogger.debug('Piece selected', { pos, pieceType: piece.type, pieceSide: piece.side });

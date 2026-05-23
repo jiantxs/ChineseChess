@@ -24,6 +24,11 @@ export default function MenuScreen({ error }: MenuScreenProps) {
     };
   }, []);
 
+  const handleStartAI = useCallback(() => {
+    clientLogger.info('Menu: start AI game');
+    navigate('/game/ai');
+  }, [navigate]);
+
   const handleStartLocal = useCallback(() => {
     clientLogger.info('Menu: start local game');
     navigate('/game/local');
@@ -81,6 +86,11 @@ export default function MenuScreen({ error }: MenuScreenProps) {
           <button className="menu-btn" onClick={handleStartLocal}>
             <span className="btn-line" />
             <span className="btn-text">单机对战</span>
+          </button>
+
+          <button className="menu-btn" onClick={handleStartAI}>
+            <span className="btn-line" />
+            <span className="btn-text">人机对战</span>
           </button>
 
           <button className="menu-btn" onClick={handleStartLocal3D}>

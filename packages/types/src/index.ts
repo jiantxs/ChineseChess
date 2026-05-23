@@ -107,6 +107,7 @@ export interface GameState {
   lastMoveTime: number;
   createdAt: number;
   localGame?: boolean;
+  aiGame?: boolean;
 }
 
 /**

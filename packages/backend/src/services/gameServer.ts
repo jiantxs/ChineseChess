@@ -234,7 +234,7 @@ export class GameServer {
    * - 向游戏中的所有玩家发送带有其分配方的 GAME_STATE
    */
   private handleJoinGame(player: ConnectedPlayer, message: GameMessage): void {
-    const { gameId, side, local, layoutName } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string };
+    const { gameId, side, local, layoutName, ai } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string; ai?: boolean };
 
     let targetGameId = gameId;
     let isNewGame = false;
@@ -254,7 +254,7 @@ export class GameServer {
       } else {
         layout = PieceLayout.fromJSON(standardLayoutData);
       }
-      const newGame = this.gameManager.createGame(layout, local || false);
+      const newGame = this.gameManager.createGame(layout, local || false, ai || false);
       targetGameId = newGame.id;
       isNewGame = true;
     }
@@ -278,6 +278,7 @@ export class GameServer {
       side: player.side,
       isNewGame,
       local: local || false,
+      ai: ai || false,
     });
 
     for (const p of this.players.values()) {
@@ -382,6 +383,74 @@ export class GameServer {
         timestamp: Date.now(),
         gameId: player.gameId,
       });
+    } else if (result.needsAIMove && player.gameId) {
+      // AI game mode: automatically trigger AI move after player's successful move
+      setTimeout(() => {
+        this.handleAIMoveInGame(player.gameId!);
+      }, 500);
+    }
+  }
+
+  /**
+   * 处理 AI 在游戏中的走动 - 由 GameManager.makeAIMove() 调用
+   * @private
+   * @description 执行 AI 走动并广播更新后的游戏状态。
+   *
+   * @param gameId - AI 走动所在游戏的 ID
+   */
+  private handleAIMoveInGame(gameId: string): void {
+    const game = this.gameManager.getGame(gameId);
+    if (!game || game.status !== GameStatus.PLAYING) {
+      return;
+    }
+
+    const aiResult = this.gameManager.makeAIMove(gameId);
+    if (!aiResult.success) {
+      logWebSocketEvent('ai_move_failed', 'ai-player', gameId, {
+        reason: aiResult.error,
+      });
+      return;
+    }
+
+    const updatedGame = aiResult.game!;
+    const lastMove = updatedGame.moves[updatedGame.moves.length - 1];
+
+    logWebSocketEvent('ai_move', 'ai-player', gameId, {
+      moveNumber: updatedGame.moves.length,
+      from: lastMove.from,
+      to: lastMove.to,
+    });
+
+    for (const p of this.players.values()) {
+      if (p.gameId === gameId) {
+        const yourSide = updatedGame.redPlayer === p.playerId ? Side.RED : Side.BLACK;
+        this.sendToPlayer(p, {
+          type: MessageType.GAME_STATE,
+          payload: {
+            game: this.sanitizeGameState(updatedGame),
+            yourSide,
+            lastMove: { from: lastMove.from, to: lastMove.to },
+          },
+          timestamp: Date.now(),
+          gameId,
+        });
+      }
+    }
+
+    if (updatedGame.status === GameStatus.FINISHED) {
+      logWebSocketEvent('game_over', 'ai-player', gameId, {
+        winner: updatedGame.winner,
+        reason: 'general_captured',
+      });
+      this.broadcastToGame(gameId, {
+        type: MessageType.GAME_OVER,
+        payload: {
+          winner: updatedGame.winner,
+          reason: 'general_captured',
+        },
+        timestamp: Date.now(),
+        gameId,
+      });
     }
   }
 
@@ -449,15 +518,14 @@ export class GameServer {
    * 处理 AI_MOVE 消息 - 请求 AI 走动计算
    * @private
    * @description AI 对手集成的占位符。
-   *              返回指示 AI 尚未实现的错误。
+   *              当请求 AI 走动时，调用 GameManager.makeAIMove()。
    *
    * @param player - 请求 AI 走动的 ConnectedPlayer
    * @param message - AI 走动请求消息
    *
    * @remarks
    * - 如果 AI 未通过 chessConfig 启用则返回错误
-   * - 当请求 AI 功能时返回错误"AI 尚未实现"
-   * - 当 ENABLE_AI 完全实现时，AI 集成将放在这里
+   * - 完整的 AI 走动逻辑由 GameManager.makeAIMove() 处理
    */
   private handleAIMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!chessConfig.ai.enabled) {
@@ -466,8 +534,13 @@ export class GameServer {
       return;
     }
 
-    logWebSocketEvent('ai_move_not_implemented', player.playerId, player.gameId);
-    this.sendError(player, 'AI not yet implemented');
+    if (!player.gameId) {
+      logWebSocketEvent('ai_move_not_in_game', player.playerId, undefined);
+      this.sendError(player, 'Not in a game');
+      return;
+    }
+
+    this.handleAIMoveInGame(player.gameId);
   }
 
   /**
@@ -658,6 +731,7 @@ export class GameServer {
       lastMoveTime: game.lastMoveTime,
       createdAt: game.createdAt,
       localGame: game.localGame || false,
+      aiGame: game.aiGame || false,
     };
   }
 

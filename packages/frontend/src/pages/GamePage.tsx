@@ -4,7 +4,7 @@ import GameScreen from '../components/GameScreen';
 import { useGameSocket } from '../hooks/useGameSocket';
 import { useLocalGame } from '../hooks/useLocalGame';
 import { useBoardController } from '../controllers/BoardController';
-import { Position } from '@chess/types';
+import { Position, Side } from '@chess/types';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath } from '../utils/api';
 
@@ -15,6 +15,7 @@ export default function GamePage() {
   const onlineGame = useGameSocket();
   const localGame = useLocalGame();
 
+  const isAI = mode === 'ai';
   const isLocal = mode === 'local' || mode === 'local3d';
   const is3D = mode === 'local3d';
   const boardStyle = is3D ? 'cyber3d' : 'cyber';
@@ -61,6 +62,8 @@ export default function GamePage() {
       onlineGame.createGame();
     } else if (mode === 'local' || mode === 'local3d') {
       localGame.resetGame();
+    } else if (mode === 'ai') {
+      onlineGame.createGame(false, undefined, true);
     } else if (mode === 'join' && gameId) {
       clientLogger.info('Joining game', { gameId });
       onlineGame.joinGame(gameId);
@@ -87,9 +90,9 @@ export default function GamePage() {
 
   return (
     <GameScreen
-      gameMode={isLocal ? 'local' : 'online'}
+      gameMode={isAI ? 'ai' : isLocal ? 'local' : 'online'}
       gameState={gameState}
-      playerSide={isLocal ? null : onlineGame.playerSide}
+      playerSide={isAI ? Side.RED : (isLocal ? null : onlineGame.playerSide)}
       connectionStatus={isLocal ? undefined : onlineGame.connectionStatus}
       validMoves={activeGame.validMoves}
       selectedPosition={boardState.selectedPosition}
