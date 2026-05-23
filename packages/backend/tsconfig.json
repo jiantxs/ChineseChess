@@ -17,14 +17,6 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
-      "@chess/core": ["../core/src"],
-      "@chess/core/*": ["../core/src/*"],
-      "@chess/config": ["../config/src"],
-      "@chess/config/*": ["../config/src/*"],
-      "@chess/game-records": ["../game-records/src"],
-      "@chess/game-records/*": ["../game-records/src/*"],
-      "@chess/logger": ["../logger/src"],
-      "@chess/logger/*": ["../logger/src/*"]
     }
   },
   "include": ["src"],
