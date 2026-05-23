@@ -90,7 +90,7 @@ function createAdminRouter(): Router {
         const dirMap: Record<string, string> = {
           requests: chessConfig.log.requestLogDir,
           errors: chessConfig.log.errorLogDir,
-          events: chessConfig.log.gameLogDir.replace('/games', '/events'),
+          events: path.join(path.dirname(chessConfig.log.gameLogDir), 'events'),
         };
         logDir = dirMap[logType];
       }
@@ -204,7 +204,7 @@ function createAdminRouter(): Router {
         if (t === 'games') {
           dir = chessConfig.log.gameLogDir;
         } else if (t === 'events') {
-          dir = chessConfig.log.gameLogDir.replace('/games', '/events');
+          dir = path.join(path.dirname(chessConfig.log.gameLogDir), 'events');
         } else {
           const dirMap: Record<string, string> = {
             requests: chessConfig.log.requestLogDir,
@@ -312,7 +312,7 @@ function createAdminRouter(): Router {
         if (type === 'games') {
           baseDir = chessConfig.log.gameLogDir;
         } else if (type === 'events') {
-          baseDir = chessConfig.log.gameLogDir.replace('/games', '/events');
+          baseDir = path.join(path.dirname(chessConfig.log.gameLogDir), 'events');
         } else {
           const dirMap: Record<string, string> = {
             requests: chessConfig.log.requestLogDir,
