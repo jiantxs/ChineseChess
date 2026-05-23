@@ -10,6 +10,7 @@
 
 import { app, BrowserWindow } from 'electron';
 import { startServer } from '@chess/backend';
+import { createChessConfig } from '@chess/config';
 import * as net from 'net';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
@@ -101,11 +102,25 @@ async function main(): Promise<void> {
     : path.resolve(__dirname, '../../backend/public');
   console.log(`Public path: ${publicPath} (isPackaged: ${isPackaged})`);
 
-  // Start backend server directly in the same process
-  console.log('Starting backend server...');
-  const result = startServer({ port, host: '127.0.0.1', prefix: basePrefix, publicPath });
-  stopServer = result.stop;
-  console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
+// Start backend server directly in the same process
+    console.log('Starting backend server...');
+
+    const config = createChessConfig({
+      server: {
+        port,
+        host: '127.0.0.1',
+        prefix: basePrefix,
+        sessionSecret: 'electron-session-secret',
+        sessionMaxAgeMs: 24 * 60 * 60 * 1000,
+      },
+      frontend: {
+        buildOutput: publicPath
+      },
+    });
+
+    const result = startServer(config, { publicPath });
+    stopServer = result.stop;
+    console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
 
     // Create the window with prefix URL
     createWindow(port, basePrefix);

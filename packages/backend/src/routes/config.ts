@@ -10,64 +10,72 @@
  */
 
 import { Router } from 'express';
-import { chessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 import { getAllLayoutNames, getAllLayouts } from '@chess/game-records';
 
-/** Express 路由器，用于配置端点 */
-const router: Router = Router();
-
 /**
- * 获取服务器配置和可用布局
- * @route GET /api/config
- * @description 返回全面的服务器配置，包括：
- *              - 服务器端口和主机
- *              - 带有元数据的可用游戏布局
- *              - 前端构建设置
- *              - SVG 棋子和其他静态文件的资源路径
- *
- * @param req - Express 请求（不需要参数）
- * @param res - Express 响应，包含配置 JSON
- * @returns 带有服务器、游戏、前端和资源配置的 JSON 对象
- *
- * @example
- * // 响应结构：
- * {
- *   "server": { "port": 3000, "host": "0.0.0.0" },
- *   "game": {
- *     "defaultLayout": "standard",
- *     "availableLayouts": ["standard", "dragon", "tiger", ...],
- *     "layouts": [{ "id": "standard", "name": "Standard", "description": "...", "tags": [...] }, ...]
- *   },
- *   "frontend": { "buildOutput": "...", "devPort": 5173 },
- *   "assets": { "svgPath": "...", "staticPath": "..." }
- * }
+ * 创建配置路由
+ * @param config - ChessConfig 实例
+ * @returns Express Router
  */
-router.get('/config', (req, res) => {
-  const layouts = getAllLayouts();
-  res.json({
-    server: {
-      port: chessConfig.server.port,
-      host: chessConfig.server.host,
-    },
-    game: {
-      defaultLayout: 'standard',
-      availableLayouts: getAllLayoutNames(),
-      layouts: layouts.map((l: { id: string; name: string; description: string; tags: string[] }) => ({
-        id: l.id,
-        name: l.name,
-        description: l.description,
-        tags: l.tags,
-      })),
-    },
-    frontend: {
-      buildOutput: chessConfig.frontend.buildOutput,
-      devPort: chessConfig.frontend.devPort,
-    },
-    assets: {
-      svgPath: chessConfig.assets.svgPath,
-      staticPath: chessConfig.assets.staticPath,
-    },
-  });
-});
+export function createConfigRouter(config: ChessConfig): Router {
+  const router: Router = Router();
 
-export default router;
+  /**
+   * 获取服务器配置和可用布局
+   * @route GET /api/config
+   * @description 返回全面的服务器配置，包括：
+   *              - 服务器端口和主机
+   *              - 带有元数据的可用游戏布局
+   *              - 前端构建设置
+   *              - SVG 棋子和其他静态文件的资源路径
+   *
+   * @param req - Express 请求（不需要参数）
+   * @param res - Express 响应，包含配置 JSON
+   * @returns 带有服务器、游戏、前端和资源配置的 JSON 对象
+   *
+   * @example
+   * // 响应结构：
+   * {
+   *   "server": { "port": 3000, "host": "0.0.0.0" },
+   *   "game": {
+   *     "defaultLayout": "standard",
+   *     "availableLayouts": ["standard", "dragon", "tiger", ...],
+   *     "layouts": [{ "id": "standard", "name": "Standard", "description": "...", "tags": [...] }, ...]
+   *   },
+   *   "frontend": { "buildOutput": "...", "devPort": 5173 },
+   *   "assets": { "svgPath": "...", "staticPath": "..." }
+   * }
+   */
+  router.get('/config', (req, res) => {
+    const layouts = getAllLayouts();
+    res.json({
+      server: {
+        port: config.server.port,
+        host: config.server.host,
+      },
+      game: {
+        defaultLayout: 'standard',
+        availableLayouts: getAllLayoutNames(),
+        layouts: layouts.map((l: { id: string; name: string; description: string; tags: string[] }) => ({
+          id: l.id,
+          name: l.name,
+          description: l.description,
+          tags: l.tags,
+        })),
+      },
+      frontend: {
+        buildOutput: config.frontend.buildOutput,
+        devPort: config.frontend.devPort,
+      },
+      assets: {
+        svgPath: config.assets.svgPath,
+        staticPath: config.assets.staticPath,
+      },
+    });
+  });
+
+  return router;
+}
+
+export default createConfigRouter;

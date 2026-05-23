@@ -136,11 +136,77 @@ export const defaultConfig: ChessConfig = {
 };
 
 /**
+ * 创建中国象棋应用程序的运行时配置实例。
+ * 返回应用环境变量覆盖并可选合并 overrides 的配置对象。
+ *
+ * @param overrides - 可选的配置覆盖，会与 defaultConfig 合并
+ * @returns 应用覆盖和合并后的冻结 ChessConfig 对象
+ *
+ * @remarks
+ * - 环境变量覆盖优先级高于 defaultConfig 但低于 overrides
+ * - 返回的配置对象会被冻结以防止运行时意外修改
+ * - 这是创建 config 实例的唯一推荐方式
+ *
+ * @example
+ * // 使用默认配置
+ * const config = createChessConfig();
+ *
+ * // 使用部分覆盖
+ * const config = createChessConfig({ server: { port: 8080 } });
+ */
+export function createChessConfig(overrides?: Partial<ChessConfig>): ChessConfig {
+  const config = { ...defaultConfig };
+
+  // 应用环境变量覆盖
+  if (process.env.CCHESSPORT) {
+    const port = parseInt(process.env.CCHESSPORT, 10);
+    if (!isNaN(port) && port > 0 && port <= 65535) {
+      config.server.port = port;
+    }
+  }
+  if (process.env.CCHESSHOST) {
+    config.server.host = process.env.CCHESSHOST;
+  }
+  if (process.env.CCHESSPREFIX) {
+    config.server.prefix = process.env.CCHESSPREFIX;
+  }
+  config.ai.enabled = process.env.ENABLE_AI === 'true';
+
+  // 应用运行时覆盖（最高优先级）
+  if (overrides) {
+    if (overrides.server) {
+      config.server = { ...config.server, ...overrides.server };
+    }
+    if (overrides.game) {
+      config.game = { ...config.game, ...overrides.game };
+    }
+    if (overrides.ai) {
+      config.ai = { ...config.ai, ...overrides.ai };
+    }
+    if (overrides.frontend) {
+      config.frontend = { ...config.frontend, ...overrides.frontend };
+    }
+    if (overrides.assets) {
+      config.assets = { ...config.assets, ...overrides.assets };
+    }
+    if (overrides.log) {
+      config.log = { ...config.log, ...overrides.log };
+    }
+    if (overrides.admin) {
+      config.admin = { ...config.admin, ...overrides.admin };
+    }
+  }
+
+  return Object.freeze(config);
+}
+
+/**
  * 对默认配置应用环境变量覆盖。
  * 当前支持：
  * - CCHESSPORT: 覆盖 server.port（验证范围 1-65535）
  * - NODE_ENV=production + ENABLE_AI=true: 启用 AI 对手
  *
+ * @deprecated 请使用 createChessConfig() 代替
  * @returns 应用覆盖后的冻结 ChessConfig 对象
  */
 function loadConfig(): ChessConfig {
@@ -162,5 +228,6 @@ function loadConfig(): ChessConfig {
 }
 
 // 应用环境变量覆盖后的冻结单例配置 - 在整个应用中使用
+// @deprecated 请使用 createChessConfig() 创建实例
 export const chessConfig = loadConfig();
 export default chessConfig;

@@ -11,7 +11,8 @@
 
 import express from 'express';
 import { createServer, Server as HttpServer } from 'http';
-import { chessConfig } from '@chess/config';
+import { createChessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 import { GameServer } from './services/gameServer';
 import { gameManager } from '@chess/core';
 import { createAppRouter } from './routes';
@@ -20,16 +21,9 @@ import { requestLogger, logSystemEvent } from './services/logger';
 /**
  * 启动服务器的可选参数
  * @interface StartServerOptions
- * @description 允许自定义服务器端口、主机和 URL 前缀。
- *              如果未提供，则使用 chessConfig 中的默认值。
+ * @description 允许自定义服务器配置。
  */
 export interface StartServerOptions {
-  /** 服务器端口（默认：从 chessConfig 获取） */
-  port?: number;
-  /** 服务器主机（默认：从 chessConfig 获取） */
-  host?: string;
-  /** URL 前缀例如 '/aabbcc'（默认：从 chessConfig 获取） */
-  prefix?: string;
   /** 前端静态文件目录路径（默认：从 __dirname 推导） */
   publicPath?: string;
 }
@@ -57,26 +51,25 @@ export interface StartServerResult {
  *              初始化 GameServer，并开始监听。
  *              设置 SIGTERM 处理器以实现优雅关闭。
  *
+ * @param config - ChessConfig 实例
  * @param options - 可选的服务器配置
- * @param options.port - 服务器端口（默认：chessConfig.server.port）
- * @param options.host - 服务器主机（默认：chessConfig.server.host）
- * @param options.prefix - URL 前缀（默认：chessConfig.server.prefix）
+ * @param options.publicPath - 前端静态文件目录路径
  * @returns 包含 app、server、gameServer 和 stop 函数的结果对象
  *
  * @remarks
- * - 所有配置均通过 options 参数或 chessConfig 默认值进行
+ * - config 实例必须直接传入，不会有默认值
  * - stop() 函数会停止 GameServer、关闭 HTTP 服务器并记录关闭
  * - 启动后记录服务器 URL 到系统日志
  */
-export function startServer(options?: StartServerOptions): StartServerResult {
-  const PORT = options?.port ?? chessConfig.server.port;
-  const HOST = options?.host ?? chessConfig.server.host;
-  const PREFIX = options?.prefix ?? chessConfig.server.prefix;
+export function startServer(config: ChessConfig, options?: StartServerOptions): StartServerResult {
+  const PORT = config.server.port;
+  const HOST = config.server.host;
+  const PREFIX = config.server.prefix;
 
   const app = express();
   const server = createServer(app);
 
-  const appRouter = createAppRouter(PREFIX, options?.publicPath);
+  const appRouter = createAppRouter(PREFIX, options?.publicPath, config);
 
   if (PREFIX) {
     app.use(PREFIX, appRouter);

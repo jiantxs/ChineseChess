@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
-import { chessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 
 type LogType = 'requests' | 'errors' | 'events' | 'games';
 
@@ -51,7 +51,7 @@ function sanitizePath(basePath: string, userPath: string): string {
   return path.join(basePath, normalized);
 }
 
-function createAdminRouter(): Router {
+function createAdminRouter(config: ChessConfig): Router {
   const router = Router();
 
   router.get('/logs', async (req, res) => {
@@ -85,12 +85,12 @@ function createAdminRouter(): Router {
           return;
         }
         const sanitizedGameId = query.gameId.replace(/[^a-zA-Z0-9-_]/g, '');
-        logDir = path.join(chessConfig.log.gameLogDir, sanitizedGameId);
+        logDir = path.join(config.log.gameLogDir, sanitizedGameId);
       } else {
         const dirMap: Record<string, string> = {
-          requests: chessConfig.log.requestLogDir,
-          errors: chessConfig.log.errorLogDir,
-          events: path.join(path.dirname(chessConfig.log.gameLogDir), 'events'),
+          requests: config.log.requestLogDir,
+          errors: config.log.errorLogDir,
+          events: path.join(path.dirname(config.log.gameLogDir), 'events'),
         };
         logDir = dirMap[logType];
       }
@@ -202,13 +202,13 @@ function createAdminRouter(): Router {
       const dirsToScan = logTypes.map(t => {
         let dir: string;
         if (t === 'games') {
-          dir = chessConfig.log.gameLogDir;
+          dir = config.log.gameLogDir;
         } else if (t === 'events') {
-          dir = path.join(path.dirname(chessConfig.log.gameLogDir), 'events');
+          dir = path.join(path.dirname(config.log.gameLogDir), 'events');
         } else {
           const dirMap: Record<string, string> = {
-            requests: chessConfig.log.requestLogDir,
-            errors: chessConfig.log.errorLogDir,
+            requests: config.log.requestLogDir,
+            errors: config.log.errorLogDir,
           };
           dir = dirMap[t];
         }
@@ -310,13 +310,13 @@ function createAdminRouter(): Router {
       for (const type of typesToExport) {
         let baseDir: string;
         if (type === 'games') {
-          baseDir = chessConfig.log.gameLogDir;
+          baseDir = config.log.gameLogDir;
         } else if (type === 'events') {
-          baseDir = path.join(path.dirname(chessConfig.log.gameLogDir), 'events');
+          baseDir = path.join(path.dirname(config.log.gameLogDir), 'events');
         } else {
           const dirMap: Record<string, string> = {
-            requests: chessConfig.log.requestLogDir,
-            errors: chessConfig.log.errorLogDir,
+            requests: config.log.requestLogDir,
+            errors: config.log.errorLogDir,
           };
           baseDir = dirMap[type];
         }
@@ -378,5 +378,5 @@ function createAdminRouter(): Router {
   return router;
 }
 
-const adminRouter: Router = createAdminRouter();
-export default adminRouter;
+export { createAdminRouter };
+export default createAdminRouter;
