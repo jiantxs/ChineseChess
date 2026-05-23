@@ -1,54 +1,47 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { assetPath } from '../utils/api';
 import { clientLogger } from '../utils/clientLogger';
+import { BgmControls } from '../types/GamePageProps';
 import './MenuScreen.css';
 
-const BGM_PATH = assetPath('/assets/music/main_bgm.mp3');
 
-interface MenuScreenProps {
-  error?: string | null;
-}
+export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
 
-export default function MenuScreen({ error }: MenuScreenProps) {
+  useEffect(() => {
+    if(resumeBgm) resumeBgm();
+    return () => {
+    }
+  });
+
   const navigate = useNavigate();
   const gameIdInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const audio = new Audio(BGM_PATH);
-    audio.loop = true;
-    audio.play().catch((err) => clientLogger.warn('BGM play failed', { error: err.message }));
-    return () => {
-      audio.pause();
-      audio.src = '';
-    };
-  }, []);
-
   const handleStartAI = useCallback(() => {
     clientLogger.info('Menu: start AI game');
-    navigate('/game/ai');
+    navigate('/gameTestServer/ai');
   }, [navigate]);
 
   const handleStartLocal = useCallback(() => {
     clientLogger.info('Menu: start local game');
-    navigate('/game/local');
+    navigate('/gameTestServer/local');
   }, [navigate]);
 
   const handleStartLocal3D = useCallback(() => {
     clientLogger.info('Menu: start local 3D game');
-    navigate('/game/local3d');
+    navigate('/gameTestServer/local3d');
   }, [navigate]);
 
   const handleStartOnline = useCallback(() => {
     clientLogger.info('Menu: start online game');
-    navigate('/game/online');
+    navigate('/gameTestServer/online');
   }, [navigate]);
 
   const handleJoinGame = useCallback(() => {
     const input = gameIdInputRef.current;
     if (input?.value) {
       clientLogger.info('Menu: join game', { gameId: input.value });
-      navigate(`/game/join/${input.value}`);
+      navigate(`/gameTestServer/join/${input.value}`);
     }
   }, [navigate]);
 
@@ -131,13 +124,6 @@ export default function MenuScreen({ error }: MenuScreenProps) {
             <span className="btn-text">退出游戏</span>
           </button>
         </div>
-
-        {error && (
-          <div className="error-message">
-            <span className="error-icon">!</span>
-            {error}
-          </div>
-        )}
       </div>
     </div>
   );

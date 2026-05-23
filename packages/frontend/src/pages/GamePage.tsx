@@ -7,8 +7,9 @@ import { useBoardController } from '../controllers/BoardController';
 import { Position, Side } from '@chess/types';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath } from '../utils/api';
+import { GamePageProps } from '../types/GamePageProps';
 
-export default function GamePage() {
+export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePageProps) {
   const { mode, gameId } = useParams<{ mode: string; gameId?: string }>();
   const navigate = useNavigate();
 
@@ -22,6 +23,16 @@ export default function GamePage() {
 
   const activeGame = isLocal ? localGame : onlineGame;
   const gameState = activeGame.gameState;
+
+  useEffect(() => {
+    pauseBgm?.();
+  }, [pauseBgm]);
+
+  useEffect(() => {
+    return () => {
+      resumeBgm?.();
+    };
+  }, [resumeBgm]);
 
   const makeMove = useCallback((from: Position, to: Position) => {
     if (isLocal) {

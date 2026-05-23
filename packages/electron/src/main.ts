@@ -2,7 +2,7 @@
  * Electron main process for Chinese Chess desktop application.
  *
  * Features:
- * - Scans for an available high port (30000+)
+ * - Scans for an available high port (30000-50000, randomized)
  * - Starts backend server directly (same Node.js process)
  * - Opens a window pointing to the local server
  * - Manages process lifecycle (cleanup on exit)
@@ -16,29 +16,43 @@ import * as path from 'path';
 import { randomUUID } from 'crypto';
 
 /**
- * Finds an available TCP port in the given range.
- * Tries ports sequentially starting from startPort.
+ * Finds a random available TCP port in the range 30000-50000.
  *
- * @param startPort - The first port to try
  * @returns A promise that resolves to an available port number
  */
-function findAvailablePort(startPort: number = 30000): Promise<number> {
+function findAvailablePort(): Promise<number> {
+  const MIN_PORT = 30000;
+  const MAX_PORT = 50000;
+  const MAX_ATTEMPTS = MAX_PORT - MIN_PORT + 1;
+
   return new Promise((resolve, reject) => {
-    const server = net.createServer();
+    let attempts = 0;
 
-    server.listen(startPort, '127.0.0.1', () => {
-      const port = (server.address() as net.AddressInfo).port;
-      server.close(() => resolve(port));
-    });
-
-    server.on('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE') {
-        // Port is in use, try the next one
-        resolve(findAvailablePort(startPort + 1));
-      } else {
-        reject(err);
+    const tryPort = (): void => {
+      attempts++;
+      if (attempts > MAX_ATTEMPTS) {
+        reject(new Error(`No available ports in range ${MIN_PORT}-${MAX_PORT}`));
+        return;
       }
-    });
+
+      const port = Math.floor(Math.random() * (MAX_PORT - MIN_PORT + 1)) + MIN_PORT;
+      const server = net.createServer();
+
+      server.listen(port, '127.0.0.1', () => {
+        const actualPort = (server.address() as net.AddressInfo).port;
+        server.close(() => resolve(actualPort));
+      });
+
+      server.on('error', (err: NodeJS.ErrnoException) => {
+        if (err.code === 'EADDRINUSE') {
+          tryPort();
+        } else {
+          reject(err);
+        }
+      });
+    };
+
+    tryPort();
   });
 }
 
