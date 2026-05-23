@@ -26,7 +26,9 @@ interface ParsedLogEntry {
   timestamp?: string;
   level?: string;
   message?: string;
-  [key: string]: unknown;
+  // Allow any additional fields from the raw log
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }
 
 function isValidDate(dateStr: string): boolean {
@@ -128,7 +130,26 @@ function createAdminRouter(): Router {
 
       for (const line of lines) {
         try {
-          const entry = JSON.parse(line) as ParsedLogEntry;
+          const raw = JSON.parse(line) as Record<string, unknown>;
+          const level = (raw.level as string) || 'unknown';
+          let message = (raw.message as string) || '';
+          const action = (raw.action as string) || '';
+
+          const genericMessages = ['event', 'game_event', 'client_log'];
+          if (!message || genericMessages.includes(message)) {
+            message = action || `${raw.eventType || 'log'}: ${JSON.stringify(raw).slice(0, 500)}`;
+          }
+
+          if (!message) {
+            message = JSON.stringify(raw).slice(0, 500);
+          }
+
+          const entry: ParsedLogEntry = {
+            timestamp: (raw.timestamp as string) || (raw.clientTimestamp as string) || new Date().toISOString(),
+            level,
+            message,
+            ...raw,
+          };
           entries.push(entry);
         } catch {
           continue;
@@ -136,6 +157,7 @@ function createAdminRouter(): Router {
       }
 
       const total = entries.length;
+      entries.reverse();
       const paginatedEntries = entries.slice(offset, offset + limit);
 
       const availableDates: string[] = [];

@@ -30,6 +30,8 @@ export interface StartServerOptions {
   host?: string;
   /** URL 前缀例如 '/aabbcc'（默认：从 chessConfig 获取） */
   prefix?: string;
+  /** 前端静态文件目录路径（默认：从 __dirname 推导） */
+  publicPath?: string;
 }
 
 /**
@@ -74,7 +76,7 @@ export function startServer(options?: StartServerOptions): StartServerResult {
   const app = express();
   const server = createServer(app);
 
-  const appRouter = createAppRouter();
+  const appRouter = createAppRouter(PREFIX, options?.publicPath);
 
   if (PREFIX) {
     app.use(PREFIX, appRouter);
