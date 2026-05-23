@@ -8,11 +8,27 @@ import './MenuScreen.css';
 
 export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
 
-  useEffect(() => {
-    if(resumeBgm) resumeBgm();
-    return () => {
+useEffect(() => {
+    async function loadPreference() {
+      try {
+        const { getPreference } = await import('../utils/preferenceApi');
+        const prefs = await getPreference();
+        clientLogger.info('App: preference loaded', { bgmEnabled: prefs.bgmEnabled, bgmVolume: prefs.bgmVolume });
+        
+        if(prefs.bgmEnabled && resumeBgm) {
+          resumeBgm();
+        }
+      } catch (err) {
+        clientLogger.error('App: failed to load preference', { 
+          error: err instanceof Error ? err.message : String(err) 
+        });
+      }
     }
-  });
+    
+    // 延迟加载偏好，确保音频元素已初始化
+    const timer = setTimeout(loadPreference, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const navigate = useNavigate();
   const gameIdInputRef = useRef<HTMLInputElement>(null);
@@ -48,6 +64,11 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
   const handleViewLogs = useCallback(() => {
     clientLogger.info('Menu: view logs');
     navigate('/logs');
+  }, [navigate]);
+
+  const handleSettings = useCallback(() => {
+    clientLogger.info('Menu: open settings');
+    navigate('/settings');
   }, [navigate]);
 
   const handleExit = useCallback(async () => {
@@ -117,6 +138,11 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
           <button className="menu-btn" onClick={handleViewLogs}>
             <span className="btn-line" />
             <span className="btn-text">查看日志</span>
+          </button>
+
+          <button className="menu-btn" onClick={handleSettings}>
+            <span className="btn-line" />
+            <span className="btn-text">设置</span>
           </button>
 
           <button className="menu-btn exit-btn" onClick={handleExit}>

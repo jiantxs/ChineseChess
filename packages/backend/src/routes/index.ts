@@ -15,6 +15,7 @@ import { gameManager } from '@chess/core';
 import { createGameRoutes } from './game';
 import { createConfigRouter } from './config';
 import { createAdminRouter } from './admin';
+import { createPreferenceRouter } from './preference';
 import { requestLogMiddleware, logError } from '../services/logger';
 
 /**
@@ -58,6 +59,9 @@ export function createAppRouter(prefix: string, customPublicPath: string | undef
 
   // 在 /api/admin 挂载管理路由 - 日志查看器
   router.use('/api/admin', createAdminRouter(config));
+
+  // 在 /api 挂载偏好设置路由 - 用户偏好管理
+  router.use('/api', createPreferenceRouter());
 
   // 在路由器的 locals 中存储游戏管理器引用，以便路由访问
   router.use((req, res, next) => {

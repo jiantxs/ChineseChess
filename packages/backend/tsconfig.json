@@ -17,6 +17,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
+      "@chess/preference": ["../preference/src"],
+      "@chess/preference/*": ["../preference/src/*"]
     }
   },
   "include": ["src"],
@@ -24,6 +26,7 @@
     { "path": "../core" },
     { "path": "../config" },
     { "path": "../game-records" },
-    { "path": "../logger" }
+    { "path": "../logger" },
+    { "path": "../preference" }
   ]
 }

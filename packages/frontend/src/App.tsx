@@ -4,6 +4,7 @@ import SplashScreen from './pages/SplashScreen';
 import MenuScreen from './pages/MenuScreen';
 import GamePage from './pages/GamePage';
 import LogsPage from './pages/LogsPage';
+import SettingsPage from './pages/SettingsPage';
 import { assetPath } from './utils/api';
 import { clientLogger } from './utils/clientLogger';
 import './App.css';
@@ -45,6 +46,29 @@ function App() {
     }
   }, []);
 
+  // 加载并应用用户偏好设置
+  useEffect(() => {
+    async function loadPreference() {
+      try {
+        const { getPreference } = await import('./utils/preferenceApi');
+        const prefs = await getPreference();
+        clientLogger.info('App: preference loaded', { bgmEnabled: prefs.bgmEnabled, bgmVolume: prefs.bgmVolume });
+        
+        if (audioRef.current) {
+          audioRef.current.volume = prefs.bgmVolume / 100;
+        }
+      } catch (err) {
+        clientLogger.error('App: failed to load preference', { 
+          error: err instanceof Error ? err.message : String(err) 
+        });
+      }
+    }
+    
+    // 延迟加载偏好，确保音频元素已初始化
+    const timer = setTimeout(loadPreference, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   clientLogger.info('App mounted', { basename: getBasename() });
   return (
     <BrowserRouter basename={getBasename()}>
@@ -53,6 +77,7 @@ function App() {
         <Route path="/menu" element={<MenuScreen pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />
         <Route path="/gameTestServer/:mode/:gameId?" element={<GamePage pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />
         <Route path="/logs" element={<LogsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

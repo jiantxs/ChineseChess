@@ -16,7 +16,9 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
-import { chessConfig } from '@chess/config';
+import { createChessConfig } from '@chess/config';
+
+const chessConfig = createChessConfig();
 
 const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
 
