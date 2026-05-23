@@ -140,17 +140,11 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
     if (!projection) return 0;
 
     const pCurr = projection.project(metrics, col, row);
-
-    const hRow = row < BOARD_ROWS - 1 ? row + 1 : row - 1;
+    const hRow = row > 0 ? row - 1 : row + 1;
     const pVert = projection.project(metrics, col, hRow);
     const vertAngle = Math.atan2(pVert.y - pCurr.y, pVert.x - pCurr.x);
     const tilt = vertAngle - Math.PI / 2;
-
-    const centerRow = (BOARD_ROWS - 1) / 2;
-    if (row > centerRow) {
-      return tilt + Math.PI;
-    }
-    return tilt;
+    return tilt + Math.PI;
   }
 
   private drawPieceGlow(
