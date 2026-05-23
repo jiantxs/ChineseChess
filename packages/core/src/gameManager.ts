@@ -4,6 +4,7 @@ import { GameStatus, Side, BOARD_ROWS, BOARD_COLS } from './types';
 import { isValidMove, isGeneralCaptured, getValidMoves as getValidMovesLogic } from './gameLogic';
 import { PieceLayout } from './pieceLayout';
 import { gameLogger } from './gameLogger';
+import { AIEngine } from './ai';
 
 /**
  * GameManager - 中国象棋内存游戏状态管理的单例。
@@ -33,7 +34,11 @@ export class GameManager {
   private games: Map<string, GameState> = new Map();
   private playerGames: Map<string, string> = new Map();
 
-  private constructor() {}
+  private aiEngine: AIEngine;
+
+  private constructor() {
+    this.aiEngine = new AIEngine();
+  }
 
   /**
    * 返回单例 GameManager 实例。
@@ -413,6 +418,30 @@ return getValidMovesLogic(game.board, piece);
     }
 
     return board;
+  }
+
+  makeAIMove(
+    gameId: string
+  ): { success: boolean; game?: GameState; error?: string } {
+    const game = this.games.get(gameId);
+    if (!game) {
+      gameLogger.warn('makeAIMove failed - game not found', { gameId });
+      return { success: false, error: 'Game not found' };
+    }
+
+    if (game.status !== GameStatus.PLAYING) {
+      gameLogger.warn('makeAIMove failed - game not in progress', { gameId, status: game.status });
+      return { success: false, error: 'Game is not in progress' };
+    }
+
+    const aiMove = this.aiEngine.findBestMove(game.board, game.currentTurn, 4);
+
+    if (!aiMove) {
+      gameLogger.warn('makeAIMove failed - AI could not find a move', { gameId, currentTurn: game.currentTurn });
+      return { success: false, error: 'AI could not find a valid move' };
+    }
+
+    return this.makeMove(gameId, 'ai-player', aiMove.from, aiMove.to);
   }
 
   /**
