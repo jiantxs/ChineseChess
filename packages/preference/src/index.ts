@@ -18,21 +18,13 @@ import fs from 'fs';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
 import type { UserPreference } from '@chess/types';
+import { defaultUserPreference } from '@chess/types';
 
 // 重新导出共享类型，便于其他包使用
 export type { UserPreference, PreferenceOption } from '@chess/types';
 
-/**
- * 默认用户偏好设置 - 所有选项默认可见
- */
-export const defaultPreference: UserPreference = {
-  audio: {
-    bgm: {
-      enabled: { value: true, visible: true },
-      volume: { value: 100, visible: true },
-    },
-  },
-};
+// 重新导出默认偏好设置（别名，便于其他包使用）
+export { defaultUserPreference as defaultPreference } from '@chess/types';
 
 /**
  * 配置单例 holder
@@ -63,7 +55,7 @@ function getPreferenceFilePath(): string {
 function ensurePreferenceFile(): void {
   const filePath = getPreferenceFilePath();
   if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(defaultPreference, null, 2), 'utf-8');
+    fs.writeFileSync(filePath, JSON.stringify(defaultUserPreference, null, 2), 'utf-8');
   }
 }
 
@@ -104,12 +96,12 @@ function readPreference(): UserPreference {
       audio: {
         bgm: {
           enabled: {
-            value: parsed.audio?.bgm?.enabled?.value ?? defaultPreference.audio.bgm.enabled.value,
-            visible: parsed.audio?.bgm?.enabled?.visible ?? defaultPreference.audio.bgm.enabled.visible,
+            value: parsed.audio?.bgm?.enabled?.value ?? defaultUserPreference.audio.bgm.enabled.value,
+            visible: parsed.audio?.bgm?.enabled?.visible ?? defaultUserPreference.audio.bgm.enabled.visible,
           },
           volume: {
-            value: parsed.audio?.bgm?.volume?.value ?? defaultPreference.audio.bgm.volume.value,
-            visible: parsed.audio?.bgm?.volume?.visible ?? defaultPreference.audio.bgm.volume.visible,
+            value: parsed.audio?.bgm?.volume?.value ?? defaultUserPreference.audio.bgm.volume.value,
+            visible: parsed.audio?.bgm?.volume?.visible ?? defaultUserPreference.audio.bgm.volume.visible,
           },
         },
       },
@@ -117,7 +109,7 @@ function readPreference(): UserPreference {
     return result;
   } catch (error) {
     console.error('Failed to read preference file, using defaults:', error);
-    return JSON.parse(JSON.stringify(defaultPreference));
+    return JSON.parse(JSON.stringify(defaultUserPreference));
   }
 }
 
@@ -186,7 +178,7 @@ export class PreferenceManager {
    * @returns 默认偏好设置
    */
   resetToDefault(): UserPreference {
-    const defaultCopy = JSON.parse(JSON.stringify(defaultPreference)) as UserPreference;
+    const defaultCopy = JSON.parse(JSON.stringify(defaultUserPreference)) as UserPreference;
     writePreference(defaultCopy);
     this.cache = defaultCopy;
     return defaultCopy;

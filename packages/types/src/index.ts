@@ -183,3 +183,15 @@ export interface UserPreference {
     };
   };
 }
+
+/**
+ * 默认用户偏好设置 - 所有选项默认可见
+ */
+export const defaultUserPreference: UserPreference = {
+  audio: {
+    bgm: {
+      enabled: { value: true, visible: true },
+      volume: { value: 100, visible: true },
+    },
+  },
+};
