@@ -93,7 +93,7 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.scale(totalScale, totalScale);
-        const perspectiveTilt = this.calculatePerspectiveTilt(row, col, metrics);
+        const perspectiveTilt = this.calculatePerspectiveTilt(row, col, metrics, piece.side, piece.type);
         ctx.rotate(idleAnim.rotation + perspectiveTilt);
 
         this.drawPieceGlow(ctx, piece, pieceSize, idleAnim.glowIntensity);
@@ -135,15 +135,23 @@ export class Cyber3DPiecesLayer extends BaseLayer implements PiecesLayerInterfac
     return { scale, rotation, glowIntensity };
   }
 
-  private calculatePerspectiveTilt(row: number, col: number, metrics: BoardMetrics): number {
+  private calculatePerspectiveTilt(row: number, col: number, metrics: BoardMetrics, side?: Side, pieceType?: PieceType): number {
     const { projection } = metrics;
     if (!projection) return 0;
 
     const pCurr = projection.project(metrics, col, row);
-    const hRow = row > 0 ? row - 1 : row + 1;
+    // 使用对称的相邻行计算：顶行(row=0)用下方格，底行(row=9)用上方格
+    const hRow = row === 0 ? row + 1 : row - 1;
     const pVert = projection.project(metrics, col, hRow);
     const vertAngle = Math.atan2(pVert.y - pCurr.y, pVert.x - pCurr.x);
-    const tilt = vertAngle - Math.PI / 2;
+    let tilt = vertAngle - Math.PI / 2;
+
+    // 顶行(row=0)的黑方棋子需要额外旋转π来纠正倒置（但黑方将那排已经对了，不转）
+    // 只对黑方炮(CANNON)在row=2时转180度
+    if (row === 2 && side === Side.BLACK && pieceType === PieceType.CANNON) {
+      tilt += Math.PI;
+    }
+
     return tilt + Math.PI;
   }
 
