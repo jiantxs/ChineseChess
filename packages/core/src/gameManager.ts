@@ -476,8 +476,20 @@ return getValidMovesLogic(game.board, piece);
     const aiMove = this.aiEngine.findBestMove(game.board, game.currentTurn, depth);
 
     if (!aiMove) {
-      gameLogger.warn('makeAIMove failed - AI could not find a move', { gameId, currentTurn: game.currentTurn });
-      return { success: false, error: 'AI could not find a valid move' };
+      // AI 无法找到有效移动，说明当前回合方被将死，判负方为当前回合（AI方），对方获胜
+      game.status = GameStatus.FINISHED;
+      const winner = game.currentTurn === Side.RED ? Side.BLACK : Side.RED;
+      game.winner = winner;
+
+      gameLogger.info('Game finished - no valid moves for AI', {
+        gameId,
+        currentTurn: game.currentTurn,
+        winner,
+        reason: 'checkmate',
+        totalMoves: game.moves.length,
+      });
+
+      return { success: true, game };
     }
 
     return this.makeMove(gameId, 'ai-player', aiMove.from, aiMove.to);
