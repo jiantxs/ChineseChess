@@ -34,7 +34,10 @@
       "allowToChangeInstallationDirectory": true
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@chess/backend": "workspace:*",
+    "@chess/config": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^20.10.5",
     "electron": "^30.0.0",

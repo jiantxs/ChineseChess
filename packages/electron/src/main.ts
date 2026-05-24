@@ -127,10 +127,7 @@ async function main(): Promise<void> {
         sessionSecret: 'electron-session-secret',
         sessionMaxAgeMs: 24 * 60 * 60 * 1000,
         platform: 'win'
-      },
-      frontend: {
-        buildOutput: publicPath
-      },
+      }
     });
 
     const result = startServer(config, { publicPath });

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPreference, updatePreference, type UserPreference } from '../utils/preferenceApi';
 import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
+import { apiPath } from '../utils/api';
 import './SettingsPage.css';
 
 // 立即更新本地状态
@@ -30,15 +31,31 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>('');
+  const [showRestartHint, setShowRestartHint] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadPreference = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const prefs = await getPreference();
-      setPreference(prefs);
-      clientLogger.info('Settings: preference loaded');
+      const [prefs, configRes] = await Promise.all([
+        getPreference(),
+        fetch(apiPath('/api/config')).then((r) => r.json()).catch(() => null),
+      ]);
+
+      // 根据 server.platform 控制 extraSettings 的可见性
+      const shouldShowExtra = configRes?.server?.platform === 'win';
+      const toggledExtraSettings: UserPreference['extraSettings'] = JSON.parse(JSON.stringify(prefs.extraSettings));
+      for (const group of Object.values(toggledExtraSettings)) {
+        for (const item of Object.values(group)) {
+          if (item && typeof item === 'object' && 'visible' in item) {
+            (item as { visible: boolean }).visible = shouldShowExtra;
+          }
+        }
+      }
+      const updated = await updatePreference({ extraSettings: toggledExtraSettings });
+      setPreference(updated);
+      clientLogger.info(`Settings: extraSettings ${shouldShowExtra ? 'shown' : 'hidden'} (platform: ${configRes?.server?.platform})`);
     } catch (err) {
       const message = err instanceof Error ? err.message : '加载偏好设置失败';
       setError(message);
@@ -58,6 +75,13 @@ export default function SettingsPage() {
       if (!prev) return prev;
       return deepMergePreference(prev, updates);
     });
+
+    // 检测 extraSettings.extraServer.enabled 是否被打开
+    if (
+      updates.extraSettings?.extraServer?.enabled?.value === true
+    ) {
+      setShowRestartHint(true);
+    }
 
     setSaveStatus('保存中...');
     setError(null);
@@ -137,6 +161,13 @@ export default function SettingsPage() {
           <div className="error-message">
             <span className="error-icon">!</span>
             {error}
+          </div>
+        )}
+
+        {showRestartHint && (
+          <div className="restart-hint">
+            <span className="restart-icon">↻</span>
+            更改已保存，重启软件后生效
           </div>
         )}
 

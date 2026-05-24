@@ -121,6 +121,13 @@ importers:
         version: 5.9.3
 
   packages/electron:
+    dependencies:
+      '@chess/backend':
+        specifier: workspace:*
+        version: link:../backend
+      '@chess/config':
+        specifier: workspace:*
+        version: link:../config
     devDependencies:
       '@types/node':
         specifier: ^20.10.5

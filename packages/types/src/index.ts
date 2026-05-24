@@ -198,6 +198,13 @@ export interface UserPreference {
     /** AI 难度 (1-10)，影响搜索深度 */
     difficulty: PreferenceOption<number>;
   };
+
+  extraSettings: {
+    extraServer:{
+      enabled: PreferenceOption<boolean>;
+      textCode: PreferenceOption<string>;
+    }
+  }
 }
 
 /**
@@ -212,5 +219,11 @@ export const defaultUserPreference: UserPreference = {
   },
   ai: {
     difficulty: { value: 5, visible: true, label: 'AI难度', valueType: 'number', range: { min: 1, max: 10, step: 1 } },
+  },
+  extraSettings:{
+    extraServer:{
+      enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean' },
+      textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
+    }
   }
 };

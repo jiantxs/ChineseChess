@@ -132,6 +132,39 @@
   50% { border-color: rgba(255, 100, 100, 0.4); }
 }
 
+/* 重启提示 */
+.restart-hint {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  color: rgba(255, 200, 80, 0.95);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  background: rgba(255, 160, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: restartPulse 2s ease-in-out infinite;
+}
+
+.restart-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 200, 80, 0.5);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes restartPulse {
+  0%, 100% { border-color: rgba(255, 200, 80, 0.25); }
+  50% { border-color: rgba(255, 200, 80, 0.5); }
+}
+
 /* 内容区域 */
 .settings-content {
   flex: 1;
@@ -355,6 +388,37 @@
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 1px;
+}
+
+/* 重启提示 */
+.restart-hint {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  color: rgba(255, 200, 80, 0.95);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  background: rgba(255, 160, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+
+.restart-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@keyframes hintPulse {
+  0%, 100% { border-color: rgba(255, 200, 80, 0.2); }
+  50% { border-color: rgba(255, 200, 80, 0.45); }
 }
 
 /* ============================================================

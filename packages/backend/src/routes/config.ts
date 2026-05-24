@@ -53,6 +53,7 @@ export function createConfigRouter(config: ChessConfig): Router {
       server: {
         port: config.server.port,
         host: config.server.host,
+        platform: config.server.platform
       },
       game: {
         defaultLayout: 'standard',
@@ -65,12 +66,8 @@ export function createConfigRouter(config: ChessConfig): Router {
         })),
       },
       frontend: {
-        buildOutput: config.frontend.buildOutput,
-        devPort: config.frontend.devPort,
       },
       assets: {
-        svgPath: config.assets.svgPath,
-        staticPath: config.assets.staticPath,
       },
     });
   });

@@ -71,12 +71,9 @@ export interface ChessConfig {
     endpoint?: string;
   };
   frontend: {
-    buildOutput: string;
-    devPort: number;
+
   };
   assets: {
-    svgPath: string;
-    staticPath: string;
   };
   log: {
     level: string;
@@ -87,7 +84,6 @@ export interface ChessConfig {
     monorepoRoot: string;
   };
   admin: {
-    password: string;
   };
 }
 
@@ -115,12 +111,8 @@ export const defaultConfig: ChessConfig = {
     endpoint: process.env.AI_ENDPOINT,
   },
   frontend: {
-    buildOutput: './public',
-    devPort: 5173,
   },
   assets: {
-    svgPath: '/assets/svg',
-    staticPath: '/public',
   },
   log: {
     level: process.env.LOG_LEVEL || 'info',
@@ -131,7 +123,6 @@ export const defaultConfig: ChessConfig = {
     monorepoRoot,
   },
   admin: {
-    password: process.env.ADMIN_PASSWORD || 'admin123',
   },
 };
 
