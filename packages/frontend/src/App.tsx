@@ -59,9 +59,6 @@ function App() {
 
         if (audioRef.current) {
           audioRef.current.volume = prefs.audio.bgm.volume.value / 100;
-          if (prefs.audio.bgm.enabled.value) {
-            audioRef.current.play().catch((err) => clientLogger.warn('BGM autoplay failed', { error: err.message }));
-          }
         }
       } catch (err) {
         clientLogger.error('App: failed to load preference', {
