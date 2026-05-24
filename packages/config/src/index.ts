@@ -68,7 +68,6 @@ export interface ChessConfig {
   };
   ai: {
     enabled: boolean;
-    difficulty: number;
     endpoint?: string;
   };
   frontend: {
@@ -113,7 +112,6 @@ export const defaultConfig: ChessConfig = {
   },
   ai: {
     enabled: false,
-    difficulty: 5,
     endpoint: process.env.AI_ENDPOINT,
   },
   frontend: {

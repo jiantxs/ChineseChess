@@ -239,7 +239,7 @@ export class GameServer {
    * - 向游戏中的所有玩家发送带有其分配方的 GAME_STATE
    */
   private handleJoinGame(player: ConnectedPlayer, message: GameMessage): void {
-    const { gameId, side, local, layoutName, ai } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string; ai?: boolean };
+    const { gameId, side, local, layoutName, ai, aiDifficulty } = message.payload as { gameId?: string; side?: Side; local?: boolean; layoutName?: string; ai?: boolean; aiDifficulty?: number };
 
     let targetGameId = gameId;
     let isNewGame = false;
@@ -259,7 +259,7 @@ export class GameServer {
       } else {
         layout = PieceLayout.fromJSON(standardLayoutData);
       }
-      const newGame = this.gameManager.createGame(layout, local || false, ai || false);
+      const newGame = this.gameManager.createGame(layout, local || false, ai || false, aiDifficulty);
       targetGameId = newGame.id;
       isNewGame = true;
     }
@@ -409,7 +409,7 @@ export class GameServer {
       return;
     }
 
-    const aiResult = this.gameManager.makeAIMove(gameId);
+    const aiResult = this.gameManager.makeAIMove(gameId, game.aiDifficulty);
     if (!aiResult.success) {
       logWebSocketEvent('ai_move_failed', 'ai-player', gameId, {
         reason: aiResult.error,

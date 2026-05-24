@@ -15,10 +15,12 @@ export default function SettingsPage() {
   // 本地编辑状态 - 从分层结构提取值
   const [bgmEnabled, setBgmEnabled] = useState(true);
   const [bgmVolume, setBgmVolume] = useState(100);
+  const [aiDifficulty, setAiDifficulty] = useState(5);
 
   // 可见性状态
   const [bgmEnabledVisible, setBgmEnabledVisible] = useState(true);
   const [bgmVolumeVisible, setBgmVolumeVisible] = useState(true);
+  const [aiDifficultyVisible, setAiDifficultyVisible] = useState(true);
 
   // 加载偏好设置
   const loadPreference = useCallback(async () => {
@@ -31,17 +33,22 @@ export default function SettingsPage() {
       // 从分层结构提取值
       const enabled = prefs.audio.bgm.enabled;
       const volume = prefs.audio.bgm.volume;
+      const difficulty = prefs.ai.difficulty;
 
       setBgmEnabled(enabled.value);
       setBgmVolume(volume.value);
       setBgmEnabledVisible(enabled.visible);
       setBgmVolumeVisible(volume.visible);
+      setAiDifficulty(difficulty.value);
+      setAiDifficultyVisible(difficulty.visible);
 
       clientLogger.info('Settings: preference loaded', {
         bgmEnabled: enabled.value,
         bgmVolume: volume.value,
         bgmEnabledVisible: enabled.visible,
-        bgmVolumeVisible: volume.visible
+        bgmVolumeVisible: volume.visible,
+        aiDifficulty: difficulty.value,
+        aiDifficultyVisible: difficulty.visible,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : '加载偏好设置失败';
@@ -57,7 +64,7 @@ export default function SettingsPage() {
   }, [loadPreference]);
 
   // 自动保存偏好设置
-  const autoSave = useCallback(async (enabled: boolean, volume: number, enabledVisible: boolean, volumeVisible: boolean) => {
+  const autoSave = useCallback(async (enabled: boolean, volume: number, enabledVisible: boolean, volumeVisible: boolean, difficulty: number, difficultyVisible: boolean) => {
     setSaveStatus('保存中...');
     setError(null);
 
@@ -76,13 +83,17 @@ export default function SettingsPage() {
               volume: { value: volume, visible: volumeVisible },
             },
           },
+          ai: {
+            difficulty: { value: difficulty, visible: difficultyVisible },
+          },
         };
         const updated = await updatePreference(updates);
         setPreference(updated);
         setSaveStatus('已保存');
         clientLogger.info('Settings: auto-saved preference', {
           bgmEnabled: updated.audio.bgm.enabled.value,
-          bgmVolume: updated.audio.bgm.volume.value
+          bgmVolume: updated.audio.bgm.volume.value,
+          aiDifficulty: updated.ai.difficulty.value,
         });
 
         // 2秒后清除状态
@@ -100,15 +111,22 @@ export default function SettingsPage() {
   const handleBgmToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setBgmEnabled(newValue);
-    autoSave(newValue, bgmVolume, bgmEnabledVisible, bgmVolumeVisible);
-  }, [bgmVolume, bgmEnabledVisible, bgmVolumeVisible, autoSave]);
+    autoSave(newValue, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible);
+  }, [bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible, autoSave]);
 
   // 处理音量变化
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
     setBgmVolume(newValue);
-    autoSave(bgmEnabled, newValue, bgmEnabledVisible, bgmVolumeVisible);
-  }, [bgmEnabled, bgmEnabledVisible, bgmVolumeVisible, autoSave]);
+    autoSave(bgmEnabled, newValue, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible);
+  }, [bgmEnabled, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible, autoSave]);
+
+  // 处理AI难度变化
+  const handleDifficultyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = Number(e.target.value);
+    setAiDifficulty(newValue);
+    autoSave(bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, newValue, aiDifficultyVisible);
+  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficultyVisible, autoSave]);
 
   // 应用并刷新
   const handleApply = useCallback(async () => {
@@ -122,6 +140,9 @@ export default function SettingsPage() {
             volume: { value: bgmVolume, visible: bgmVolumeVisible },
           },
         },
+        ai: {
+          difficulty: { value: aiDifficulty, visible: aiDifficultyVisible },
+        },
       };
       await updatePreference(updates);
       clientLogger.info('Settings: preference applied, reloading...');
@@ -133,7 +154,7 @@ export default function SettingsPage() {
       setSaveStatus('应用失败');
       clientLogger.error('Settings: failed to apply preference', { error: message });
     }
-  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible]);
+  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible]);
 
   // 返回菜单
   const handleBack = useCallback(() => {
@@ -226,6 +247,32 @@ export default function SettingsPage() {
                     className="volume-slider"
                   />
                   <span className="volume-value">{bgmVolume}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* AI设置 */}
+          <div className="settings-section">
+            <h2 className="section-title">AI设置</h2>
+
+            {/* AI难度控制 - 仅当 visible 为 true 时渲染 */}
+            {aiDifficultyVisible && (
+              <div className="setting-item">
+                <div className="setting-info">
+                  <span className="setting-name">AI难度</span>
+                  <span className="setting-desc">调节AI对手强度 (1-10)</span>
+                </div>
+                <div className="setting-control volume-control">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={aiDifficulty}
+                    onChange={handleDifficultyChange}
+                    className="volume-slider"
+                  />
+                  <span className="volume-value">{aiDifficulty}</span>
                 </div>
               </div>
             )}

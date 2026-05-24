@@ -108,6 +108,8 @@ export interface GameState {
   createdAt: number;
   localGame?: boolean;
   aiGame?: boolean;
+  /** AI 难度 (1-10)，仅在 aiGame 为 true 时使用 */
+  aiDifficulty?: number;
 }
 
 /**
@@ -182,6 +184,11 @@ export interface UserPreference {
       volume: PreferenceOption<number>;
     };
   };
+  /** AI 设置 */
+  ai: {
+    /** AI 难度 (1-10)，影响搜索深度 */
+    difficulty: PreferenceOption<number>;
+  };
 }
 
 /**
@@ -193,5 +200,8 @@ export const defaultUserPreference: UserPreference = {
       enabled: { value: true, visible: true },
       volume: { value: 100, visible: true },
     },
+  },
+  ai: {
+    difficulty: { value: 5, visible: true },
   },
 };

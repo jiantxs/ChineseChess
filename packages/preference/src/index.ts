@@ -77,6 +77,11 @@ function deepMergePreference(
           : { ...current.audio.bgm.volume },
       },
     },
+    ai: {
+      difficulty: updates.ai?.difficulty
+        ? { ...current.ai.difficulty, ...updates.ai.difficulty }
+        : { ...current.ai.difficulty },
+    },
   };
 }
 
@@ -103,6 +108,12 @@ function readPreference(): UserPreference {
             value: parsed.audio?.bgm?.volume?.value ?? defaultUserPreference.audio.bgm.volume.value,
             visible: parsed.audio?.bgm?.volume?.visible ?? defaultUserPreference.audio.bgm.volume.visible,
           },
+        },
+      },
+      ai: {
+        difficulty: {
+          value: parsed.ai?.difficulty?.value ?? defaultUserPreference.ai.difficulty.value,
+          visible: parsed.ai?.difficulty?.visible ?? defaultUserPreference.ai.difficulty.visible,
         },
       },
     };

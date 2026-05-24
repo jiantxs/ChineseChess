@@ -19,7 +19,7 @@ export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePagePr
   const isAI = mode === 'ai';
   const isLocal = mode === 'local' || mode === 'local3d';
   const is3D = mode === 'local3d';
-  const boardStyle = is3D ? 'cyber3d' : 'cyber';
+  let boardStyle = (is3D || isAI) ? 'cyber3d' : 'cyber';
 
   const activeGame = isLocal ? localGame : onlineGame;
   const gameState = activeGame.gameState;
@@ -30,7 +30,22 @@ export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePagePr
 
   useEffect(() => {
     return () => {
-      resumeBgm?.();
+      async function loadPreference() {
+        try {
+          const { getPreference } = await import('../utils/preferenceApi');
+          const prefs = await getPreference();
+          clientLogger.info('App: preference loaded', { bgmEnabled: prefs.audio.bgm.enabled.value, bgmVolume: prefs.audio.bgm.volume.value });
+  
+          if(prefs.audio.bgm.enabled.value && resumeBgm) {
+            resumeBgm();
+          }
+        } catch (err) {
+          clientLogger.error('App: failed to load preference', { 
+            error: err instanceof Error ? err.message : String(err) 
+          });
+        }
+      };
+      loadPreference();
     };
   }, [resumeBgm]);
 

@@ -7,6 +7,17 @@ import { gameLogger } from './gameLogger';
 import { AIEngine } from './ai';
 
 /**
+ * 将用户偏好难度 (1-10) 转换为 AI 搜索深度
+ * 难度越高，搜索深度越大，AI 越强
+ */
+function difficultyToDepth(difficulty: number): number {
+  if (difficulty <= 3) return difficulty === 1 ? 1 : 2;
+  if (difficulty <= 6) return difficulty <= 4 ? 3 : 4;
+  if (difficulty <= 9) return difficulty <= 7 ? 5 : 6;
+  return 8;
+}
+
+/**
  * GameManager - 中国象棋内存游戏状态管理的单例。
  *
  * 此模块提供 GameManager 单例来管理所有内存中的游戏状态。
@@ -58,9 +69,10 @@ export class GameManager {
    * @param layout - 定义初始棋盘布局的 PieceLayout 实例
    * @param local - 如果为 true，则为热座模式（双方为同一玩家）
    * @param ai - 如果为 true，则为 AI 对战模式（玩家执红，AI 执黑）
+   * @param aiDifficulty - 可选的 AI 难度级别（1-10），仅在 ai 为 true 时使用
    * @returns 新创建的 GameState
    */
-  createGame(layout: PieceLayout, local: boolean = false, ai: boolean = false): GameState {
+  createGame(layout: PieceLayout, local: boolean = false, ai: boolean = false, aiDifficulty?: number): GameState {
     for (const [gameId, game] of this.games.entries()) {
       if (game.status === GameStatus.PLAYING || game.status === GameStatus.WAITING) {
         game.status = GameStatus.FINISHED;
@@ -83,6 +95,7 @@ export class GameManager {
       createdAt: Date.now(),
       localGame: local,
       aiGame: ai,
+      aiDifficulty: ai ? (aiDifficulty ?? 5) : undefined,
     };
 
     if (ai) {
@@ -445,7 +458,8 @@ return getValidMovesLogic(game.board, piece);
   }
 
   makeAIMove(
-    gameId: string
+    gameId: string,
+    difficulty?: number
   ): { success: boolean; game?: GameState; error?: string } {
     const game = this.games.get(gameId);
     if (!game) {
@@ -455,10 +469,11 @@ return getValidMovesLogic(game.board, piece);
 
     if (game.status !== GameStatus.PLAYING) {
       gameLogger.warn('makeAIMove failed - game not in progress', { gameId, status: game.status });
-      return { success: false, error: 'Game is not in progress' };
+      return { success: false, error: 'Game not in progress' };
     }
 
-    const aiMove = this.aiEngine.findBestMove(game.board, game.currentTurn, 4);
+    const depth = difficulty !== undefined ? difficultyToDepth(difficulty) : (game.aiDifficulty !== undefined ? difficultyToDepth(game.aiDifficulty) : 4);
+    const aiMove = this.aiEngine.findBestMove(game.board, game.currentTurn, depth);
 
     if (!aiMove) {
       gameLogger.warn('makeAIMove failed - AI could not find a move', { gameId, currentTurn: game.currentTurn });
