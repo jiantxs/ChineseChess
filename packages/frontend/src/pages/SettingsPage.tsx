@@ -1,8 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPreference, updatePreference, type UserPreference } from '../utils/preferenceApi';
+import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
 import './SettingsPage.css';
+
+// 立即更新本地状态
+function shallowMergePreference(base: Record<string, unknown>, overrides: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value === undefined) continue;
+    const baseValue = base[key];
+    if (baseValue && typeof baseValue === 'object' && typeof value === 'object' && !Array.isArray(baseValue) && !Array.isArray(value)) {
+      result[key] = shallowMergePreference(baseValue as Record<string, unknown>, value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+function deepMergePreference(base: UserPreference, overrides: Partial<UserPreference>): UserPreference {
+  return shallowMergePreference(base as unknown as Record<string, unknown>, overrides as unknown as Record<string, unknown>) as unknown as UserPreference;
+}
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -12,44 +32,13 @@ export default function SettingsPage() {
   const [saveStatus, setSaveStatus] = useState<string>('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 本地编辑状态 - 从分层结构提取值
-  const [bgmEnabled, setBgmEnabled] = useState(true);
-  const [bgmVolume, setBgmVolume] = useState(100);
-  const [aiDifficulty, setAiDifficulty] = useState(5);
-
-  // 可见性状态
-  const [bgmEnabledVisible, setBgmEnabledVisible] = useState(true);
-  const [bgmVolumeVisible, setBgmVolumeVisible] = useState(true);
-  const [aiDifficultyVisible, setAiDifficultyVisible] = useState(true);
-
-  // 加载偏好设置
   const loadPreference = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const prefs = await getPreference();
       setPreference(prefs);
-
-      // 从分层结构提取值
-      const enabled = prefs.audio.bgm.enabled;
-      const volume = prefs.audio.bgm.volume;
-      const difficulty = prefs.ai.difficulty;
-
-      setBgmEnabled(enabled.value);
-      setBgmVolume(volume.value);
-      setBgmEnabledVisible(enabled.visible);
-      setBgmVolumeVisible(volume.visible);
-      setAiDifficulty(difficulty.value);
-      setAiDifficultyVisible(difficulty.visible);
-
-      clientLogger.info('Settings: preference loaded', {
-        bgmEnabled: enabled.value,
-        bgmVolume: volume.value,
-        bgmEnabledVisible: enabled.visible,
-        bgmVolumeVisible: volume.visible,
-        aiDifficulty: difficulty.value,
-        aiDifficultyVisible: difficulty.visible,
-      });
+      clientLogger.info('Settings: preference loaded');
     } catch (err) {
       const message = err instanceof Error ? err.message : '加载偏好设置失败';
       setError(message);
@@ -63,90 +52,43 @@ export default function SettingsPage() {
     loadPreference();
   }, [loadPreference]);
 
-  // 自动保存偏好设置
-  const autoSave = useCallback(async (enabled: boolean, volume: number, enabledVisible: boolean, volumeVisible: boolean, difficulty: number, difficultyVisible: boolean) => {
+  const handleChange = useCallback((updates: Partial<UserPreference>) => {
+    // 立即更新本地状态，滑动条不用等上传
+    setPreference((prev) => {
+      if (!prev) return prev;
+      return deepMergePreference(prev, updates);
+    });
+
     setSaveStatus('保存中...');
     setError(null);
 
-    // 清除之前的定时器
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
 
-    // 防抖保存 - 使用分层结构
     saveTimerRef.current = setTimeout(async () => {
       try {
-        const updates: Partial<UserPreference> = {
-          audio: {
-            bgm: {
-              enabled: { value: enabled, visible: enabledVisible },
-              volume: { value: volume, visible: volumeVisible },
-            },
-          },
-          ai: {
-            difficulty: { value: difficulty, visible: difficultyVisible },
-          },
-        };
         const updated = await updatePreference(updates);
         setPreference(updated);
         setSaveStatus('已保存');
-        clientLogger.info('Settings: auto-saved preference', {
-          bgmEnabled: updated.audio.bgm.enabled.value,
-          bgmVolume: updated.audio.bgm.volume.value,
-          aiDifficulty: updated.ai.difficulty.value,
-        });
-
-        // 2秒后清除状态
+        clientLogger.info('Settings: auto-saved', updates);
         setTimeout(() => setSaveStatus(''), 2000);
       } catch (err) {
         const message = err instanceof Error ? err.message : '保存偏好设置失败';
         setError(message);
         setSaveStatus('保存失败');
-        clientLogger.error('Settings: failed to auto-save preference', { error: message });
+        clientLogger.error('Settings: failed to auto-save', { error: message });
       }
     }, 300);
   }, []);
 
-  // 处理开关变化
-  const handleBgmToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setBgmEnabled(newValue);
-    autoSave(newValue, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible);
-  }, [bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible, autoSave]);
-
-  // 处理音量变化
-  const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = Number(e.target.value);
-    setBgmVolume(newValue);
-    autoSave(bgmEnabled, newValue, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible);
-  }, [bgmEnabled, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible, autoSave]);
-
-  // 处理AI难度变化
-  const handleDifficultyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = Number(e.target.value);
-    setAiDifficulty(newValue);
-    autoSave(bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, newValue, aiDifficultyVisible);
-  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficultyVisible, autoSave]);
-
-  // 应用并刷新
   const handleApply = useCallback(async () => {
+    if (!preference) return;
     setSaveStatus('应用中...');
     setError(null);
     try {
-      const updates: Partial<UserPreference> = {
-        audio: {
-          bgm: {
-            enabled: { value: bgmEnabled, visible: bgmEnabledVisible },
-            volume: { value: bgmVolume, visible: bgmVolumeVisible },
-          },
-        },
-        ai: {
-          difficulty: { value: aiDifficulty, visible: aiDifficultyVisible },
-        },
-      };
-      await updatePreference(updates);
+      await updatePreference(preference);
       clientLogger.info('Settings: preference applied, reloading...');
-      // 重新加载页面
       window.location.reload();
     } catch (err) {
       const message = err instanceof Error ? err.message : '应用偏好设置失败';
@@ -154,14 +96,12 @@ export default function SettingsPage() {
       setSaveStatus('应用失败');
       clientLogger.error('Settings: failed to apply preference', { error: message });
     }
-  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible, aiDifficulty, aiDifficultyVisible]);
+  }, [preference]);
 
-  // 返回菜单
   const handleBack = useCallback(() => {
     navigate('/menu');
   }, [navigate]);
 
-  // 清理定时器
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
@@ -184,17 +124,12 @@ export default function SettingsPage() {
   return (
     <div className="settings-page">
       <div className="background-layer settings-bg" />
-
       <div className="settings-container">
         <div className="settings-header">
           <h1 className="settings-title">设置</h1>
           <div className="header-actions">
-            {saveStatus && (
-              <span className="save-status">{saveStatus}</span>
-            )}
-            <button className="back-btn" onClick={handleBack}>
-              返回菜单
-            </button>
+            {saveStatus && <span className="save-status">{saveStatus}</span>}
+            <button className="back-btn" onClick={handleBack}>返回菜单</button>
           </div>
         </div>
 
@@ -205,87 +140,12 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="settings-content">
-          <div className="settings-section">
-            <h2 className="section-title">背景音乐</h2>
-
-            {/* 主界面音乐开关 - 仅当 visible 为 true 时渲染 */}
-            {bgmEnabledVisible && (
-              <div className="setting-item">
-                <div className="setting-info">
-                  <span className="setting-name">主界面音乐</span>
-                  <span className="setting-desc">播放背景音乐</span>
-                </div>
-                <div className="setting-control">
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={bgmEnabled}
-                      onChange={handleBgmToggle}
-                    />
-                    <span className="toggle-slider" />
-                  </label>
-                  <span className="toggle-label">{bgmEnabled ? '开启' : '关闭'}</span>
-                </div>
-              </div>
-            )}
-
-            {/* 音量控制 - 仅当 visible 为 true 时渲染 */}
-            {bgmVolumeVisible && (
-              <div className="setting-item">
-                <div className="setting-info">
-                  <span className="setting-name">音量</span>
-                  <span className="setting-desc">调节背景音乐音量大小</span>
-                </div>
-                <div className="setting-control volume-control">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={bgmVolume}
-                    onChange={handleVolumeChange}
-                    className="volume-slider"
-                  />
-                  <span className="volume-value">{bgmVolume}%</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* AI设置 */}
-          <div className="settings-section">
-            <h2 className="section-title">AI设置</h2>
-
-            {/* AI难度控制 - 仅当 visible 为 true 时渲染 */}
-            {aiDifficultyVisible && (
-              <div className="setting-item">
-                <div className="setting-info">
-                  <span className="setting-name">AI难度</span>
-                  <span className="setting-desc">调节AI对手强度 (1-10)</span>
-                </div>
-                <div className="setting-control volume-control">
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={aiDifficulty}
-                    onChange={handleDifficultyChange}
-                    className="volume-slider"
-                  />
-                  <span className="volume-value">{aiDifficulty}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {preference && (
+          <PreferenceRenderer preference={preference} onChange={handleChange} />
+        )}
 
         <div className="settings-actions">
-          <button
-            className="apply-btn"
-            onClick={handleApply}
-          >
-            应用
-          </button>
+          <button className="apply-btn" onClick={handleApply}>应用</button>
         </div>
       </div>
     </div>

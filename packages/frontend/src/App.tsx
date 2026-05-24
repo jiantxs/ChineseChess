@@ -67,7 +67,6 @@ function App() {
       }
     }
 
-    // 延迟加载偏好，确保音频元素已初始化
     const timer = setTimeout(loadPreference, 100);
     return () => clearTimeout(timer);
   }, []);

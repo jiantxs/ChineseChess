@@ -24,7 +24,7 @@ import { defaultUserPreference } from '@chess/types';
 export type { UserPreference, PreferenceOption } from '@chess/types';
 
 // 重新导出默认偏好设置（别名，便于其他包使用）
-export { defaultUserPreference as defaultPreference } from '@chess/types';
+export { defaultUserPreference as defaultPreference, defaultUserPreference } from '@chess/types';
 
 /**
  * 配置单例 holder
@@ -60,29 +60,32 @@ function ensurePreferenceFile(): void {
 }
 
 /**
+ * 通用深度合并（只合并不为 undefined 的字段）
+ */
+function deepMerge(base: Record<string, unknown>, overrides: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...base };
+
+  for (const [key, value] of Object.entries(overrides)) {
+    if (value === undefined) continue;
+    const baseValue = base[key];
+    if (baseValue && typeof baseValue === 'object' && typeof value === 'object' && !Array.isArray(baseValue) && !Array.isArray(value)) {
+      result[key] = deepMerge(baseValue as Record<string, unknown>, value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+
+  return result;
+}
+
+/**
  * 深度合并分层偏好设置（支持部分更新）
  */
-function deepMergePreference(
+function mergePreference(
   current: UserPreference,
   updates: Partial<UserPreference>
 ): UserPreference {
-  return {
-    audio: {
-      bgm: {
-        enabled: updates.audio?.bgm?.enabled
-          ? { ...current.audio.bgm.enabled, ...updates.audio.bgm.enabled }
-          : { ...current.audio.bgm.enabled },
-        volume: updates.audio?.bgm?.volume
-          ? { ...current.audio.bgm.volume, ...updates.audio.bgm.volume }
-          : { ...current.audio.bgm.volume },
-      },
-    },
-    ai: {
-      difficulty: updates.ai?.difficulty
-        ? { ...current.ai.difficulty, ...updates.ai.difficulty }
-        : { ...current.ai.difficulty },
-    },
-  };
+  return deepMerge(current as unknown as Record<string, unknown>, updates as unknown as Record<string, unknown>) as unknown as UserPreference;
 }
 
 /**
@@ -94,30 +97,8 @@ function readPreference(): UserPreference {
   const filePath = getPreferenceFilePath();
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(content);
-
-    // 新版分层结构，带默认值填充
-    const result: UserPreference = {
-      audio: {
-        bgm: {
-          enabled: {
-            value: parsed.audio?.bgm?.enabled?.value ?? defaultUserPreference.audio.bgm.enabled.value,
-            visible: parsed.audio?.bgm?.enabled?.visible ?? defaultUserPreference.audio.bgm.enabled.visible,
-          },
-          volume: {
-            value: parsed.audio?.bgm?.volume?.value ?? defaultUserPreference.audio.bgm.volume.value,
-            visible: parsed.audio?.bgm?.volume?.visible ?? defaultUserPreference.audio.bgm.volume.visible,
-          },
-        },
-      },
-      ai: {
-        difficulty: {
-          value: parsed.ai?.difficulty?.value ?? defaultUserPreference.ai.difficulty.value,
-          visible: parsed.ai?.difficulty?.visible ?? defaultUserPreference.ai.difficulty.visible,
-        },
-      },
-    };
-    return result;
+    const parsed = JSON.parse(content) as UserPreference;
+    return deepMerge(defaultUserPreference as unknown as Record<string, unknown>, parsed as unknown as Record<string, unknown>) as unknown as UserPreference;
   } catch (error) {
     console.error('Failed to read preference file, using defaults:', error);
     return JSON.parse(JSON.stringify(defaultUserPreference));
@@ -143,17 +124,12 @@ function writePreference(preference: UserPreference): void {
  * 提供获取和更新用户偏好的方法
  */
 export class PreferenceManager {
-  private cache: UserPreference | null = null;
-
   /**
    * 获取当前用户偏好设置
    * @returns 用户偏好设置对象
    */
   getPreference(): UserPreference {
-    if (!this.cache) {
-      this.cache = readPreference();
-    }
-    return JSON.parse(JSON.stringify(this.cache)) as UserPreference;
+    return readPreference();
   }
 
   /**
@@ -163,7 +139,7 @@ export class PreferenceManager {
    */
   updatePreference(updates: Partial<UserPreference>): UserPreference {
     const current = this.getPreference();
-    const updated = deepMergePreference(current, updates);
+    const updated = mergePreference(current, updates as Record<string, unknown>) as UserPreference;
     this.validateAndSave(updated);
     return JSON.parse(JSON.stringify(updated)) as UserPreference;
   }
@@ -181,7 +157,6 @@ export class PreferenceManager {
     }
 
     writePreference(preference);
-    this.cache = preference;
   }
 
   /**
@@ -191,15 +166,7 @@ export class PreferenceManager {
   resetToDefault(): UserPreference {
     const defaultCopy = JSON.parse(JSON.stringify(defaultUserPreference)) as UserPreference;
     writePreference(defaultCopy);
-    this.cache = defaultCopy;
     return defaultCopy;
-  }
-
-  /**
-   * 清除缓存，下次获取时重新读取文件
-   */
-  clearCache(): void {
-    this.cache = null;
   }
 }
 

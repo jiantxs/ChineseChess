@@ -159,14 +159,23 @@ export const BOARD_ROWS = 10;
 export const BOARD_COLS = 9;
 
 /**
- * 带可见性的偏好选项
- * 用于分层偏好设置结构
+ * 带可见性的偏好选项 - 包含渲染元数据
  */
 export interface PreferenceOption<T> {
   /** 选项值 */
   value: T;
   /** 是否可见（用于条件显示配置项） */
   visible: boolean;
+  /** 显示名称 */
+  label?: string;
+  /** 值类型 */
+  valueType?: 'boolean' | 'number' | 'string';
+  /** 是否只读 */
+  readonly?: boolean;
+  /** 范围/步进配置（number 类型时） */
+  range?: { min?: number; max?: number; step?: number };
+  /** 下拉选项（string 类型时） */
+  options?: string[];
 }
 
 /**
@@ -192,16 +201,16 @@ export interface UserPreference {
 }
 
 /**
- * 默认用户偏好设置 - 所有选项默认可见
+ * 默认用户偏好设置 - 包含渲染元数据
  */
 export const defaultUserPreference: UserPreference = {
   audio: {
     bgm: {
-      enabled: { value: true, visible: true },
-      volume: { value: 100, visible: true },
+      enabled: { value: true, visible: true, label: '背景音乐', valueType: 'boolean' },
+      volume: { value: 100, visible: true, label: '音量', valueType: 'number', range: { min: 0, max: 100, step: 1 } },
     },
   },
   ai: {
-    difficulty: { value: 5, visible: true },
-  },
+    difficulty: { value: 5, visible: true, label: 'AI难度', valueType: 'number', range: { min: 1, max: 10, step: 1 } },
+  }
 };
