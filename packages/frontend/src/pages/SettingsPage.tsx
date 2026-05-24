@@ -12,9 +12,13 @@ export default function SettingsPage() {
   const [saveStatus, setSaveStatus] = useState<string>('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 本地编辑状态
+  // 本地编辑状态 - 从分层结构提取值
   const [bgmEnabled, setBgmEnabled] = useState(true);
   const [bgmVolume, setBgmVolume] = useState(100);
+
+  // 可见性状态
+  const [bgmEnabledVisible, setBgmEnabledVisible] = useState(true);
+  const [bgmVolumeVisible, setBgmVolumeVisible] = useState(true);
 
   // 加载偏好设置
   const loadPreference = useCallback(async () => {
@@ -23,9 +27,22 @@ export default function SettingsPage() {
     try {
       const prefs = await getPreference();
       setPreference(prefs);
-      setBgmEnabled(prefs.bgmEnabled);
-      setBgmVolume(prefs.bgmVolume);
-      clientLogger.info('Settings: preference loaded', { bgmEnabled: prefs.bgmEnabled, bgmVolume: prefs.bgmVolume });
+
+      // 从分层结构提取值
+      const enabled = prefs.audio.bgm.enabled;
+      const volume = prefs.audio.bgm.volume;
+
+      setBgmEnabled(enabled.value);
+      setBgmVolume(volume.value);
+      setBgmEnabledVisible(enabled.visible);
+      setBgmVolumeVisible(volume.visible);
+
+      clientLogger.info('Settings: preference loaded', {
+        bgmEnabled: enabled.value,
+        bgmVolume: volume.value,
+        bgmEnabledVisible: enabled.visible,
+        bgmVolumeVisible: volume.visible
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : '加载偏好设置失败';
       setError(message);
@@ -40,27 +57,34 @@ export default function SettingsPage() {
   }, [loadPreference]);
 
   // 自动保存偏好设置
-  const autoSave = useCallback(async (enabled: boolean, volume: number) => {
+  const autoSave = useCallback(async (enabled: boolean, volume: number, enabledVisible: boolean, volumeVisible: boolean) => {
     setSaveStatus('保存中...');
     setError(null);
-    
+
     // 清除之前的定时器
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
-    
-    // 防抖保存
+
+    // 防抖保存 - 使用分层结构
     saveTimerRef.current = setTimeout(async () => {
       try {
         const updates: Partial<UserPreference> = {
-          bgmEnabled: enabled,
-          bgmVolume: volume,
+          audio: {
+            bgm: {
+              enabled: { value: enabled, visible: enabledVisible },
+              volume: { value: volume, visible: volumeVisible },
+            },
+          },
         };
         const updated = await updatePreference(updates);
         setPreference(updated);
         setSaveStatus('已保存');
-        clientLogger.info('Settings: auto-saved preference', { bgmEnabled: updated.bgmEnabled, bgmVolume: updated.bgmVolume });
-        
+        clientLogger.info('Settings: auto-saved preference', {
+          bgmEnabled: updated.audio.bgm.enabled.value,
+          bgmVolume: updated.audio.bgm.volume.value
+        });
+
         // 2秒后清除状态
         setTimeout(() => setSaveStatus(''), 2000);
       } catch (err) {
@@ -76,15 +100,15 @@ export default function SettingsPage() {
   const handleBgmToggle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setBgmEnabled(newValue);
-    autoSave(newValue, bgmVolume);
-  }, [bgmVolume, autoSave]);
+    autoSave(newValue, bgmVolume, bgmEnabledVisible, bgmVolumeVisible);
+  }, [bgmVolume, bgmEnabledVisible, bgmVolumeVisible, autoSave]);
 
   // 处理音量变化
   const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
     setBgmVolume(newValue);
-    autoSave(bgmEnabled, newValue);
-  }, [bgmEnabled, autoSave]);
+    autoSave(bgmEnabled, newValue, bgmEnabledVisible, bgmVolumeVisible);
+  }, [bgmEnabled, bgmEnabledVisible, bgmVolumeVisible, autoSave]);
 
   // 应用并刷新
   const handleApply = useCallback(async () => {
@@ -92,8 +116,12 @@ export default function SettingsPage() {
     setError(null);
     try {
       const updates: Partial<UserPreference> = {
-        bgmEnabled,
-        bgmVolume,
+        audio: {
+          bgm: {
+            enabled: { value: bgmEnabled, visible: bgmEnabledVisible },
+            volume: { value: bgmVolume, visible: bgmVolumeVisible },
+          },
+        },
       };
       await updatePreference(updates);
       clientLogger.info('Settings: preference applied, reloading...');
@@ -105,7 +133,7 @@ export default function SettingsPage() {
       setSaveStatus('应用失败');
       clientLogger.error('Settings: failed to apply preference', { error: message });
     }
-  }, [bgmEnabled, bgmVolume]);
+  }, [bgmEnabled, bgmVolume, bgmEnabledVisible, bgmVolumeVisible]);
 
   // 返回菜单
   const handleBack = useCallback(() => {
@@ -159,42 +187,48 @@ export default function SettingsPage() {
         <div className="settings-content">
           <div className="settings-section">
             <h2 className="section-title">背景音乐</h2>
-            
-            <div className="setting-item">
-              <div className="setting-info">
-                <span className="setting-name">主界面音乐</span>
-                <span className="setting-desc">播放背景音乐</span>
-              </div>
-              <div className="setting-control">
-                <label className="toggle-switch">
-                  <input
-                    type="checkbox"
-                    checked={bgmEnabled}
-                    onChange={handleBgmToggle}
-                  />
-                  <span className="toggle-slider" />
-                </label>
-                <span className="toggle-label">{bgmEnabled ? '开启' : '关闭'}</span>
-              </div>
-            </div>
 
-            <div className="setting-item">
-              <div className="setting-info">
-                <span className="setting-name">音量</span>
-                <span className="setting-desc">调节背景音乐音量大小</span>
+            {/* 主界面音乐开关 - 仅当 visible 为 true 时渲染 */}
+            {bgmEnabledVisible && (
+              <div className="setting-item">
+                <div className="setting-info">
+                  <span className="setting-name">主界面音乐</span>
+                  <span className="setting-desc">播放背景音乐</span>
+                </div>
+                <div className="setting-control">
+                  <label className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={bgmEnabled}
+                      onChange={handleBgmToggle}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                  <span className="toggle-label">{bgmEnabled ? '开启' : '关闭'}</span>
+                </div>
               </div>
-              <div className="setting-control volume-control">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={bgmVolume}
-                  onChange={handleVolumeChange}
-                  className="volume-slider"
-                />
-                <span className="volume-value">{bgmVolume}%</span>
+            )}
+
+            {/* 音量控制 - 仅当 visible 为 true 时渲染 */}
+            {bgmVolumeVisible && (
+              <div className="setting-item">
+                <div className="setting-info">
+                  <span className="setting-name">音量</span>
+                  <span className="setting-desc">调节背景音乐音量大小</span>
+                </div>
+                <div className="setting-control volume-control">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={bgmVolume}
+                    onChange={handleVolumeChange}
+                    className="volume-slider"
+                  />
+                  <span className="volume-value">{bgmVolume}%</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

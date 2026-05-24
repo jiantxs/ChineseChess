@@ -46,24 +46,30 @@ function App() {
     }
   }, []);
 
-  // 加载并应用用户偏好设置
+      // 加载并应用用户偏好设置
   useEffect(() => {
     async function loadPreference() {
       try {
         const { getPreference } = await import('./utils/preferenceApi');
         const prefs = await getPreference();
-        clientLogger.info('App: preference loaded', { bgmEnabled: prefs.bgmEnabled, bgmVolume: prefs.bgmVolume });
-        
+        clientLogger.info('App: preference loaded', {
+          bgmEnabled: prefs.audio.bgm.enabled.value,
+          bgmVolume: prefs.audio.bgm.volume.value
+        });
+
         if (audioRef.current) {
-          audioRef.current.volume = prefs.bgmVolume / 100;
+          audioRef.current.volume = prefs.audio.bgm.volume.value / 100;
+          if (prefs.audio.bgm.enabled.value) {
+            audioRef.current.play().catch((err) => clientLogger.warn('BGM autoplay failed', { error: err.message }));
+          }
         }
       } catch (err) {
-        clientLogger.error('App: failed to load preference', { 
-          error: err instanceof Error ? err.message : String(err) 
+        clientLogger.error('App: failed to load preference', {
+          error: err instanceof Error ? err.message : String(err)
         });
       }
     }
-    
+
     // 延迟加载偏好，确保音频元素已初始化
     const timer = setTimeout(loadPreference, 100);
     return () => clearTimeout(timer);

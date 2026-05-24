@@ -155,3 +155,31 @@ export interface GameMessage {
 /** 棋盘尺寸：10行（0-9）和9列（0-8） */
 export const BOARD_ROWS = 10;
 export const BOARD_COLS = 9;
+
+/**
+ * 带可见性的偏好选项
+ * 用于分层偏好设置结构
+ */
+export interface PreferenceOption<T> {
+  /** 选项值 */
+  value: T;
+  /** 是否可见（用于条件显示配置项） */
+  visible: boolean;
+}
+
+/**
+ * 用户偏好设置接口 - 分层结构
+ * 这是前后端共享的偏好配置类型
+ */
+export interface UserPreference {
+  /** 音频设置 */
+  audio: {
+    /** 背景音乐设置 */
+    bgm: {
+      /** 是否播放背景音乐 */
+      enabled: PreferenceOption<boolean>;
+      /** 背景音乐音量大小 (0-100) */
+      volume: PreferenceOption<number>;
+    };
+  };
+}

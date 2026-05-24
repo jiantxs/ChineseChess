@@ -3,13 +3,13 @@
  *
  * 提供用户偏好设置的读写功能，偏好数据持久化到 preference.json.chess 文件中。
  * 默认配置：
- *   - 背景音乐（主界面音乐）：播放 = true
- *   - 背景音乐音量：100
+ *   - 背景音乐（主界面音乐）：播放 = true, 可见 = true
+ *   - 背景音乐音量：100, 可见 = true
  *
  * 使用方法：
  *   import { preferenceManager } from '@chess/preference';
  *   const prefs = preferenceManager.getPreference();
- *   preferenceManager.updatePreference({ bgmEnabled: false, bgmVolume: 50 });
+ *   preferenceManager.updatePreference({ audio: { bgm: { enabled: { value: false }, volume: { value: 50 } } } });
  *
  * @module @chess/preference
  */
@@ -17,24 +17,21 @@
 import fs from 'fs';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
+import type { UserPreference } from '@chess/types';
+
+// 重新导出共享类型，便于其他包使用
+export type { UserPreference, PreferenceOption } from '@chess/types';
 
 /**
- * 用户偏好设置接口
- * @interface UserPreference
- */
-export interface UserPreference {
-  /** 背景音乐（主界面音乐）是否播放 */
-  bgmEnabled: boolean;
-  /** 背景音乐音量大小 (0-100) */
-  bgmVolume: number;
-}
-
-/**
- * 默认用户偏好设置
+ * 默认用户偏好设置 - 所有选项默认可见
  */
 export const defaultPreference: UserPreference = {
-  bgmEnabled: true,
-  bgmVolume: 100,
+  audio: {
+    bgm: {
+      enabled: { value: true, visible: true },
+      volume: { value: 100, visible: true },
+    },
+  },
 };
 
 /**
@@ -71,6 +68,27 @@ function ensurePreferenceFile(): void {
 }
 
 /**
+ * 深度合并分层偏好设置（支持部分更新）
+ */
+function deepMergePreference(
+  current: UserPreference,
+  updates: Partial<UserPreference>
+): UserPreference {
+  return {
+    audio: {
+      bgm: {
+        enabled: updates.audio?.bgm?.enabled
+          ? { ...current.audio.bgm.enabled, ...updates.audio.bgm.enabled }
+          : { ...current.audio.bgm.enabled },
+        volume: updates.audio?.bgm?.volume
+          ? { ...current.audio.bgm.volume, ...updates.audio.bgm.volume }
+          : { ...current.audio.bgm.volume },
+      },
+    },
+  };
+}
+
+/**
  * 读取用户偏好设置
  * @returns 用户偏好设置对象
  */
@@ -79,14 +97,27 @@ function readPreference(): UserPreference {
   const filePath = getPreferenceFilePath();
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(content) as Partial<UserPreference>;
-    return {
-      bgmEnabled: parsed.bgmEnabled ?? defaultPreference.bgmEnabled,
-      bgmVolume: parsed.bgmVolume ?? defaultPreference.bgmVolume,
+    const parsed = JSON.parse(content);
+
+    // 新版分层结构，带默认值填充
+    const result: UserPreference = {
+      audio: {
+        bgm: {
+          enabled: {
+            value: parsed.audio?.bgm?.enabled?.value ?? defaultPreference.audio.bgm.enabled.value,
+            visible: parsed.audio?.bgm?.enabled?.visible ?? defaultPreference.audio.bgm.enabled.visible,
+          },
+          volume: {
+            value: parsed.audio?.bgm?.volume?.value ?? defaultPreference.audio.bgm.volume.value,
+            visible: parsed.audio?.bgm?.volume?.visible ?? defaultPreference.audio.bgm.volume.visible,
+          },
+        },
+      },
     };
+    return result;
   } catch (error) {
     console.error('Failed to read preference file, using defaults:', error);
-    return { ...defaultPreference };
+    return JSON.parse(JSON.stringify(defaultPreference));
   }
 }
 
@@ -119,7 +150,7 @@ export class PreferenceManager {
     if (!this.cache) {
       this.cache = readPreference();
     }
-    return { ...this.cache };
+    return JSON.parse(JSON.stringify(this.cache)) as UserPreference;
   }
 
   /**
@@ -129,18 +160,25 @@ export class PreferenceManager {
    */
   updatePreference(updates: Partial<UserPreference>): UserPreference {
     const current = this.getPreference();
-    const updated: UserPreference = {
-      ...current,
-      ...updates,
-    };
-    
+    const updated = deepMergePreference(current, updates);
+    this.validateAndSave(updated);
+    return JSON.parse(JSON.stringify(updated)) as UserPreference;
+  }
+
+  /**
+   * 验证并保存偏好设置
+   */
+  private validateAndSave(preference: UserPreference): void {
     // 验证音量范围
-    if (updated.bgmVolume < 0) updated.bgmVolume = 0;
-    if (updated.bgmVolume > 100) updated.bgmVolume = 100;
-    
-    writePreference(updated);
-    this.cache = updated;
-    return { ...updated };
+    if (preference.audio.bgm.volume.value < 0) {
+      preference.audio.bgm.volume.value = 0;
+    }
+    if (preference.audio.bgm.volume.value > 100) {
+      preference.audio.bgm.volume.value = 100;
+    }
+
+    writePreference(preference);
+    this.cache = preference;
   }
 
   /**
@@ -148,9 +186,10 @@ export class PreferenceManager {
    * @returns 默认偏好设置
    */
   resetToDefault(): UserPreference {
-    writePreference(defaultPreference);
-    this.cache = { ...defaultPreference };
-    return { ...defaultPreference };
+    const defaultCopy = JSON.parse(JSON.stringify(defaultPreference)) as UserPreference;
+    writePreference(defaultCopy);
+    this.cache = defaultCopy;
+    return defaultCopy;
   }
 
   /**

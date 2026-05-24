@@ -7,13 +7,14 @@
  *
  * 路由：
  *   GET  /api/preference       - 获取当前用户偏好
- *   POST /api/preference       - 更新用户偏好（接受部分更新）
+ *   POST /api/preference       - 更新用户偏好
  *   POST /api/preference/reset - 重置为默认偏好
  */
 
 import { Router } from 'express';
 import type { ChessConfig } from '@chess/config';
-import { preferenceManager, initPreferenceManager, type UserPreference } from '@chess/preference';
+import type { UserPreference } from '@chess/types';
+import { preferenceManager, initPreferenceManager } from '@chess/preference';
 
 /**
  * 创建用户偏好设置路由器
@@ -46,32 +47,67 @@ export function createPreferenceRouter(config: ChessConfig): Router {
 
   /**
    * POST /api/preference
-   * 更新用户偏好设置（支持部分更新）
+   * 更新用户偏好设置
    */
   router.post('/preference', (req, res) => {
     try {
       const updates: Partial<UserPreference> = req.body;
-      
-      // 验证更新数据
-      if (updates.bgmEnabled !== undefined && typeof updates.bgmEnabled !== 'boolean') {
-        res.status(400).json({
-          success: false,
-          error: 'bgmEnabled 必须是布尔值',
-        });
-        return;
-      }
-      
-      if (updates.bgmVolume !== undefined) {
-        const volume = Number(updates.bgmVolume);
-        if (isNaN(volume) || volume < 0 || volume > 100) {
+
+      // 验证 enabled
+      const enabled = updates.audio?.bgm?.enabled;
+      if (enabled !== undefined) {
+        if (typeof enabled !== 'object' || enabled === null) {
           res.status(400).json({
             success: false,
-            error: 'bgmVolume 必须是 0-100 之间的数字',
+            error: 'audio.bgm.enabled 必须是对象',
+          });
+          return;
+        }
+        if (enabled.value !== undefined && typeof enabled.value !== 'boolean') {
+          res.status(400).json({
+            success: false,
+            error: 'audio.bgm.enabled.value 必须是布尔值',
+          });
+          return;
+        }
+        if (enabled.visible !== undefined && typeof enabled.visible !== 'boolean') {
+          res.status(400).json({
+            success: false,
+            error: 'audio.bgm.enabled.visible 必须是布尔值',
           });
           return;
         }
       }
-      
+
+      // 验证 volume
+      const volume = updates.audio?.bgm?.volume;
+      if (volume !== undefined) {
+        if (typeof volume !== 'object' || volume === null) {
+          res.status(400).json({
+            success: false,
+            error: 'audio.bgm.volume 必须是对象',
+          });
+          return;
+        }
+        if (volume.value !== undefined) {
+          const volValue = Number(volume.value);
+          if (isNaN(volValue) || volValue < 0 || volValue > 100) {
+            res.status(400).json({
+              success: false,
+              error: 'audio.bgm.volume.value 必须是 0-100 之间的数字',
+            });
+            return;
+          }
+        }
+        if (volume.visible !== undefined && typeof volume.visible !== 'boolean') {
+          res.status(400).json({
+            success: false,
+            error: 'audio.bgm.volume.visible 必须是布尔值',
+          });
+          return;
+        }
+      }
+
       const updated = preferenceManager.updatePreference(updates);
       res.json({
         success: true,

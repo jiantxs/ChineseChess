@@ -7,22 +7,16 @@
  * 用法：
  *   import { getPreference, updatePreference, resetPreference } from './preferenceApi';
  *   const prefs = await getPreference();
- *   await updatePreference({ bgmEnabled: false, bgmVolume: 50 });
+ *   await updatePreference({ audio: { bgm: { enabled: { value: false }, volume: { value: 50 } } } });
  *
  * @module utils/preferenceApi
  */
 
 import { apiPath } from './api';
+import type { UserPreference } from '@chess/types';
 
-/**
- * 用户偏好设置接口
- */
-export interface UserPreference {
-  /** 背景音乐（主界面音乐）是否播放 */
-  bgmEnabled: boolean;
-  /** 背景音乐音量大小 (0-100) */
-  bgmVolume: number;
-}
+// 重新导出共享类型
+export type { UserPreference, PreferenceOption } from '@chess/types';
 
 /**
  * API 响应接口
@@ -51,7 +45,7 @@ export async function getPreference(): Promise<UserPreference> {
   }
 
   const result: ApiResponse<UserPreference> = await response.json();
-  
+
   if (!result.success || !result.data) {
     throw new Error(result.error || '获取偏好设置失败');
   }
@@ -61,7 +55,7 @@ export async function getPreference(): Promise<UserPreference> {
 
 /**
  * 更新用户偏好设置（支持部分更新）
- * @param updates - 要更新的偏好字段
+ * @param updates - 要更新的偏好字段（支持分层结构）
  * @returns 更新后的完整偏好设置
  * @throws 更新失败时抛出错误
  */
@@ -81,7 +75,7 @@ export async function updatePreference(
   }
 
   const result: ApiResponse<UserPreference> = await response.json();
-  
+
   if (!result.success || !result.data) {
     throw new Error(result.error || '更新偏好设置失败');
   }
@@ -107,7 +101,7 @@ export async function resetPreference(): Promise<UserPreference> {
   }
 
   const result: ApiResponse<UserPreference> = await response.json();
-  
+
   if (!result.success || !result.data) {
     throw new Error(result.error || '重置偏好设置失败');
   }

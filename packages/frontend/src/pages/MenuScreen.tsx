@@ -13,9 +13,9 @@ useEffect(() => {
       try {
         const { getPreference } = await import('../utils/preferenceApi');
         const prefs = await getPreference();
-        clientLogger.info('App: preference loaded', { bgmEnabled: prefs.bgmEnabled, bgmVolume: prefs.bgmVolume });
-        
-        if(prefs.bgmEnabled && resumeBgm) {
+        clientLogger.info('App: preference loaded', { bgmEnabled: prefs.audio.bgm.enabled.value, bgmVolume: prefs.audio.bgm.volume.value });
+
+        if(prefs.audio.bgm.enabled.value && resumeBgm) {
           resumeBgm();
         }
       } catch (err) {
