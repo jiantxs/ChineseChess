@@ -8,3 +8,4 @@ winapp/
 .sisyphus/
 packages/backend/public/
 preference.json.chess
+mobile/

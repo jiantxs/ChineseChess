@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "@chess/backend": "workspace:*",
-    "@chess/config": "workspace:*"
+    "@chess/config": "workspace:*",
+    "@chess/preference": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

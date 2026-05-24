@@ -11,7 +11,9 @@
 import { app, BrowserWindow } from 'electron';
 import { startServer } from '@chess/backend';
 import { createChessConfig } from '@chess/config';
+import { createPreferenceManager } from '@chess/preference';
 import * as net from 'net';
+import * as os from 'os';
 import * as path from 'path';
 import { randomUUID } from 'crypto';
 
@@ -58,6 +60,7 @@ function findAvailablePort(): Promise<number> {
 
 let mainWindow: BrowserWindow | null = null;
 let stopServer: (() => void) | null = null;
+let stopMobileServer: (() => void) | null = null;
 
 /**
  * Creates the main application window.
@@ -134,6 +137,72 @@ async function main(): Promise<void> {
     stopServer = result.stop;
     console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
 
+    // Create preference manager instance bound to main config
+    const mainPreferenceManager = createPreferenceManager(config);
+
+    // Handle extra mobile server
+    const prefs = mainPreferenceManager.getPreference();
+    if (prefs.extraSettings?.extraServer?.enabled?.value === true) {
+      const mobilePort = await findAvailablePort();
+      const mobilePrefix = `/${randomUUID()}`;
+      const mobileMonorepoRoot = path.join(config.log.monorepoRoot, 'mobile');
+
+      const mobileConfig = createChessConfig({
+        server: {
+          port: mobilePort,
+          host: '0.0.0.0',
+          prefix: mobilePrefix,
+          sessionSecret: 'electron-mobile-session-secret',
+          sessionMaxAgeMs: 24 * 60 * 60 * 1000,
+          platform: 'android'
+        },
+        log: {
+          ...config.log,
+          monorepoRoot: mobileMonorepoRoot,
+          requestLogDir: path.join(mobileMonorepoRoot, 'logs', 'requests'),
+          errorLogDir: path.join(mobileMonorepoRoot, 'logs', 'errors'),
+          gameLogDir: path.join(mobileMonorepoRoot, 'logs', 'games'),
+        }
+      });
+
+      const mobileResult = startServer(mobileConfig, { publicPath });
+      stopMobileServer = mobileResult.stop;
+      console.log(`Mobile server started at http://0.0.0.0:${mobilePort}${mobilePrefix}`);
+
+      // Collect all non-internal IPv4 addresses
+      const networkInterfaces = os.networkInterfaces();
+      const addresses: string[] = [];
+      for (const iface of Object.values(networkInterfaces)) {
+        if (!iface) continue;
+        for (const info of iface) {
+          if (info.family === 'IPv4' && !info.internal) {
+            addresses.push(info.address);
+          }
+        }
+      }
+
+      // Encode port, prefix and addresses as base64 JSON
+      const mobileCode = Buffer.from(JSON.stringify({ port: mobilePort, prefix: mobilePrefix, addresses })).toString('base64');
+      mainPreferenceManager.updatePreference({
+        extraSettings: {
+          extraServer: {
+            textCode: { value: mobileCode }
+          }
+        }
+      });
+      console.log('Mobile server code saved to preference');
+    } else {
+      // Clear textCode if extra server is disabled
+      mainPreferenceManager.updatePreference({
+        extraSettings: {
+          extraServer: {
+            textCode: { value: '' }
+          }
+        }
+      });
+      console.log('Mobile server code cleared');
+    }
+
     // Create the window with prefix URL
     createWindow(port, basePrefix);
   } catch (error) {
@@ -149,6 +218,9 @@ app.on('window-all-closed', () => {
   // Stop the backend server when the window is closed
   if (stopServer) {
     stopServer();
+  }
+  if (stopMobileServer) {
+    stopMobileServer();
   }
   if (process.platform !== 'darwin') {
     app.quit();

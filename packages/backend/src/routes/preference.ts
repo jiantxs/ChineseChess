@@ -14,7 +14,7 @@
 import { Router } from 'express';
 import type { ChessConfig } from '@chess/config';
 import type { UserPreference } from '@chess/types';
-import { preferenceManager, initPreferenceManager } from '@chess/preference';
+import { createPreferenceManager } from '@chess/preference';
 
 /**
  * 创建用户偏好设置路由器
@@ -22,7 +22,7 @@ import { preferenceManager, initPreferenceManager } from '@chess/preference';
  * @returns 配置好的 Express Router 实例
  */
 export function createPreferenceRouter(config: ChessConfig): Router {
-  initPreferenceManager(config);
+  const preferenceManager = createPreferenceManager(config);
   const router = Router();
 
   /**

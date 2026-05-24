@@ -27,36 +27,65 @@ export type { UserPreference, PreferenceOption } from '@chess/types';
 export { defaultUserPreference as defaultPreference, defaultUserPreference } from '@chess/types';
 
 /**
- * 配置单例 holder
+ * 创建偏好管理器实例
+ * @param config - ChessConfig 实例
+ * @returns 绑定到指定配置的 PreferenceManager 实例
+ */
+export function createPreferenceManager(config: ChessConfig): PreferenceManager {
+  const monorepoRoot = config.log.monorepoRoot;
+
+  function getPreferenceFilePath(): string {
+    return path.join(monorepoRoot, 'preference.json.chess');
+  }
+
+  function ensurePreferenceFile(): void {
+    const filePath = getPreferenceFilePath();
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify(defaultUserPreference, null, 2), 'utf-8');
+    }
+  }
+
+  function readPreference(): UserPreference {
+    ensurePreferenceFile();
+    const filePath = getPreferenceFilePath();
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(content) as UserPreference;
+      return deepMerge(defaultUserPreference as unknown as Record<string, unknown>, parsed as unknown as Record<string, unknown>) as unknown as UserPreference;
+    } catch (error) {
+      console.error('Failed to read preference file, using defaults:', error);
+      return JSON.parse(JSON.stringify(defaultUserPreference));
+    }
+  }
+
+  function writePreference(preference: UserPreference): void {
+    const filePath = getPreferenceFilePath();
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(preference, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Failed to write preference file:', error);
+      throw error;
+    }
+  }
+
+  return new PreferenceManager(readPreference, writePreference);
+}
+
+/**
+ * 配置单例 holder（向后兼容）
  */
 let configHolder: { config: ChessConfig } | null = null;
 
 /**
- * 初始化偏好管理器
+ * 初始化全局偏好管理器（向后兼容，只允许初始化一次）
  * @param config - ChessConfig 实例
+ * @deprecated 使用 createPreferenceManager 创建多实例
  */
 export function initPreferenceManager(config: ChessConfig): void {
+  if (configHolder) {
+    return;
+  }
   configHolder = { config };
-}
-
-/**
- * 偏好文件路径
- */
-function getPreferenceFilePath(): string {
-  if (!configHolder) {
-    throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
-  }
-  return path.join(configHolder.config.log.monorepoRoot, 'preference.json.chess');
-}
-
-/**
- * 确保偏好文件存在，如果不存在则创建默认配置
- */
-function ensurePreferenceFile(): void {
-  const filePath = getPreferenceFilePath();
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(defaultUserPreference, null, 2), 'utf-8');
-  }
 }
 
 /**
@@ -89,47 +118,24 @@ function mergePreference(
 }
 
 /**
- * 读取用户偏好设置
- * @returns 用户偏好设置对象
- */
-function readPreference(): UserPreference {
-  ensurePreferenceFile();
-  const filePath = getPreferenceFilePath();
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(content) as UserPreference;
-    return deepMerge(defaultUserPreference as unknown as Record<string, unknown>, parsed as unknown as Record<string, unknown>) as unknown as UserPreference;
-  } catch (error) {
-    console.error('Failed to read preference file, using defaults:', error);
-    return JSON.parse(JSON.stringify(defaultUserPreference));
-  }
-}
-
-/**
- * 写入用户偏好设置
- * @param preference - 要保存的用户偏好设置
- */
-function writePreference(preference: UserPreference): void {
-  const filePath = getPreferenceFilePath();
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(preference, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Failed to write preference file:', error);
-    throw error;
-  }
-}
-
-/**
  * 用户偏好管理器
  * 提供获取和更新用户偏好的方法
  */
 export class PreferenceManager {
+  private readPreference: () => UserPreference;
+  private writePreference: (preference: UserPreference) => void;
+
+  constructor(readPreference: () => UserPreference, writePreference: (preference: UserPreference) => void) {
+    this.readPreference = readPreference;
+    this.writePreference = writePreference;
+  }
+
   /**
    * 获取当前用户偏好设置
    * @returns 用户偏好设置对象
    */
   getPreference(): UserPreference {
-    return readPreference();
+    return this.readPreference();
   }
 
   /**
@@ -156,7 +162,7 @@ export class PreferenceManager {
       preference.audio.bgm.volume.value = 100;
     }
 
-    writePreference(preference);
+    this.writePreference(preference);
   }
 
   /**
@@ -165,15 +171,31 @@ export class PreferenceManager {
    */
   resetToDefault(): UserPreference {
     const defaultCopy = JSON.parse(JSON.stringify(defaultUserPreference)) as UserPreference;
-    writePreference(defaultCopy);
+    this.writePreference(defaultCopy);
     return defaultCopy;
   }
 }
 
 /**
- * 全局偏好管理器实例
+ * 全局偏好管理器实例（向后兼容，需要先用 initPreferenceManager 初始化）
+ * @deprecated 使用 createPreferenceManager 创建多实例
  */
-export const preferenceManager = new PreferenceManager();
+export const preferenceManager = new PreferenceManager(
+  () => {
+    if (!configHolder) {
+      throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
+    }
+    const pm = createPreferenceManager(configHolder.config);
+    return pm.getPreference();
+  },
+  (preference: UserPreference) => {
+    if (!configHolder) {
+      throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
+    }
+    const pm = createPreferenceManager(configHolder.config);
+    pm.updatePreference(preference as Partial<UserPreference>);
+  }
+);
 
 /**
  * 获取当前用户偏好设置的便捷函数

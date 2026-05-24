@@ -55,7 +55,7 @@ export interface ChessConfig {
     prefix: string;
     sessionSecret: string;
     sessionMaxAgeMs: number;
-    platform : 'web' | 'win';
+    platform : 'web' | 'win' | 'android';
   };
   game: {
     turnTimeoutMs: number;

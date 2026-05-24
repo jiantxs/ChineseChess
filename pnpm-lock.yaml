@@ -128,6 +128,9 @@ importers:
       '@chess/config':
         specifier: workspace:*
         version: link:../config
+      '@chess/preference':
+        specifier: workspace:*
+        version: link:../preference
     devDependencies:
       '@types/node':
         specifier: ^20.10.5

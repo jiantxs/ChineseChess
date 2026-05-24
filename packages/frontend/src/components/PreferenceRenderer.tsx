@@ -131,7 +131,11 @@ function PreferenceControl({ item, value, onChange }: { item: SchemaItem; value:
               <option value={String(value)}>{String(value)}</option>
             </select>
           )}
-          {valueType === 'string' && !item.options && <span className="readonly-value">{String(value)}</span>}
+          {valueType === 'string' && !item.options && (
+            <span className="readonly-value readonly-text" title={String(value)}>
+              {String(value)}
+            </span>
+          )}
         </div>
       </div>
     );

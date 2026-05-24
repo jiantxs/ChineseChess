@@ -1,12 +1,28 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { assetPath } from '../utils/api';
+import { apiPath, assetPath } from '../utils/api';
 import { clientLogger } from '../utils/clientLogger';
 import { BgmControls } from '../types/GamePageProps';
 import './MenuScreen.css';
 
 
 export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
+  const [platform, setPlatform] = useState<string>('');
+
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const res = await fetch(apiPath('/api/config'));
+        const data = await res.json();
+        setPlatform(data.server?.platform ?? '');
+      } catch (err) {
+        clientLogger.error('Menu: failed to load config', {
+          error: err instanceof Error ? err.message : String(err)
+        });
+      }
+    }
+    loadConfig();
+  }, []);
 
 useEffect(() => {
     async function loadPreference() {
@@ -145,10 +161,12 @@ useEffect(() => {
             <span className="btn-text">设置</span>
           </button>
 
-          <button className="menu-btn exit-btn" onClick={handleExit}>
-            <span className="btn-line" />
-            <span className="btn-text">退出游戏</span>
-          </button>
+          {platform === 'win' && (
+            <button className="menu-btn exit-btn" onClick={handleExit}>
+              <span className="btn-line" />
+              <span className="btn-text">退出游戏</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
