@@ -210,8 +210,16 @@ export function PreferenceRenderer({ preference, onChange }: PreferenceRendererP
   const handleItemChange = (path: string, newValue: unknown) => {
     const current = getByPath(preference, path);
     if (!isPreferenceOption(current)) return;
-    const updated = setByPath(preference, path, { ...current, value: newValue }) as Partial<UserPreference>;
-    onChange(updated);
+    // 只构造被修改的路径部分，避免携带未改动的 sibling 属性
+    const keys = path.split('.');
+    let partial: Record<string, unknown> = {};
+    let cursor: Record<string, unknown> = partial;
+    for (let i = 0; i < keys.length - 1; i++) {
+      cursor[keys[i]] = {};
+      cursor = cursor[keys[i]] as Record<string, unknown>;
+    }
+    cursor[keys[keys.length - 1]] = { ...current, value: newValue };
+    onChange(partial as Partial<UserPreference>);
   };
 
   return (
