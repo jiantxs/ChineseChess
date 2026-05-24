@@ -17,7 +17,7 @@
     "build:backend": "pnpm --filter @chess/backend build",
     "build:frontend": "pnpm --filter @chess/frontend build",
     "build:core": "pnpm --filter @chess/core build",
-    "build:electron": "pnpm --filter @chess/electron dist",
+    "build:electron": "pnpm build && pnpm --filter @chess/electron dist",
     "build:reactn": "pnpm --filter @chess/reactn build",
     "start": "pnpm --filter @chess/backend start",
     "typecheck": "pnpm -r typecheck",
