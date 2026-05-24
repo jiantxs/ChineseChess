@@ -1,3 +1,8 @@
+/*
+该ai模块改编自https://github.com/SinuxLee/jschess.git，并进行了重构和优化以适应当前项目的架构和需求。
+*/
+
+
 import { Position } from './position';
 import { Search } from './search';
 import { boardToSquares, sqToPosition, moveSrc, moveDst } from './adapter';
