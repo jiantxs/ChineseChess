@@ -2,14 +2,17 @@
  * @fileoverview 用户偏好设置模块
  *
  * 提供用户偏好设置的读写功能，偏好数据持久化到 preference.json.chess 文件中。
+ * 每个服务器应创建独立的 PreferenceManager 实例。
+ *
  * 默认配置：
  *   - 背景音乐（主界面音乐）：播放 = true, 可见 = true
  *   - 背景音乐音量：100, 可见 = true
  *
  * 使用方法：
- *   import { preferenceManager } from '@chess/preference';
- *   const prefs = preferenceManager.getPreference();
- *   preferenceManager.updatePreference({ audio: { bgm: { enabled: { value: false }, volume: { value: 50 } } } });
+ *   import { createPreferenceManager } from '@chess/preference';
+ *   const pm = createPreferenceManager(config);
+ *   const prefs = pm.getPreference();
+ *   pm.updatePreference({ audio: { bgm: { enabled: { value: false }, volume: { value: 50 } } } });
  *
  * @module @chess/preference
  */
@@ -69,23 +72,6 @@ export function createPreferenceManager(config: ChessConfig): PreferenceManager 
   }
 
   return new PreferenceManager(readPreference, writePreference);
-}
-
-/**
- * 配置单例 holder（向后兼容）
- */
-let configHolder: { config: ChessConfig } | null = null;
-
-/**
- * 初始化全局偏好管理器（向后兼容，只允许初始化一次）
- * @param config - ChessConfig 实例
- * @deprecated 使用 createPreferenceManager 创建多实例
- */
-export function initPreferenceManager(config: ChessConfig): void {
-  if (configHolder) {
-    return;
-  }
-  configHolder = { config };
 }
 
 /**
@@ -176,48 +162,3 @@ export class PreferenceManager {
   }
 }
 
-/**
- * 全局偏好管理器实例（向后兼容，需要先用 initPreferenceManager 初始化）
- * @deprecated 使用 createPreferenceManager 创建多实例
- */
-export const preferenceManager = new PreferenceManager(
-  () => {
-    if (!configHolder) {
-      throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
-    }
-    const pm = createPreferenceManager(configHolder.config);
-    return pm.getPreference();
-  },
-  (preference: UserPreference) => {
-    if (!configHolder) {
-      throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
-    }
-    const pm = createPreferenceManager(configHolder.config);
-    pm.updatePreference(preference as Partial<UserPreference>);
-  }
-);
-
-/**
- * 获取当前用户偏好设置的便捷函数
- * @returns 用户偏好设置对象
- */
-export function getPreference(): UserPreference {
-  return preferenceManager.getPreference();
-}
-
-/**
- * 更新用户偏好设置的便捷函数
- * @param updates - 要更新的偏好字段
- * @returns 更新后的完整偏好设置
- */
-export function updatePreference(updates: Partial<UserPreference>): UserPreference {
-  return preferenceManager.updatePreference(updates);
-}
-
-/**
- * 重置为默认偏好设置的便捷函数
- * @returns 默认偏好设置
- */
-export function resetPreference(): UserPreference {
-  return preferenceManager.resetToDefault();
-}

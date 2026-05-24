@@ -18,15 +18,16 @@ function difficultyToDepth(difficulty: number): number {
 }
 
 /**
- * GameManager - 中国象棋内存游戏状态管理的单例。
+ * GameManager - 中国象棋内存游戏状态管理器。
  *
- * 此模块提供 GameManager 单例来管理所有内存中的游戏状态。
+ * 每个服务器应创建独立的 GameManager 实例以避免状态冲突。
  * 它维护：
  * - `games`：Map<gameId, GameState> - 所有活跃和已结束的游戏
  * - `playerGames`：Map<playerId, gameId> - 玩家到游戏的映射
  *
  * 用法：
- *   import { gameManager } from '@chess/core';
+ *   import { GameManager } from '@chess/core';
+ *   const gameManager = new GameManager();
  *   const game = gameManager.createGame(layout);
  *
  * 重要提示：cleanupInactiveGames 方法必须由外部调用
@@ -36,31 +37,13 @@ function difficultyToDepth(difficulty: number): number {
  * @module GameManager
  */
 export class GameManager {
-  /**
-   * 用于管理所有游戏状态的单例 GameManager。
-   * 使用私有静态实例字段确保只存在一个实例。
-   * 构造函数是私有的以防止直接实例化——请改用 getInstance()。
-   */
-  private static instance: GameManager;
   private games: Map<string, GameState> = new Map();
   private playerGames: Map<string, string> = new Map();
 
   private aiEngine: AIEngine;
 
-  private constructor() {
+  constructor() {
     this.aiEngine = new AIEngine();
-  }
-
-  /**
-   * 返回单例 GameManager 实例。
-   * 如果实例不存在则创建一个新实例。
-   * @returns 单例 GameManager 实例
-   */
-  static getInstance(): GameManager {
-    if (!GameManager.instance) {
-      GameManager.instance = new GameManager();
-    }
-    return GameManager.instance;
   }
 
   /**
@@ -503,5 +486,3 @@ return getValidMovesLogic(game.board, piece);
     return Array.from(this.games.values());
   }
 }
-
-export const gameManager = GameManager.getInstance();

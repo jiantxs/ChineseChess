@@ -11,7 +11,7 @@ import express from 'express';
 import session from 'express-session';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
-import { gameManager } from '@chess/core';
+import { GameManager } from '@chess/core';
 import { createGameRoutes } from './game';
 import { createConfigRouter } from './config';
 import { createAdminRouter } from './admin';
@@ -27,8 +27,9 @@ import { requestLogMiddleware, logError } from '../services/logger';
  * @param config - ChessConfig 实例
  * @returns 配置好的 Express Router 实例
  */
-export function createAppRouter(prefix: string, customPublicPath: string | undefined, config: ChessConfig): Router {
+export function createAppRouter(prefix: string, customPublicPath: string | undefined, config: ChessConfig, gameManager?: GameManager): Router {
   const router = Router();
+  const gm = gameManager || new GameManager();
 
   // 中间件：解析 JSON 请求体
   router.use(express.json());
@@ -65,7 +66,7 @@ export function createAppRouter(prefix: string, customPublicPath: string | undef
 
   // 在路由器的 locals 中存储游戏管理器引用，以便路由访问
   router.use((req, res, next) => {
-    (req as any).app.locals.gameManager = gameManager;
+    (req as any).app.locals.gameManager = gm;
     next();
   });
 

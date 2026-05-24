@@ -1,4 +1,4 @@
-import { gameManager } from './gameManager';
+import { GameManager } from './gameManager';
 import { PieceLayout } from './pieceLayout';
 import { Side, PieceType } from './types';
 
@@ -40,25 +40,26 @@ const STANDARD_PIECES = [
 export function runAITest(): void {
   console.log('=== AI Engine Test ===');
 
+  const gm = new GameManager();
   const layout = new PieceLayout(STANDARD_PIECES, Side.RED, 'standard');
-  const game = gameManager.createGame(layout, false);
+  const game = gm.createGame(layout, false);
   console.log('Game created:', game.id);
 
-  const humanPlayer = gameManager.joinGame(game.id, 'human-player', Side.RED);
+  const humanPlayer = gm.joinGame(game.id, 'human-player', Side.RED);
   if (!humanPlayer) {
     console.error('Failed to join as human player');
     return;
   }
   console.log('Human player joined as RED');
 
-  const aiPlayer = gameManager.joinGame(game.id, 'ai-player', Side.BLACK);
+  const aiPlayer = gm.joinGame(game.id, 'ai-player', Side.BLACK);
   if (!aiPlayer) {
     console.error('Failed to join as AI player');
     return;
   }
   console.log('AI player joined as BLACK');
 
-  const humanMove = gameManager.makeMove(
+  const humanMove = gm.makeMove(
     game.id,
     'human-player',
     { row: 7, col: 1 },
@@ -72,7 +73,7 @@ export function runAITest(): void {
   console.log('Human move: 炮从 (7,1) 到 (7,4)');
   console.log('Current turn after human move:', humanMove.game?.currentTurn);
 
-  const aiMove = gameManager.makeAIMove(game.id);
+  const aiMove = gm.makeAIMove(game.id);
   if (!aiMove.success) {
     console.error('AI move failed:', aiMove.error);
     return;
@@ -80,7 +81,7 @@ export function runAITest(): void {
   console.log('AI move successful!');
   console.log('Current turn after AI move:', aiMove.game?.currentTurn);
 
-  const currentGame = gameManager.getGame(game.id);
+  const currentGame = gm.getGame(game.id);
   if (!currentGame) {
     console.error('Game not found after AI move');
     return;

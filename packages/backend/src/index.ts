@@ -14,7 +14,7 @@ import { createServer, Server as HttpServer } from 'http';
 import type { ChessConfig } from '@chess/config';
 import { initLogger } from '@chess/logger';
 import { GameServer } from './services/gameServer';
-import { gameManager } from '@chess/core';
+import { GameManager } from '@chess/core';
 import { createAppRouter } from './routes';
 import { requestLogger, logSystemEvent } from './services/logger';
 
@@ -72,7 +72,8 @@ export function startServer(config: ChessConfig, options?: StartServerOptions): 
   const app = express();
   const server = createServer(app);
 
-  const appRouter = createAppRouter(PREFIX, options?.publicPath, config);
+  const gameManager = new GameManager();
+  const appRouter = createAppRouter(PREFIX, options?.publicPath, config, gameManager);
 
   if (PREFIX) {
     app.use(PREFIX, appRouter);
