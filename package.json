@@ -33,6 +33,7 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "react-native": "0.81.5",
     "react-router-dom": "^7.15.1"
   }
 }
