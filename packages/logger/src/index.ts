@@ -16,17 +16,57 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
-import { createChessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 
-const chessConfig = createChessConfig();
+/**
+ * 配置单例 holder
+ */
+let configHolder: { config: ChessConfig } | null = null;
 
-const logDir = path.join(chessConfig.log.monorepoRoot, 'logs');
-
-// 确保游戏日志目录存在
-const gameLogDir = path.join(logDir, 'games');
-if (!fs.existsSync(gameLogDir)) {
-  fs.mkdirSync(gameLogDir, { recursive: true });
+/**
+ * 初始化日志模块
+ * @param config - ChessConfig 实例
+ * @remarks 调用此函数后，才能使用其他日志功能
+ */
+export function initLogger(config: ChessConfig): void {
+  configHolder = { config };
+  // 确保游戏日志目录存在
+  const gameLogDir = path.join(config.log.monorepoRoot, 'logs', 'games');
+  if (!fs.existsSync(gameLogDir)) {
+    fs.mkdirSync(gameLogDir, { recursive: true });
+  }
+  // 初始化日志记录器
+  requestLogger = createRequestLogger();
+  errorLogger = createErrorLogger();
+  globalEventLogger = createEventLogger();
 }
+
+/**
+ * 获取配置（内部使用）
+ */
+function getConfig(): ChessConfig {
+  if (!configHolder) {
+    throw new Error('Logger not initialized. Call initLogger first.');
+  }
+  return configHolder.config;
+}
+
+/**
+ * 日志目录
+ */
+function getLogDir(): string {
+  return path.join(getConfig().log.monorepoRoot, 'logs');
+}
+
+// 导出的日志记录器 - 在模块加载时初始化
+// 注意：这些在 initLogger() 被调用之前无法使用
+
+/** HTTP 请求日志记录器 - 记录到 logs/requests/request-%DATE%.log */
+export let requestLogger: winston.Logger;
+/** 仅记录错误的日志记录器 - 记录到 logs/errors/error-%DATE%.log */
+export let errorLogger: winston.Logger;
+/** 通用事件日志记录器 - 记录到 logs/events/events-%DATE%.log */
+export let globalEventLogger: winston.Logger;
 
 /**
  * 分类日志的事件类型
@@ -42,8 +82,9 @@ export type EventType = 'GAME' | 'HTTP' | 'WEBSOCKET' | 'SYSTEM' | 'ERROR';
  * @returns 配置为 HTTP 请求日志记录的 Winston 日志实例
  */
 function createRequestLogger(): winston.Logger {
+  const config = getConfig();
   return winston.createLogger({
-    level: chessConfig.log.level,
+    level: config.log.level,
     defaultMeta: { service: 'chess-server' },
     format: winston.format.combine(
       winston.format.timestamp(),
@@ -51,9 +92,9 @@ function createRequestLogger(): winston.Logger {
     ),
     transports: [
       new DailyRotateFile({
-        filename: path.join(logDir, 'requests', 'request-%DATE%.log'),
+        filename: path.join(getLogDir(), 'requests', 'request-%DATE%.log'),
         datePattern: 'YYYY-MM-DD',
-        maxFiles: chessConfig.log.maxFiles,
+        maxFiles: config.log.maxFiles,
         format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       }),
       ...(process.env.NODE_ENV !== 'production'
@@ -83,6 +124,7 @@ function createRequestLogger(): winston.Logger {
  * @returns 配置为错误日志记录的 Winston 日志实例
  */
 function createErrorLogger(): winston.Logger {
+  const config = getConfig();
   return winston.createLogger({
     level: 'error',
     defaultMeta: { service: 'chess-server' },
@@ -92,9 +134,9 @@ function createErrorLogger(): winston.Logger {
     ),
     transports: [
       new DailyRotateFile({
-        filename: path.join(logDir, 'errors', 'error-%DATE%.log'),
+        filename: path.join(getLogDir(), 'errors', 'error-%DATE%.log'),
         datePattern: 'YYYY-MM-DD',
-        maxFiles: chessConfig.log.maxFiles,
+        maxFiles: config.log.maxFiles,
         format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       }),
       ...(process.env.NODE_ENV !== 'production'
@@ -124,8 +166,9 @@ function createErrorLogger(): winston.Logger {
  * @returns 配置为事件日志记录的 Winston 日志实例
  */
 function createEventLogger(): winston.Logger {
+  const config = getConfig();
   return winston.createLogger({
-    level: chessConfig.log.level,
+    level: config.log.level,
     defaultMeta: { service: 'chess-events' },
     format: winston.format.combine(
       winston.format.timestamp(),
@@ -133,9 +176,9 @@ function createEventLogger(): winston.Logger {
     ),
     transports: [
       new DailyRotateFile({
-        filename: path.join(logDir, 'events', 'events-%DATE%.log'),
+        filename: path.join(getLogDir(), 'events', 'events-%DATE%.log'),
         datePattern: 'YYYY-MM-DD',
-        maxFiles: chessConfig.log.maxFiles,
+        maxFiles: config.log.maxFiles,
         format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       }),
       ...(process.env.NODE_ENV !== 'production'
@@ -143,22 +186,19 @@ function createEventLogger(): winston.Logger {
             level: 'debug',
             format: winston.format.combine(
               winston.format.timestamp(),
-              winston.format.json()
+              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                if (Object.keys(metadata).length > 0) {
+                  msg += ` ${JSON.stringify(metadata)}`;
+                }
+                return msg;
+              }),
             ),
           })]
         : []),
     ],
   });
 }
-
-// 导出的日志记录器 - 在模块加载时初始化
-
-/** HTTP 请求日志记录器 - 记录到 logs/requests/request-%DATE%.log */
-export const requestLogger = createRequestLogger();
-/** 仅记录错误的日志记录器 - 记录到 logs/errors/error-%DATE%.log */
-export const errorLogger = createErrorLogger();
-/** 通用事件日志记录器 - 记录到 logs/events/events-%DATE%.log */
-export const globalEventLogger = createEventLogger();
 
 /**
  * 基于游戏 ID 的日志记录器工厂
@@ -169,10 +209,11 @@ export const globalEventLogger = createEventLogger();
  * @returns 指定游戏的 Winston 日志实例
  */
 function createGameLogger(gameId: string): winston.Logger {
-  const gameLogSubdir = path.join(gameLogDir, gameId);
+  const config = getConfig();
+  const gameLogSubdir = path.join(getLogDir(), 'games', gameId);
 
   return winston.createLogger({
-    level: chessConfig.log.level,
+    level: config.log.level,
     defaultMeta: { service: 'chess-game', gameId },
     format: winston.format.combine(
       winston.format.timestamp(),
@@ -182,7 +223,7 @@ function createGameLogger(gameId: string): winston.Logger {
       new DailyRotateFile({
         filename: path.join(gameLogSubdir, '%DATE%.log'),
         datePattern: 'YYYY-MM-DD',
-        maxFiles: chessConfig.log.maxFiles,
+        maxFiles: config.log.maxFiles,
         format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
       }),
       ...(process.env.NODE_ENV !== 'production'

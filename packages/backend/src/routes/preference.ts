@@ -12,13 +12,16 @@
  */
 
 import { Router } from 'express';
-import { preferenceManager, type UserPreference } from '@chess/preference';
+import type { ChessConfig } from '@chess/config';
+import { preferenceManager, initPreferenceManager, type UserPreference } from '@chess/preference';
 
 /**
  * 创建用户偏好设置路由器
+ * @param config - ChessConfig 实例
  * @returns 配置好的 Express Router 实例
  */
-export function createPreferenceRouter(): Router {
+export function createPreferenceRouter(config: ChessConfig): Router {
+  initPreferenceManager(config);
   const router = Router();
 
   /**

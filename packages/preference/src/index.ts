@@ -16,9 +16,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { createChessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 
-const chessConfig = createChessConfig();
 /**
  * 用户偏好设置接口
  * @interface UserPreference
@@ -39,10 +38,26 @@ export const defaultPreference: UserPreference = {
 };
 
 /**
+ * 配置单例 holder
+ */
+let configHolder: { config: ChessConfig } | null = null;
+
+/**
+ * 初始化偏好管理器
+ * @param config - ChessConfig 实例
+ */
+export function initPreferenceManager(config: ChessConfig): void {
+  configHolder = { config };
+}
+
+/**
  * 偏好文件路径
  */
 function getPreferenceFilePath(): string {
-  return path.join(chessConfig.log.monorepoRoot, 'preference.json.chess');
+  if (!configHolder) {
+    throw new Error('Preference manager not initialized. Call initPreferenceManager first.');
+  }
+  return path.join(configHolder.config.log.monorepoRoot, 'preference.json.chess');
 }
 
 /**

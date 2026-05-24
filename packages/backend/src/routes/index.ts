@@ -61,7 +61,7 @@ export function createAppRouter(prefix: string, customPublicPath: string | undef
   router.use('/api/admin', createAdminRouter(config));
 
   // 在 /api 挂载偏好设置路由 - 用户偏好管理
-  router.use('/api', createPreferenceRouter());
+  router.use('/api', createPreferenceRouter(config));
 
   // 在路由器的 locals 中存储游戏管理器引用，以便路由访问
   router.use((req, res, next) => {

@@ -11,8 +11,8 @@
 
 import express from 'express';
 import { createServer, Server as HttpServer } from 'http';
-import { createChessConfig } from '@chess/config';
 import type { ChessConfig } from '@chess/config';
+import { initLogger } from '@chess/logger';
 import { GameServer } from './services/gameServer';
 import { gameManager } from '@chess/core';
 import { createAppRouter } from './routes';
@@ -62,6 +62,9 @@ export interface StartServerResult {
  * - 启动后记录服务器 URL 到系统日志
  */
 export function startServer(config: ChessConfig, options?: StartServerOptions): StartServerResult {
+  // 初始化日志模块
+  initLogger(config);
+
   const PORT = config.server.port;
   const HOST = config.server.host;
   const PREFIX = config.server.prefix;
@@ -78,7 +81,7 @@ export function startServer(config: ChessConfig, options?: StartServerOptions): 
     app.use(appRouter);
   }
 
-  const gameServer = new GameServer(server, gameManager, PREFIX);
+  const gameServer = new GameServer(server, gameManager, PREFIX, config);
 
   app.locals.gameServer = gameServer;
 

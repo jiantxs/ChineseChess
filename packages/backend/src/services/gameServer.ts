@@ -25,7 +25,7 @@ import {
   PieceLayout,
   gameLogger,
 } from '@chess/core';
-import { chessConfig } from '@chess/config';
+import type { ChessConfig } from '@chess/config';
 import { logWebSocketEvent, logError, logGameLifecycle, getGameLogger, clearGameLogger } from './logger';
 import { getLayout, standardLayoutData } from '@chess/game-records';
 
@@ -77,6 +77,8 @@ export class GameServer {
   private players: Map<string, ConnectedPlayer> = new Map();
   /** GameManager 单例的引用，用于游戏操作 */
   private gameManager: GameManager;
+  /** ChessConfig 实例 */
+  private config: ChessConfig;
   /** ping/pong 健康检查的间隔句柄（30 秒） */
   private pingInterval: NodeJS.Timeout | null = null;
   /** 不活跃游戏清理的间隔句柄（10 分钟） */
@@ -87,14 +89,17 @@ export class GameServer {
    * @constructor
    * @param server - 附加 WebSocket 服务器的 HTTP 服务器
    * @param gameManager - 用于游戏操作的 GameManager 实例
+   * @param prefix - URL 前缀
+   * @param config - ChessConfig 实例
    *
    * @remarks
    * - 在 '/ws' 路径上创建 WebSocketServer
    * - 自动启动 ping 间隔和清理间隔
    * - 为新的 WebSocket 客户端设置连接处理器
    */
-  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '') {
+  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '', config: ChessConfig) {
     this.gameManager = gameManager;
+    this.config = config;
     const wsPath = prefix ? `${prefix}/ws` : '/ws';
     this.wss = new WebSocketServer({ server, path: wsPath });
 
@@ -528,7 +533,7 @@ export class GameServer {
    * - 完整的 AI 走动逻辑由 GameManager.makeAIMove() 处理
    */
   private handleAIMove(player: ConnectedPlayer, message: GameMessage): void {
-    if (!chessConfig.ai.enabled) {
+    if (!this.config.ai.enabled) {
       logWebSocketEvent('ai_move_disabled', player.playerId, player.gameId);
       this.sendError(player, 'AI is not enabled');
       return;
@@ -607,7 +612,7 @@ export class GameServer {
    * @remarks
    * - 如果玩家在超时内重新连接，他们保留游戏槽位
    * - 如果超时到期，玩家被判负，游戏可能结束
-   * - 使用 chessConfig.game.reconnectTimeoutMs 作为超时持续时间
+   * - 使用 this.config.game.reconnectTimeoutMs 作为超时持续时间
    */
   private handleDisconnect(player: ConnectedPlayer): void {
     if (player.reconnectTimeout) {
@@ -647,7 +652,7 @@ export class GameServer {
           }
         }
         player.reconnectTimeout = undefined;
-      }, chessConfig.game.reconnectTimeoutMs);
+      }, this.config.game.reconnectTimeoutMs);
     }
 
     this.players.delete(player.playerId);
