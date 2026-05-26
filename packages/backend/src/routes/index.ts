@@ -11,12 +11,12 @@ import express from 'express';
 import session from 'express-session';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
+import type { LoggerService } from '../services/logger';
 import { GameManager } from '@chess/core';
 import { createGameRoutes } from './game';
 import { createConfigRouter } from './config';
 import { createAdminRouter } from './admin';
 import { createPreferenceRouter } from './preference';
-import { requestLogMiddleware, logError } from '../services/logger';
 
 /**
  * 创建并配置带有所有中间件和路由的主应用路由器。
@@ -25,17 +25,28 @@ import { requestLogMiddleware, logError } from '../services/logger';
  * @param prefix - URL 前缀
  * @param customPublicPath - 可选的自定义静态文件路径
  * @param config - ChessConfig 实例
+ * @param gameManager - 可选的游戏管理器实例
+ * @param loggerService - 日志服务实例（必填，用于中间件）
  * @returns 配置好的 Express Router 实例
  */
-export function createAppRouter(prefix: string, customPublicPath: string | undefined, config: ChessConfig, gameManager?: GameManager): Router {
+export function createAppRouter(
+  prefix: string,
+  customPublicPath: string | undefined,
+  config: ChessConfig,
+  gameManager?: GameManager,
+  loggerService?: LoggerService
+): Router {
   const router = Router();
   const gm = gameManager || new GameManager();
+  const logger = loggerService;
 
   // 中间件：解析 JSON 请求体
   router.use(express.json());
 
   // 中间件：使用 Winston 记录所有 HTTP 请求
-  router.use(requestLogMiddleware());
+  if (logger) {
+    router.use(logger.requestLogMiddleware());
+  }
 
   // 中间件：会话管理，用于玩家身份识别
   router.use(
@@ -53,7 +64,7 @@ export function createAppRouter(prefix: string, customPublicPath: string | undef
   );
 
   // 在 /api/game 挂载游戏路由 - 处理玩家 ID 生成
-  router.use('/api/game', createGameRoutes());
+  router.use('/api/game', createGameRoutes(logger));
 
   // 在 /api 挂载配置路由 - 返回服务器配置和布局
   router.use('/api', createConfigRouter(config));
@@ -85,7 +96,9 @@ export function createAppRouter(prefix: string, customPublicPath: string | undef
 
   // 全局错误处理中间件
   router.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    logError('Unhandled error in Express router', err, { path: req.path });
+    if (logger) {
+      logger.logError('Unhandled error in Express router', err, { path: req.path });
+    }
     res.status(500).json({ error: 'Internal server error' });
   });
 

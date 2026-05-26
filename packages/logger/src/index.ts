@@ -7,8 +7,8 @@
  *   - logs/events/     (通用事件日志)
  *   - logs/games/      (按 gameId 分组的游戏特定事件日志)
  *
- * 使用方法：
- *   import { requestLogger, errorLogger, globalEventLogger, logGameEvent, gameLogger } from '@chess/logger';
+ * 多实例模式：每次 createLogger() 调用创建独立的日志实例。
+ * 每个实例拥有独立的配置、日志文件目录和日志记录器。
  *
  * @module @chess/logger
  */
@@ -19,523 +19,428 @@ import fs from 'fs';
 import type { ChessConfig } from '@chess/config';
 
 /**
- * 配置单例 holder
- */
-let configHolder: { config: ChessConfig } | null = null;
-
-/**
- * 初始化日志模块
- * @param config - ChessConfig 实例
- * @remarks 调用此函数后，才能使用其他日志功能
- */
-export function initLogger(config: ChessConfig): void {
-  configHolder = { config };
-  // 确保游戏日志目录存在
-  const gameLogDir = path.join(config.log.monorepoRoot, 'logs', 'games');
-  if (!fs.existsSync(gameLogDir)) {
-    fs.mkdirSync(gameLogDir, { recursive: true });
-  }
-  // 初始化日志记录器
-  requestLogger = createRequestLogger();
-  errorLogger = createErrorLogger();
-  globalEventLogger = createEventLogger();
-}
-
-/**
- * 获取配置（内部使用）
- */
-function getConfig(): ChessConfig {
-  if (!configHolder) {
-    throw new Error('Logger not initialized. Call initLogger first.');
-  }
-  return configHolder.config;
-}
-
-/**
- * 日志目录
- */
-function getLogDir(): string {
-  return path.join(getConfig().log.monorepoRoot, 'logs');
-}
-
-// 导出的日志记录器 - 在模块加载时初始化
-// 注意：这些在 initLogger() 被调用之前无法使用
-
-/** HTTP 请求日志记录器 - 记录到 logs/requests/request-%DATE%.log */
-export let requestLogger: winston.Logger;
-/** 仅记录错误的日志记录器 - 记录到 logs/errors/error-%DATE%.log */
-export let errorLogger: winston.Logger;
-/** 通用事件日志记录器 - 记录到 logs/events/events-%DATE%.log */
-export let globalEventLogger: winston.Logger;
-
-/**
  * 分类日志的事件类型
  * @enum {string}
  */
 export type EventType = 'GAME' | 'HTTP' | 'WEBSOCKET' | 'SYSTEM' | 'ERROR';
 
 /**
- * 创建 HTTP 请求日志记录器，使用每日轮转文件传输。
- * 将 HTTP 请求记录到 logs/requests/request-%DATE%.log
- * 在非生产环境中，也会在 debug 级别输出到控制台。
- *
- * @returns 配置为 HTTP 请求日志记录的 Winston 日志实例
+ * 日志实例接口 - 提供创建独立日志实例的工厂方法
  */
-function createRequestLogger(): winston.Logger {
-  const config = getConfig();
-  return winston.createLogger({
-    level: config.log.level,
-    defaultMeta: { service: 'chess-server' },
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    transports: [
-      new DailyRotateFile({
-        filename: path.join(getLogDir(), 'requests', 'request-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        maxFiles: config.log.maxFiles,
-        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-      }),
-      ...(process.env.NODE_ENV !== 'production'
-        ? [new winston.transports.Console({
-            level: 'debug',
-            format: winston.format.combine(
-              winston.format.timestamp(),
-              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-                if (Object.keys(metadata).length > 0) {
-                  msg += ` ${JSON.stringify(metadata)}`;
-                }
-                return msg;
-              }),
-            ),
-          })]
-        : []),
-    ],
-  });
+export interface LoggerInstance {
+  requestLogger: winston.Logger;
+  errorLogger: winston.Logger;
+  globalEventLogger: winston.Logger;
+  getGameLogger: (gameId: string) => winston.Logger;
+  clearGameLogger: (gameId?: string) => void;
+  logGameLifecycle: (gameId: string, action: string, metadata?: Record<string, unknown>) => void;
+  logWebSocketEvent: (event: string, playerId: string, gameId?: string, details?: Record<string, unknown>) => void;
+  logHttpRequest: (method: string, url: string, path: string, statusCode: number, duration: number, ip?: string, userAgent?: string, playerId?: string | null) => void;
+  logError: (message: string, error?: Error, context?: Record<string, unknown>) => void;
+  logEvent: (eventType: EventType, source: string, metadata?: Record<string, unknown>, playerId?: string, gameId?: string) => void;
+  logGameEvent: (gameId: string, action: string, playerId: string, metadata?: Record<string, unknown>) => void;
+  logSystemEvent: (message: string, metadata?: Record<string, unknown>) => void;
+  logClientLogEvent: (level: string, message: string, timestamp: number, metadata?: Record<string, unknown>, playerId?: string, gameId?: string) => void;
 }
 
 /**
- * 创建仅记录错误的日志记录器，使用每日轮转文件传输。
- * 将错误记录到 logs/errors/error-%DATE%.log
- * 在非生产环境中，也会在 error 级别输出到控制台。
+ * 日志器工厂类 - 创建独立的日志实例
  *
- * @returns 配置为错误日志记录的 Winston 日志实例
+ * 每个创建的实例拥有独立的：
+ * - 配置副本
+ * - 日志文件目录
+ * - 日志记录器实例
+ * - 游戏日志缓存
+ *
+ * @example
+ * // 创建主服务器日志实例
+ * const mainLogger = new LoggerFactory().createLogger(mainConfig);
+ *
+ * // 创建移动服务器日志实例
+ * const mobileLogger = new LoggerFactory().createLogger(mobileConfig);
+ *
+ * // 两个实例独立运行，互不干扰
+ * mainLogger.logSystemEvent('Main server started');
+ * mobileLogger.logSystemEvent('Mobile server started');
  */
-function createErrorLogger(): winston.Logger {
-  const config = getConfig();
-  return winston.createLogger({
-    level: 'error',
-    defaultMeta: { service: 'chess-server' },
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    transports: [
-      new DailyRotateFile({
-        filename: path.join(getLogDir(), 'errors', 'error-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        maxFiles: config.log.maxFiles,
-        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-      }),
-      ...(process.env.NODE_ENV !== 'production'
-        ? [new winston.transports.Console({
-            level: 'error',
-            format: winston.format.combine(
-              winston.format.timestamp(),
-              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-                if (Object.keys(metadata).length > 0) {
-                  msg += ` ${JSON.stringify(metadata)}`;
-                }
-                return msg;
-              }),
-            ),
-          })]
-        : []),
-    ],
-  });
-}
+export class LoggerFactory {
+  /**
+   * 创建日志实例
+   * @param config - ChessConfig 实例
+   * @returns 日志实例接口
+   */
+  public createLogger(config: ChessConfig): LoggerInstance {
+    const gameLogDir = path.join(config.log.monorepoRoot, 'logs', 'games');
+    if (!fs.existsSync(gameLogDir)) {
+      fs.mkdirSync(gameLogDir, { recursive: true });
+    }
 
-/**
- * 创建通用事件日志记录器，使用每日轮转文件传输。
- * 将事件记录到 logs/events/events-%DATE%.log
- * 在非生产环境中，也会在 debug 级别输出到控制台。
- *
- * @returns 配置为事件日志记录的 Winston 日志实例
- */
-function createEventLogger(): winston.Logger {
-  const config = getConfig();
-  return winston.createLogger({
-    level: config.log.level,
-    defaultMeta: { service: 'chess-events' },
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    transports: [
-      new DailyRotateFile({
-        filename: path.join(getLogDir(), 'events', 'events-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        maxFiles: config.log.maxFiles,
-        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-      }),
-      ...(process.env.NODE_ENV !== 'production'
-        ? [new winston.transports.Console({
-            level: 'debug',
-            format: winston.format.combine(
-              winston.format.timestamp(),
-              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-                if (Object.keys(metadata).length > 0) {
-                  msg += ` ${JSON.stringify(metadata)}`;
-                }
-                return msg;
-              }),
-            ),
-          })]
-        : []),
-    ],
-  });
-}
+    const gameLoggers: Map<string, winston.Logger> = new Map();
 
-/**
- * 基于游戏 ID 的日志记录器工厂
- * 创建的 Winston 日志记录器会将游戏特定日志写入 logs/games/<gameId>/%DATE%.log
- * 每个游戏在其 gameId 子目录中获得自己的日志文件。
- *
- * @param gameId - 唯一的游戏标识符
- * @returns 指定游戏的 Winston 日志实例
- */
-function createGameLogger(gameId: string): winston.Logger {
-  const config = getConfig();
-  const gameLogSubdir = path.join(getLogDir(), 'games', gameId);
+    const getLogDir = () => path.join(config.log.monorepoRoot, 'logs');
 
-  return winston.createLogger({
-    level: config.log.level,
-    defaultMeta: { service: 'chess-game', gameId },
-    format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
-    ),
-    transports: [
-      new DailyRotateFile({
-        filename: path.join(gameLogSubdir, '%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        maxFiles: config.log.maxFiles,
-        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-      }),
-      ...(process.env.NODE_ENV !== 'production'
-        ? [new winston.transports.Console({
-            level: 'debug',
-            format: winston.format.combine(
-              winston.format.timestamp(),
-              winston.format.printf(({ level, message, timestamp, ...metadata }) => {
-                let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-                if (Object.keys(metadata).length > 0) {
-                  msg += ` ${JSON.stringify(metadata)}`;
-                }
-                return msg;
-              }),
-            ),
-          })]
-        : []),
-    ],
-  });
-}
+    const createRequestLogger = (): winston.Logger => {
+      return winston.createLogger({
+        level: config.log.level,
+        defaultMeta: { service: 'chess-server' },
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+        transports: [
+          new DailyRotateFile({
+            filename: path.join(getLogDir(), 'requests', 'request-%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: config.log.maxFiles,
+            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+          }),
+          ...(process.env.NODE_ENV !== 'production'
+            ? [new winston.transports.Console({
+                level: 'debug',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                    let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                    if (Object.keys(metadata).length > 0) {
+                      msg += ` ${JSON.stringify(metadata)}`;
+                    }
+                    return msg;
+                  }),
+                ),
+              })]
+            : []),
+        ],
+      });
+    };
 
-// 游戏日志记录器的内存存储 - 防止为同一游戏重复创建日志记录器
-const gameLoggers: Map<string, winston.Logger> = new Map();
+    const createErrorLogger = (): winston.Logger => {
+      return winston.createLogger({
+        level: 'error',
+        defaultMeta: { service: 'chess-server' },
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+        transports: [
+          new DailyRotateFile({
+            filename: path.join(getLogDir(), 'errors', 'error-%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: config.log.maxFiles,
+            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+          }),
+          ...(process.env.NODE_ENV !== 'production'
+            ? [new winston.transports.Console({
+                level: 'error',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                    let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                    if (Object.keys(metadata).length > 0) {
+                      msg += ` ${JSON.stringify(metadata)}`;
+                    }
+                    return msg;
+                  }),
+                ),
+              })]
+            : []),
+        ],
+      });
+    };
 
-/**
- * 获取或创建给定 gameId 的游戏特定日志记录器。
- * 日志记录器被缓存，因此使用相同 gameId 的重复调用返回相同的日志实例。
- *
- * @param gameId - 唯一的游戏标识符
- * @returns 为指定游戏配置的 Winston 日志实例
- */
-export function getGameLogger(gameId: string): winston.Logger {
-  let logger = gameLoggers.get(gameId);
-  if (!logger) {
-    logger = createGameLogger(gameId);
-    gameLoggers.set(gameId, logger);
-  }
-  return logger;
-}
+    const createEventLogger = (): winston.Logger => {
+      return winston.createLogger({
+        level: config.log.level,
+        defaultMeta: { service: 'chess-events' },
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+        transports: [
+          new DailyRotateFile({
+            filename: path.join(getLogDir(), 'events', 'events-%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: config.log.maxFiles,
+            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+          }),
+          ...(process.env.NODE_ENV !== 'production'
+            ? [new winston.transports.Console({
+                level: 'debug',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                    let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                    if (Object.keys(metadata).length > 0) {
+                      msg += ` ${JSON.stringify(metadata)}`;
+                    }
+                    return msg;
+                  }),
+                ),
+              })]
+            : []),
+        ],
+      });
+    };
 
-/**
- * 记录游戏生命周期事件，包含详细元数据。
- * 同时写入：
- *   - 游戏特定的日志文件（logs/games/<gameId>/<date>.log）
- *   - 全局事件日志（logs/events/events-<date>.log）
- *
- * 当游戏状态改变（创建、移动、结束、中止）时从 @chess/core 调用。
- *
- * @param gameId - 游戏标识符
- * @param action - 要记录的动作（'created' | 'move' | 'finished' | 'aborted'）
- * @param metadata - 额外的事件特定元数据
- */
-export function logGameLifecycle(
-  gameId: string,
-  action: string,
-  metadata: Record<string, unknown> = {}
-): void {
-  const gameLogger = getGameLogger(gameId);
+    const createGameLogger = (gameId: string): winston.Logger => {
+      const gameLogSubdir = path.join(getLogDir(), 'games', gameId);
 
-  const eventData = {
-    action,
-    gameId,
-    timestamp: Date.now(),
-    ...metadata,
-  };
+      return winston.createLogger({
+        level: config.log.level,
+        defaultMeta: { service: 'chess-game', gameId },
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json()
+        ),
+        transports: [
+          new DailyRotateFile({
+            filename: path.join(gameLogSubdir, '%DATE%.log'),
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: config.log.maxFiles,
+            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+          }),
+          ...(process.env.NODE_ENV !== 'production'
+            ? [new winston.transports.Console({
+                level: 'debug',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.printf(({ level, message, timestamp, ...metadata }) => {
+                    let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
+                    if (Object.keys(metadata).length > 0) {
+                      msg += ` ${JSON.stringify(metadata)}`;
+                    }
+                    return msg;
+                  }),
+                ),
+              })]
+            : []),
+        ],
+      });
+    };
 
-  // 写入游戏的专用日志文件
-  switch (action) {
-    case 'created':
-      gameLogger.info('game_created', eventData);
-      break;
-    case 'move':
-      gameLogger.info('game_move', eventData);
-      break;
-    case 'finished':
-      gameLogger.info('game_finished', eventData);
-      break;
-    case 'aborted':
-      gameLogger.warn('game_aborted', eventData);
-      break;
-    default:
-      gameLogger.info('game_event', eventData);
-  }
+    const getGameLoggerInternal = (gameId: string): winston.Logger => {
+      let logger = gameLoggers.get(gameId);
+      if (!logger) {
+        logger = createGameLogger(gameId);
+        gameLoggers.set(gameId, logger);
+      }
+      return logger;
+    };
 
-  // 同时写入全局事件日志以进行跨游戏监控
-  globalEventLogger.info('game_event', {
-    eventType: 'GAME',
-    source: 'core',
-    gameId,
-    action,
-    ...metadata,
-  });
-}
+    const clearGameLoggerInternal = (gameId?: string): void => {
+      if (gameId) {
+        gameLoggers.delete(gameId);
+      } else {
+        gameLoggers.clear();
+      }
+    };
 
-/**
- * 清除内部游戏日志记录器缓存。
- * 在关闭或游戏完全清理时调用，以防止内存泄漏。
- *
- * @param gameId - 可选的要清除的特定游戏 ID。如果省略，清除所有游戏日志记录器。
- */
-export function clearGameLogger(gameId?: string): void {
-  if (gameId) {
-    gameLoggers.delete(gameId);
-  } else {
-    gameLoggers.clear();
-  }
-}
+    const logGameLifecycleInternal = (
+      gameId: string,
+      action: string,
+      metadata: Record<string, unknown> = {}
+    ): void => {
+      const gameLogger = getGameLoggerInternal(gameId);
 
-/**
- * 记录 WebSocket 事件，包含玩家和可选的游戏上下文。
- * 同时记录到 requestLogger 和 globalEventLogger。
- *
- * @param event - WebSocket 事件名称/类型
- * @param playerId - 与事件关联的玩家 ID
- * @param gameId - 可选的与事件关联的游戏 ID
- * @param details - 可选的额外元数据
- */
-export function logWebSocketEvent(
-  event: string,
-  playerId: string,
-  gameId?: string,
-  details?: Record<string, unknown>
-): void {
-  requestLogger.info('websocket_event', {
-    event,
-    playerId,
-    gameId: gameId || null,
-    ...details,
-  });
-  globalEventLogger.info('event', {
-    eventType: 'WEBSOCKET',
-    source: 'backend',
-    playerId,
-    gameId: gameId || null,
-    ...details,
-  });
-}
+      const eventData = {
+        action,
+        gameId,
+        timestamp: Date.now(),
+        ...metadata,
+      };
 
-/**
- * 记录 HTTP 请求，包含方法、URL、状态码和持续时间。
- * 同时记录到 requestLogger 和 globalEventLogger。
- *
- * @param method - HTTP 方法（GET、POST 等）
- * @param url - 请求的完整 URL
- * @param path - 请求路径
- * @param statusCode - HTTP 状态码
- * @param duration - 请求持续时间（毫秒）
- * @param ip - 可选的客户端 IP 地址
- * @param userAgent - 可选的用户代理字符串
- * @param playerId - 可选的与请求关联的玩家 ID
- */
-export function logHttpRequest(
-  method: string,
-  url: string,
-  path: string,
-  statusCode: number,
-  duration: number,
-  ip?: string,
-  userAgent?: string,
-  playerId?: string | null
-): void {
-  requestLogger.info('http_request', {
-    method,
-    url,
-    path,
-    statusCode,
-    duration,
-    ip,
-    userAgent,
-    playerId,
-  });
-  globalEventLogger.info('event', {
-    eventType: 'HTTP',
-    source: 'backend',
-    playerId: playerId || null,
-    method,
-    path,
-    statusCode,
-    duration,
-  });
-}
+      switch (action) {
+        case 'created':
+          gameLogger.info('game_created', eventData);
+          break;
+        case 'move':
+          gameLogger.info('game_move', eventData);
+          break;
+        case 'finished':
+          gameLogger.info('game_finished', eventData);
+          break;
+        case 'aborted':
+          gameLogger.warn('game_aborted', eventData);
+          break;
+        default:
+          gameLogger.info('game_event', eventData);
+      }
 
-/**
- * 记录错误，包含可选的堆栈跟踪和额外上下文。
- * 同时记录到 errorLogger 和 globalEventLogger。
- *
- * @param message - 要记录的错误消息
- * @param error - 可选的 Error 对象，用于提取消息和堆栈跟踪
- * @param context - 可选的额外上下文元数据
- */
-export function logError(
-  message: string,
-  error?: Error,
-  context?: Record<string, unknown>
-): void {
-  errorLogger.error(message, {
-    error: error?.message || error?.toString(),
-    stack: error?.stack,
-    ...context,
-  });
-  globalEventLogger.error('event', {
-    eventType: 'ERROR',
-    source: 'backend',
-    message,
-    error: error?.message || error?.toString(),
-    ...context,
-  });
-}
+      const globalEventLogger = createEventLogger();
+      globalEventLogger.info('game_event', {
+        eventType: 'GAME',
+        source: 'core',
+        gameId,
+        action,
+        ...metadata,
+      });
+    };
 
-/**
- * 通用事件日志记录器，包含 eventType、source 和元数据。
- * 使用 eventType 分类记录到 globalEventLogger。
- *
- * @param eventType - 事件类型（GAME、HTTP、WEBSOCKET、SYSTEM、ERROR）
- * @param source - 事件来源（例如 'backend'）
- * @param metadata - 要记录的额外元数据
- * @param playerId - 可选的玩家 ID
- * @param gameId - 可选的游戏 ID
- */
-export function logEvent(
-  eventType: EventType,
-  source: string,
-  metadata: Record<string, unknown> = {},
-  playerId?: string,
-  gameId?: string
-): void {
-  globalEventLogger.info('event', {
-    timestamp: Date.now(),
-    eventType,
-    source,
-    playerId: playerId || null,
-    gameId: gameId || null,
-    ...metadata,
-  });
-}
+    const logWebSocketEventInternal = (
+      event: string,
+      playerId: string,
+      gameId: string | undefined,
+      details: Record<string, unknown> | undefined
+    ): void => {
+      const requestLogger = createRequestLogger();
+      const globalEventLogger = createEventLogger();
 
-/**
- * 记录游戏相关事件的便捷函数。
- * 使用 eventType 'GAME' 和 source 'backend' 调用 logEvent。
- *
- * @param gameId - 游戏 ID
- * @param action - 要记录的动作（例如 'move'、'chat'）
- * @param playerId - 与动作关联的玩家 ID
- * @param metadata - 额外元数据
- */
-export function logGameEvent(
-  gameId: string,
-  action: string,
-  playerId: string,
-  metadata: Record<string, unknown> = {}
-): void {
-  logEvent('GAME', 'backend', { action, ...metadata }, playerId, gameId);
-}
+      requestLogger.info('websocket_event', {
+        event,
+        playerId,
+        gameId: gameId || null,
+        ...details,
+      });
+      globalEventLogger.info('event', {
+        eventType: 'WEBSOCKET',
+        source: 'backend',
+        playerId,
+        gameId: gameId || null,
+        ...details,
+      });
+    };
 
-/**
- * 记录系统相关事件的便捷函数。
- * 使用 eventType 'SYSTEM' 和 source 'backend' 调用 logEvent。
- *
- * @param message - 要记录的系统消息
- * @param metadata - 额外元数据
- */
-export function logSystemEvent(
-  message: string,
-  metadata: Record<string, unknown> = {}
-): void {
-  logEvent('SYSTEM', 'backend', { message, ...metadata });
-}
+    const logHttpRequestInternal = (
+      method: string,
+      url: string,
+      p: string,
+      statusCode: number,
+      duration: number,
+      ip: string | undefined,
+      userAgent: string | undefined,
+      playerId: string | null | undefined
+    ): void => {
+      const requestLogger = createRequestLogger();
+      const globalEventLogger = createEventLogger();
 
-/**
- * 记录通过 HTTP API 接收的客户端（前端）日志条目。
- * 使用 eventType 'CLIENT' 标记日志，以区别于服务器日志。
- *
- * @param level - 日志级别（debug、info、warn、error）
- * @param message - 前端的日志消息
- * @param timestamp - 客户端创建日志时的 Unix 时间戳
- * @param metadata - 来自客户端的额外元数据
- * @param playerId - 如果可用则可选的玩家 ID
- * @param gameId - 如果可用则可选的游戏 ID
- */
-export function logClientLogEvent(
-  level: string,
-  message: string,
-  timestamp: number,
-  metadata?: Record<string, unknown>,
-  playerId?: string,
-  gameId?: string
-): void {
-  const logData = {
-    eventType: 'CLIENT',
-    source: 'frontend',
-    clientTimestamp: timestamp,
-    level,
-    message,
-    playerId: playerId || null,
-    gameId: gameId || null,
-    ...metadata,
-  };
+      requestLogger.info('http_request', {
+        method,
+        url,
+        path: p,
+        statusCode,
+        duration,
+        ip,
+        userAgent,
+        playerId,
+      });
+      globalEventLogger.info('event', {
+        eventType: 'HTTP',
+        source: 'backend',
+        playerId: playerId || null,
+        method,
+        path: p,
+        statusCode,
+        duration,
+      });
+    };
 
-  switch (level) {
-    case 'error':
-      globalEventLogger.error('client_log', logData);
-      errorLogger.error('client_log', logData);
-      break;
-    case 'warn':
-      globalEventLogger.warn('client_log', logData);
-      break;
-    case 'debug':
-      globalEventLogger.debug('client_log', logData);
-      break;
-    default:
-      globalEventLogger.info('client_log', logData);
+    const logErrorInternal = (
+      message: string,
+      error: Error | undefined,
+      context: Record<string, unknown> | undefined
+    ): void => {
+      const errorLogger = createErrorLogger();
+      const globalEventLogger = createEventLogger();
+
+      errorLogger.error(message, {
+        error: error?.message || error?.toString(),
+        stack: error?.stack,
+        ...context,
+      });
+      globalEventLogger.error('event', {
+        eventType: 'ERROR',
+        source: 'backend',
+        message,
+        error: error?.message || error?.toString(),
+        ...context,
+      });
+    };
+
+    const logEventInternal = (
+      eventType: EventType,
+      source: string,
+      metadata: Record<string, unknown> = {},
+      playerId: string | undefined,
+      gameId: string | undefined
+    ): void => {
+      const globalEventLogger = createEventLogger();
+      globalEventLogger.info('event', {
+        timestamp: Date.now(),
+        eventType,
+        source,
+        playerId: playerId || null,
+        gameId: gameId || null,
+        ...metadata,
+      });
+    };
+
+    const logGameEventInternal = (
+      gameId: string,
+      action: string,
+      playerId: string,
+      metadata: Record<string, unknown> | undefined
+    ): void => {
+      logEventInternal('GAME', 'backend', { action, ...metadata }, playerId, gameId);
+    };
+
+    const logSystemEventInternal = (
+      message: string,
+      metadata: Record<string, unknown> | undefined
+    ): void => {
+      logEventInternal('SYSTEM', 'backend', { message, ...metadata }, undefined, undefined);
+    };
+
+    const logClientLogEventInternal = (
+      level: string,
+      message: string,
+      timestamp: number,
+      metadata: Record<string, unknown> | undefined,
+      playerId: string | undefined,
+      gameId: string | undefined
+    ): void => {
+      const globalEventLogger = createEventLogger();
+      const errorLogger = createErrorLogger();
+
+      const logData = {
+        eventType: 'CLIENT',
+        source: 'frontend',
+        clientTimestamp: timestamp,
+        level,
+        message,
+        playerId: playerId || null,
+        gameId: gameId || null,
+        ...metadata,
+      };
+
+      switch (level) {
+        case 'error':
+          globalEventLogger.error('client_log', logData);
+          errorLogger.error('client_log', logData);
+          break;
+        case 'warn':
+          globalEventLogger.warn('client_log', logData);
+          break;
+        case 'debug':
+          globalEventLogger.debug('client_log', logData);
+          break;
+        default:
+          globalEventLogger.info('client_log', logData);
+      }
+    };
+
+    return {
+      requestLogger: createRequestLogger(),
+      errorLogger: createErrorLogger(),
+      globalEventLogger: createEventLogger(),
+      getGameLogger: getGameLoggerInternal,
+      clearGameLogger: clearGameLoggerInternal,
+      logGameLifecycle: logGameLifecycleInternal,
+      logWebSocketEvent: logWebSocketEventInternal,
+      logHttpRequest: logHttpRequestInternal,
+      logError: logErrorInternal,
+      logEvent: logEventInternal,
+      logGameEvent: logGameEventInternal,
+      logSystemEvent: logSystemEventInternal,
+      logClientLogEvent: logClientLogEventInternal,
+    };
   }
 }
-
-export { createEventLogger };

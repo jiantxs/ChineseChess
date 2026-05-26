@@ -26,7 +26,7 @@ import {
   gameLogger,
 } from '@chess/core';
 import type { ChessConfig } from '@chess/config';
-import { logWebSocketEvent, logError, logGameLifecycle, getGameLogger, clearGameLogger } from './logger';
+import type { LoggerService } from './logger';
 import { getLayout, standardLayoutData } from '@chess/game-records';
 
 /**
@@ -79,6 +79,8 @@ export class GameServer {
   private gameManager: GameManager;
   /** ChessConfig 实例 */
   private config: ChessConfig;
+  /** 日志服务实例 */
+  private loggerService: LoggerService;
   /** ping/pong 健康检查的间隔句柄（30 秒） */
   private pingInterval: NodeJS.Timeout | null = null;
   /** 不活跃游戏清理的间隔句柄（10 分钟） */
@@ -91,21 +93,23 @@ export class GameServer {
    * @param gameManager - 用于游戏操作的 GameManager 实例
    * @param prefix - URL 前缀
    * @param config - ChessConfig 实例
+   * @param loggerService - 日志服务实例
    *
    * @remarks
    * - 在 '/ws' 路径上创建 WebSocketServer
    * - 自动启动 ping 间隔和清理间隔
    * - 为新的 WebSocket 客户端设置连接处理器
    */
-  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '', config: ChessConfig) {
+  constructor(server: import('http').Server | import('https').Server, gameManager: GameManager, prefix: string = '', config: ChessConfig, loggerService: LoggerService) {
     this.gameManager = gameManager;
     this.config = config;
+    this.loggerService = loggerService;
     const wsPath = prefix ? `${prefix}/ws` : '/ws';
     this.wss = new WebSocketServer({ server, path: wsPath });
 
-    // 将 @chess/core 的内存 gameLogger 桥接到 @chess/logger 的基于文件的游戏日志记录
+    // 将 @chess/core 的内存 gameLogger 桥接到基于文件的游戏日志记录
     gameLogger.setExternalLogger((gameId, action, metadata) => {
-      logGameLifecycle(gameId, action, metadata);
+      this.loggerService.logGameLifecycle(gameId, action, metadata);
     });
 
     this.setupWebSocketServer();
@@ -147,23 +151,23 @@ export class GameServer {
 
       this.players.set(playerId, player);
 
-      logWebSocketEvent('connection', playerId);
+      this.loggerService.logWebSocketEvent('connection', playerId);
 
       ws.on('message', (data: RawData) => {
         try {
           const message: GameMessage = JSON.parse(data.toString());
-          logWebSocketEvent('message', playerId, message.gameId, {
+          this.loggerService.logWebSocketEvent('message', playerId, message.gameId, {
             messageType: message.type,
           });
           this.handleMessage(player, message);
         } catch (error) {
-          logError('websocket_message_parse_error', error as Error, { playerId });
+          this.loggerService.logError('websocket_message_parse_error', error as Error, { playerId });
           this.sendError(player, 'Invalid message format');
         }
       });
 
       ws.on('close', () => {
-        logWebSocketEvent('disconnect', playerId, player.gameId);
+        this.loggerService.logWebSocketEvent('disconnect', playerId, player.gameId);
         this.handleDisconnect(player);
       });
 
@@ -250,7 +254,7 @@ export class GameServer {
         try {
           layout = getLayout(layoutName);
         } catch (err) {
-          logWebSocketEvent('layout_fallback', player.playerId, undefined, {
+          this.loggerService.logWebSocketEvent('layout_fallback', player.playerId, undefined, {
             requestedLayout: layoutName,
             reason: err instanceof Error ? err.message : 'Unknown error',
           });
@@ -267,7 +271,7 @@ export class GameServer {
     const game = this.gameManager.joinGame(targetGameId!, player.playerId, side);
 
     if (!game) {
-      logWebSocketEvent('join_game_failed', player.playerId, targetGameId, {
+      this.loggerService.logWebSocketEvent('join_game_failed', player.playerId, targetGameId, {
         reason: 'Failed to join game',
         side,
         local: local || false,
@@ -279,7 +283,7 @@ export class GameServer {
     player.gameId = targetGameId!;
     player.side = game.redPlayer === player.playerId ? Side.RED : Side.BLACK;
 
-    logWebSocketEvent('join_game', player.playerId, targetGameId, {
+    this.loggerService.logWebSocketEvent('join_game', player.playerId, targetGameId, {
       side: player.side,
       isNewGame,
       local: local || false,
@@ -321,7 +325,7 @@ export class GameServer {
    */
   private handleMakeMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
-      logWebSocketEvent('make_move_not_in_game', player.playerId, undefined);
+      this.loggerService.logWebSocketEvent('make_move_not_in_game', player.playerId, undefined);
       this.sendError(player, 'Not in a game');
       return;
     }
@@ -333,7 +337,7 @@ export class GameServer {
         typeof to.row !== 'number' || typeof to.col !== 'number' ||
         from.row < 0 || from.row > 9 || from.col < 0 || from.col > 8 ||
         to.row < 0 || to.row > 9 || to.col < 0 || to.col > 8) {
-      logWebSocketEvent('make_move_invalid_coords', player.playerId, player.gameId, { from, to });
+      this.loggerService.logWebSocketEvent('make_move_invalid_coords', player.playerId, player.gameId, { from, to });
       this.sendError(player, 'Invalid coordinates');
       return;
     }
@@ -341,7 +345,7 @@ export class GameServer {
     const result = this.gameManager.makeMove(player.gameId, player.playerId, from, to);
 
     if (!result.success) {
-      logWebSocketEvent('make_move_failed', player.playerId, player.gameId, {
+      this.loggerService.logWebSocketEvent('make_move_failed', player.playerId, player.gameId, {
         reason: result.error,
         from,
         to,
@@ -352,7 +356,7 @@ export class GameServer {
 
     const game = result.game!;
 
-    logWebSocketEvent('make_move', player.playerId, player.gameId, {
+    this.loggerService.logWebSocketEvent('make_move', player.playerId, player.gameId, {
       moveNumber: game.moves.length,
       from,
       to,
@@ -375,7 +379,7 @@ export class GameServer {
     }
 
     if (game.status === GameStatus.FINISHED) {
-      logWebSocketEvent('game_over', player.playerId, player.gameId, {
+      this.loggerService.logWebSocketEvent('game_over', player.playerId, player.gameId, {
         winner: game.winner,
         reason: 'general_captured',
       });
@@ -411,7 +415,7 @@ export class GameServer {
 
     const aiResult = this.gameManager.makeAIMove(gameId, game.aiDifficulty);
     if (!aiResult.success) {
-      logWebSocketEvent('ai_move_failed', 'ai-player', gameId, {
+      this.loggerService.logWebSocketEvent('ai_move_failed', 'ai-player', gameId, {
         reason: aiResult.error,
       });
       return;
@@ -420,7 +424,7 @@ export class GameServer {
     const updatedGame = aiResult.game!;
     const lastMove = updatedGame.moves[updatedGame.moves.length - 1];
 
-    logWebSocketEvent('ai_move', 'ai-player', gameId, {
+    this.loggerService.logWebSocketEvent('ai_move', 'ai-player', gameId, {
       moveNumber: updatedGame.moves.length,
       from: lastMove.from,
       to: lastMove.to,
@@ -443,7 +447,7 @@ export class GameServer {
     }
 
     if (updatedGame.status === GameStatus.FINISHED) {
-      logWebSocketEvent('game_over', 'ai-player', gameId, {
+      this.loggerService.logWebSocketEvent('game_over', 'ai-player', gameId, {
         winner: updatedGame.winner,
         reason: 'general_captured',
       });
@@ -534,13 +538,13 @@ export class GameServer {
    */
   private handleAIMove(player: ConnectedPlayer, message: GameMessage): void {
     if (!this.config.ai.enabled) {
-      logWebSocketEvent('ai_move_disabled', player.playerId, player.gameId);
+      this.loggerService.logWebSocketEvent('ai_move_disabled', player.playerId, player.gameId);
       this.sendError(player, 'AI is not enabled');
       return;
     }
 
     if (!player.gameId) {
-      logWebSocketEvent('ai_move_not_in_game', player.playerId, undefined);
+      this.loggerService.logWebSocketEvent('ai_move_not_in_game', player.playerId, undefined);
       this.sendError(player, 'Not in a game');
       return;
     }
@@ -566,7 +570,7 @@ export class GameServer {
    */
   private handleGetValidMoves(player: ConnectedPlayer, message: GameMessage): void {
     if (!player.gameId) {
-      logWebSocketEvent('get_valid_moves_not_in_game', player.playerId, undefined);
+      this.loggerService.logWebSocketEvent('get_valid_moves_not_in_game', player.playerId, undefined);
       this.sendError(player, 'Not in a game');
       return;
     }
@@ -574,7 +578,7 @@ export class GameServer {
     const { position } = message.payload as { position: Position };
 
     if (!position || typeof position.row !== 'number' || typeof position.col !== 'number') {
-      logWebSocketEvent('get_valid_moves_invalid_position', player.playerId, player.gameId, { position });
+      this.loggerService.logWebSocketEvent('get_valid_moves_invalid_position', player.playerId, player.gameId, { position });
       this.sendError(player, 'Invalid position');
       return;
     }
@@ -585,7 +589,7 @@ export class GameServer {
       position
     );
 
-    logWebSocketEvent('get_valid_moves', player.playerId, player.gameId, {
+    this.loggerService.logWebSocketEvent('get_valid_moves', player.playerId, player.gameId, {
       position,
       moveCount: validMoves.length,
     });
@@ -636,7 +640,7 @@ export class GameServer {
         if (!reconnected || !reconnected.gameId) {
           const game = this.gameManager.leaveGame(player.gameId!, player.playerId);
           if (game) {
-            logWebSocketEvent('game_over_disconnect', player.playerId, player.gameId!, {
+            this.loggerService.logWebSocketEvent('game_over_disconnect', player.playerId, player.gameId!, {
               winner: game.winner,
               reason: 'player_disconnect',
             });
@@ -782,7 +786,7 @@ export class GameServer {
     this.cleanupInterval = setInterval(() => {
       const cleaned = this.gameManager.cleanupInactiveGames(3600000);
       if (cleaned > 0) {
-        logWebSocketEvent('cleanup', 'system', undefined, { cleaned });
+        this.loggerService.logWebSocketEvent('cleanup', 'system', undefined, { cleaned });
       }
     }, 600000);
   }

@@ -12,7 +12,7 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { logClientLogEvent, logError } from '../services/logger';
+import type { LoggerService } from '../services/logger';
 
 interface ClientLogPayload {
   level: string;
@@ -24,9 +24,10 @@ interface ClientLogPayload {
 
 /**
  * 创建游戏路由
+ * @param loggerService - 可选的日志服务实例
  * @returns Express Router
  */
-export function createGameRoutes(): ExpressRouter {
+export function createGameRoutes(loggerService?: LoggerService): ExpressRouter {
   const router: ExpressRouter = Router();
 
   /**
@@ -80,7 +81,9 @@ export function createGameRoutes(): ExpressRouter {
           gameServer.stop();
         }
       } catch (err) {
-        logError('Error during server shutdown', err as Error, { context: 'gameServer.stop()' });
+        if (loggerService) {
+          loggerService.logError('Error during server shutdown', err as Error, { context: 'gameServer.stop()' });
+        }
       }
       process.exit(0);
     }, 100);
@@ -105,13 +108,15 @@ export function createGameRoutes(): ExpressRouter {
       return;
     }
 
-    logClientLogEvent(
-      payload.level,
-      payload.message,
-      payload.timestamp || Date.now(),
-      payload.metadata,
-      playerId
-    );
+    if (loggerService) {
+      loggerService.logClientLogEvent(
+        payload.level,
+        payload.message,
+        payload.timestamp || Date.now(),
+        payload.metadata,
+        playerId
+      );
+    }
 
     res.json({ success: true });
   });
