@@ -9,3 +9,4 @@ winapp/
 packages/backend/public/
 preference.json.chess
 mobile/
+packages/electron/apk_floder

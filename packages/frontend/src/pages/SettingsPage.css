@@ -582,6 +582,32 @@
   border: 1px solid rgba(80, 220, 160, 0.5);
 }
 
+/* 提示消息中的超链接 */
+.hint-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.hint-link:hover {
+  opacity: 0.8;
+}
+
+.hint-warning .hint-link {
+  color: rgba(255, 220, 100, 0.95);
+}
+
+.hint-info .hint-link {
+  color: rgba(140, 200, 255, 0.95);
+}
+
+.hint-success .hint-link {
+  color: rgba(120, 240, 180, 0.95);
+}
+
 /* ============================================================
    响应式
    ============================================================ */

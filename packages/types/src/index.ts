@@ -167,6 +167,16 @@ export interface PreferenceGroup {
 }
 
 /**
+ * 提示消息中的超链接配置
+ */
+export interface PreferenceHintLink {
+  /** 链接显示文字 */
+  text: string;
+  /** 链接路径（前端会使用 assetPath 转换） */
+  path: string;
+}
+
+/**
  * 选项变更提示配置
  * 当选项值改变时显示提示信息
  */
@@ -177,6 +187,8 @@ export interface PreferenceHint {
   trigger: 'onChange' | 'onEnable' | 'onDisable';
   /** 提示类型 */
   type?: 'info' | 'warning' | 'success';
+  /** 可选的超链接 */
+  link?: PreferenceHintLink;
 }
 
 /**
@@ -250,7 +262,7 @@ export const defaultUserPreference: UserPreference = {
     label: '额外设置',
     extraServer: {
       label: '额外服务器',
-      enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean', hint: { message: '更改已保存，重启软件后生效', trigger: 'onChange', type: 'warning' } },
+      enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean', hint: { message: '更改已保存，重启软件后生效', trigger: 'onEnable', type: 'warning', link: { text: '请点此获取安卓应用程序', path: '/assets/app.apk' } } },
       textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
     }
   }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getPreference, updatePreference, type UserPreference } from '../utils/preferenceApi';
 import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
-import { apiPath } from '../utils/api';
+import { apiPath, assetPath } from '../utils/api';
 import type { PreferenceHint } from '@chess/types';
 import './SettingsPage.css';
 
@@ -31,6 +31,7 @@ interface HintMessage {
   id: string;
   message: string;
   type: 'info' | 'warning' | 'success';
+  link?: { text: string; url: string };
 }
 
 export default function SettingsPage() {
@@ -111,8 +112,22 @@ export default function SettingsPage() {
   // 处理提示消息
   const handleHint = useCallback((hint: PreferenceHint) => {
     const id = `hint-${++hintIdRef.current}`;
-    setHints((prev) => [...prev, { id, message: hint.message, type: hint.type ?? 'info' }]);
-    clientLogger.info('Settings: hint shown', { message: hint.message, type: hint.type });
+    const hintMessage: HintMessage = {
+      id,
+      message: hint.message,
+      type: hint.type ?? 'info',
+    };
+    
+    // 如果包含链接，使用 assetPath 转换路径
+    if (hint.link) {
+      hintMessage.link = {
+        text: hint.link.text,
+        url: assetPath(hint.link.path),
+      };
+    }
+    
+    setHints((prev) => [...prev, hintMessage]);
+    clientLogger.info('Settings: hint shown', { message: hint.message, type: hint.type, link: hint.link });
   }, []);
 
   // 关闭提示消息
@@ -182,7 +197,34 @@ export default function SettingsPage() {
         {hints.map((hint) => (
           <div key={hint.id} className={`hint-message hint-${hint.type}`}>
             <span className="hint-icon">{hint.type === 'warning' ? '⚠' : hint.type === 'success' ? '✓' : 'ℹ'}</span>
-            <span className="hint-text">{hint.message}</span>
+            <span className="hint-text">
+              {hint.message}
+              {hint.link && (
+                <>
+                  {' '}
+                  <a 
+                    href={hint.link.url} 
+                    className="hint-link" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      // 如果是 APK 文件，阻止默认行为并使用下载
+                      if (hint.link!.url.endsWith('.apk')) {
+                        e.preventDefault();
+                        const a = document.createElement('a');
+                        a.href = hint.link!.url;
+                        a.download = 'android-app.apk';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }
+                    }}
+                  >
+                    {hint.link.text}
+                  </a>
+                </>
+              )}
+            </span>
             <button className="hint-close" onClick={() => dismissHint(hint.id)}>✕</button>
           </div>
         ))}

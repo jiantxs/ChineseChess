@@ -152,6 +152,21 @@ async function build() {
     console.warn('⚠ Backend public directory not found at', publicSrc);
   }
 
+  // Copy APK to dist/public/assets
+  const apkSrc = path.resolve(__dirname, 'apk_floder', 'app.apk');
+  const apkDestDir = path.resolve(distDir, 'public', 'assets');
+  const apkDest = path.resolve(apkDestDir, 'app.apk');
+
+  if (fs.existsSync(apkSrc)) {
+    if (!fs.existsSync(apkDestDir)) {
+      fs.mkdirSync(apkDestDir, { recursive: true });
+    }
+    fs.copyFileSync(apkSrc, apkDest);
+    console.log('✓ Copied app.apk to dist/public/assets');
+  } else {
+    console.warn('⚠ APK not found at', apkSrc);
+  }
+
   // Verify the bundled file has no external @chess/* imports
   const bundledCode = fs.readFileSync(path.resolve(distDir, 'main.js'), 'utf-8');
   const externalChessImports = bundledCode.match(/require\(['"]@chess\/[^'"]+['"]\)/g);
