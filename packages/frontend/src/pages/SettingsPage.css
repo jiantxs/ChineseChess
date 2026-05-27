@@ -1,5 +1,5 @@
 /* ============================================================
-   设置页面 - 与日志查看器风格一致
+   设置页面 - 左右分栏布局
    ============================================================ */
 .settings-page {
   background: #000000;
@@ -26,7 +26,7 @@
 .settings-container {
   position: relative;
   width: calc(100vw - 48px);
-  max-width: 800px;
+  max-width: 900px;
   height: calc(100vh - 48px);
   margin: 24px;
   padding: 32px;
@@ -57,6 +57,7 @@
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid rgba(0, 255, 170, 0.1);
+  flex-shrink: 0;
 }
 
 .settings-title {
@@ -113,6 +114,7 @@
   justify-content: center;
   gap: 8px;
   animation: errorPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .error-icon {
@@ -146,6 +148,7 @@
   justify-content: center;
   gap: 8px;
   animation: restartPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .restart-icon {
@@ -165,11 +168,76 @@
   50% { border-color: rgba(255, 200, 80, 0.5); }
 }
 
-/* 内容区域 */
+/* ============================================================
+   左右分栏布局
+   ============================================================ */
+.settings-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* 左侧分类导航 */
+.settings-sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(0, 255, 170, 0.1);
+  padding-right: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.settings-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.settings-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.15);
+  border-radius: 2px;
+}
+
+.category-btn {
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  color: rgba(160, 170, 180, 0.7);
+  font-size: 15px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+  text-align: left;
+  border-radius: 0 4px 4px 0;
+}
+
+.category-btn:hover {
+  color: rgba(0, 255, 170, 0.8);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+.category-btn.active {
+  color: rgba(0, 255, 170, 0.95);
+  border-left-color: rgba(0, 255, 170, 0.8);
+  background: rgba(0, 255, 170, 0.08);
+  font-weight: 500;
+}
+
+/* 右侧内容区域 */
 .settings-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-left: 32px;
+  padding-top: 8px;
 }
 
 .settings-content::-webkit-scrollbar {
@@ -189,19 +257,19 @@
   background: rgba(0, 255, 170, 0.3);
 }
 
-/* 设置区块 */
-.settings-section {
+/* 设置分组 */
+.settings-group {
   margin-bottom: 24px;
 }
 
-.section-title {
-  font-size: 18px;
+.group-title {
+  font-size: 16px;
   font-weight: 500;
-  color: rgba(0, 255, 170, 0.8);
-  margin: 0 0 16px 0;
+  color: rgba(0, 255, 170, 0.75);
+  margin: 0 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(0, 255, 170, 0.1);
-  letter-spacing: 2px;
+  border-bottom: 1px solid rgba(0, 255, 170, 0.08);
+  letter-spacing: 1px;
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
 }
 
@@ -210,7 +278,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 14px 0;
   border-bottom: 1px solid rgba(0, 255, 170, 0.05);
 }
 
@@ -350,6 +418,7 @@
   padding-top: 24px;
   border-top: 1px solid rgba(0, 255, 170, 0.1);
   margin-top: auto;
+  flex-shrink: 0;
 }
 
 .apply-btn {
@@ -421,37 +490,6 @@
   border-radius: 2px;
 }
 
-/* 重启提示 */
-.restart-hint {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  color: rgba(255, 200, 80, 0.95);
-  font-size: 14px;
-  letter-spacing: 1px;
-  border: 1px solid rgba(255, 200, 80, 0.25);
-  background: rgba(255, 160, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  animation: hintPulse 2s ease-in-out infinite;
-}
-
-.restart-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-@keyframes hintPulse {
-  0%, 100% { border-color: rgba(255, 200, 80, 0.2); }
-  50% { border-color: rgba(255, 200, 80, 0.45); }
-}
-
 /* ============================================================
    响应式
    ============================================================ */
@@ -471,6 +509,39 @@
 
   .settings-title {
     font-size: 22px;
+  }
+
+  .settings-layout {
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 255, 170, 0.1);
+    padding-bottom: 8px;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-top: 0;
+  }
+
+  .category-btn {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .category-btn.active {
+    border-left-color: transparent;
+    border-bottom-color: rgba(0, 255, 170, 0.8);
+  }
+
+  .settings-content {
+    padding-left: 0;
+    padding-top: 16px;
   }
 
   .setting-item {

@@ -8,7 +8,8 @@
  *   />
  */
 
-import type { UserPreference, PreferenceOption } from '@chess/types';
+import { useState } from 'react';
+import type { UserPreference, PreferenceOption, PreferenceGroup } from '@chess/types';
 
 // 从 dotted path 获取嵌套对象值
 function getByPath(obj: unknown, path: string): unknown {
@@ -20,27 +21,28 @@ function getByPath(obj: unknown, path: string): unknown {
   }, obj);
 }
 
-// 从 dotted path 设置嵌套对象值（只改 value，不动元数据）
-function setByPath(obj: unknown, path: string, value: unknown): unknown {
-  const keys = path.split('.');
-  const result = Array.isArray(obj) ? [...obj] : { ...(obj as Record<string, unknown>) };
-  let current: Record<string, unknown> = result as Record<string, unknown>;
-
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    if (!(key in current)) {
-      current[key] = {};
-    }
-    current[key] = { ...(current[key] as Record<string, unknown>) };
-    current = current[key] as Record<string, unknown>;
-  }
-
-  current[keys[keys.length - 1]] = value;
-  return result;
+// 判断对象是否是 PreferenceGroup（有 label 字段）
+function isPreferenceGroup(obj: unknown): obj is PreferenceGroup {
+  return !!(obj && typeof obj === 'object' && 'label' in obj && typeof (obj as Record<string, unknown>).label === 'string');
 }
 
-// 从 defaultUserPreference 推导 schema（三层嵌套结构）
-type SchemaSection = { section: string; title: string; items: SchemaItem[] };
+function isPreferenceOption(obj: unknown): obj is PreferenceOption<unknown> {
+  return !!(obj && typeof obj === 'object' && 'value' in obj && 'visible' in obj);
+}
+
+// Schema 类型定义
+type SchemaCategory = {
+  key: string;
+  label: string;
+  groups: SchemaGroup[];
+};
+
+type SchemaGroup = {
+  key: string;
+  label: string;
+  items: SchemaItem[];
+};
+
 type SchemaItem = {
   key: string;
   label: string;
@@ -50,43 +52,49 @@ type SchemaItem = {
   options?: string[];
 };
 
-function isPreferenceOption(obj: unknown): obj is PreferenceOption<unknown> {
-  return !!(obj && typeof obj === 'object' && 'value' in obj && 'visible' in obj);
-}
+// 从 preference 推导 schema（支持三层嵌套结构）
+function deriveSchema(preference: UserPreference): SchemaCategory[] {
+  const categories: SchemaCategory[] = [];
 
-function deriveSchema(preference: UserPreference): SchemaSection[] {
-  const sections: SchemaSection[] = [];
+  for (const [categoryKey, categoryValue] of Object.entries(preference)) {
+    if (!categoryValue || typeof categoryValue !== 'object') continue;
+    
+    const categoryLabel = isPreferenceGroup(categoryValue) ? categoryValue.label : categoryKey;
+    const groups: SchemaGroup[] = [];
 
-  // sectionKey = 'audio' | 'ai' | 'test'
-  for (const [sectionKey, sectionValue] of Object.entries(preference)) {
-    if (!sectionValue || typeof sectionValue !== 'object') continue;
-    const sectionItems: SchemaItem[] = [];
-
-    // groupKey = 'bgm' | 'difficulty'
-    for (const [groupKey, groupValue] of Object.entries(sectionValue)) {
+    for (const [groupKey, groupValue] of Object.entries(categoryValue)) {
       if (!groupValue || typeof groupValue !== 'object') continue;
+      if (groupKey === 'label') continue; // 跳过 label 字段
 
       if (isPreferenceOption(groupValue)) {
-        // groupValue 直接是 PreferenceOption（没有中间层 like audio.bgm）
+        // groupValue 直接是 PreferenceOption（没有中间层 like ai.difficulty）
         const opt = groupValue as PreferenceOption<unknown>;
         if (opt.visible) {
-          sectionItems.push({
-            key: `${sectionKey}.${groupKey}`,
+          groups.push({
+            key: `${categoryKey}.${groupKey}`,
             label: opt.label ?? groupKey,
-            valueType: opt.valueType ?? (typeof opt.value === 'boolean' ? 'boolean' : typeof opt.value === 'number' ? 'number' : 'string'),
-            readonly: opt.readonly,
-            range: opt.range,
-            options: opt.options,
+            items: [{
+              key: `${categoryKey}.${groupKey}`,
+              label: opt.label ?? groupKey,
+              valueType: opt.valueType ?? (typeof opt.value === 'boolean' ? 'boolean' : typeof opt.value === 'number' ? 'number' : 'string'),
+              readonly: opt.readonly,
+              range: opt.range,
+              options: opt.options,
+            }],
           });
         }
       } else {
         // groupValue 是容器（如 audio.bgm），继续遍历第三层
+        const groupLabel = isPreferenceGroup(groupValue) ? groupValue.label : groupKey;
+        const items: SchemaItem[] = [];
+        
         for (const [itemKey, itemValue] of Object.entries(groupValue)) {
+          if (itemKey === 'label') continue; // 跳过 label 字段
           if (!isPreferenceOption(itemValue)) continue;
           if (!itemValue.visible) continue;
 
-          sectionItems.push({
-            key: `${sectionKey}.${groupKey}.${itemKey}`,
+          items.push({
+            key: `${categoryKey}.${groupKey}.${itemKey}`,
             label: itemValue.label ?? itemKey,
             valueType: itemValue.valueType ?? (typeof itemValue.value === 'boolean' ? 'boolean' : typeof itemValue.value === 'number' ? 'number' : 'string'),
             readonly: itemValue.readonly,
@@ -94,19 +102,23 @@ function deriveSchema(preference: UserPreference): SchemaSection[] {
             options: itemValue.options,
           });
         }
+
+        if (items.length > 0) {
+          groups.push({
+            key: `${categoryKey}.${groupKey}`,
+            label: groupLabel,
+            items,
+          });
+        }
       }
     }
 
-    if (sectionItems.length > 0) {
-      sections.push({ section: sectionKey, title: sectionKey, items: sectionItems });
+    if (groups.length > 0) {
+      categories.push({ key: categoryKey, label: categoryLabel, groups });
     }
   }
 
-  return sections;
-}
-
-function getSectionTitle(section: string): string {
-  return section;
+  return categories;
 }
 
 interface PreferenceRendererProps {
@@ -206,6 +218,7 @@ function PreferenceControl({ item, value, onChange }: { item: SchemaItem; value:
 
 export function PreferenceRenderer({ preference, onChange }: PreferenceRendererProps) {
   const schema = deriveSchema(preference);
+  const [activeCategory, setActiveCategory] = useState<string>(schema[0]?.key ?? '');
 
   const handleItemChange = (path: string, newValue: unknown) => {
     const current = getByPath(preference, path);
@@ -222,20 +235,47 @@ export function PreferenceRenderer({ preference, onChange }: PreferenceRendererP
     onChange(partial as Partial<UserPreference>);
   };
 
+  const activeCategoryData = schema.find((c) => c.key === activeCategory);
+
   return (
-    <div className="settings-content">
-      {schema.map((section) => (
-        <div key={section.section} className="settings-section">
-          <h2 className="section-title">{section.title}</h2>
-          {section.items.map((item) => {
-            const itemValue = getByPath(preference, item.key);
-            if (!isPreferenceOption(itemValue)) return null;
-            return (
-              <PreferenceControl key={item.key} item={item} value={itemValue.value} onChange={handleItemChange} />
-            );
-          })}
-        </div>
-      ))}
+    <div className="settings-layout">
+      {/* 左侧分类导航 */}
+      <div className="settings-sidebar">
+        {schema.map((category) => (
+          <button
+            key={category.key}
+            className={`category-btn ${activeCategory === category.key ? 'active' : ''}`}
+            onClick={() => setActiveCategory(category.key)}
+          >
+            {category.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 右侧内容区域 */}
+      <div className="settings-content">
+        {activeCategoryData && (
+          <>
+            {activeCategoryData.groups.map((group) => (
+              <div key={group.key} className="settings-group">
+                <h3 className="group-title">{group.label}</h3>
+                {group.items.map((item) => {
+                  const itemValue = getByPath(preference, item.key);
+                  if (!isPreferenceOption(itemValue)) return null;
+                  return (
+                    <PreferenceControl
+                      key={item.key}
+                      item={item}
+                      value={itemValue.value}
+                      onChange={handleItemChange}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }

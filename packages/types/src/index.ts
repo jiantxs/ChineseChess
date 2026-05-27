@@ -159,6 +159,14 @@ export const BOARD_ROWS = 10;
 export const BOARD_COLS = 9;
 
 /**
+ * 偏好设置分组描述 - 用于存放分类的显示名称
+ */
+export interface PreferenceGroup {
+  /** 分组显示名称 */
+  label: string;
+}
+
+/**
  * 带可见性的偏好选项 - 包含渲染元数据
  */
 export interface PreferenceOption<T> {
@@ -184,9 +192,9 @@ export interface PreferenceOption<T> {
  */
 export interface UserPreference {
   /** 音频设置 */
-  audio: {
+  audio: PreferenceGroup & {
     /** 背景音乐设置 */
-    bgm: {
+    bgm: PreferenceGroup & {
       /** 是否播放背景音乐 */
       enabled: PreferenceOption<boolean>;
       /** 背景音乐音量大小 (0-100) */
@@ -194,13 +202,13 @@ export interface UserPreference {
     };
   };
   /** AI 设置 */
-  ai: {
+  ai: PreferenceGroup & {
     /** AI 难度 (1-10)，影响搜索深度 */
     difficulty: PreferenceOption<number>;
   };
 
-  extraSettings: {
-    extraServer:{
+  extraSettings: PreferenceGroup & {
+    extraServer: PreferenceGroup & {
       enabled: PreferenceOption<boolean>;
       textCode: PreferenceOption<string>;
     }
@@ -212,16 +220,21 @@ export interface UserPreference {
  */
 export const defaultUserPreference: UserPreference = {
   audio: {
+    label: '音量',
     bgm: {
+      label: '背景音量',
       enabled: { value: true, visible: true, label: '背景音乐', valueType: 'boolean' },
       volume: { value: 100, visible: true, label: '音量', valueType: 'number', range: { min: 0, max: 100, step: 1 } },
     },
   },
   ai: {
+    label: 'AI 设置',
     difficulty: { value: 5, visible: true, label: 'AI难度', valueType: 'number', range: { min: 1, max: 10, step: 1 } },
   },
-  extraSettings:{
-    extraServer:{
+  extraSettings: {
+    label: '额外设置',
+    extraServer: {
+      label: '额外服务器',
       enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean' },
       textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
     }
