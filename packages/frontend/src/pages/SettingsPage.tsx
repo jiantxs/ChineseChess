@@ -4,6 +4,7 @@ import { getPreference, updatePreference, type UserPreference } from '../utils/p
 import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath } from '../utils/api';
+import type { PreferenceHint } from '@chess/types';
 import './SettingsPage.css';
 
 // 立即更新本地状态
@@ -25,14 +26,22 @@ function deepMergePreference(base: UserPreference, overrides: Partial<UserPrefer
   return shallowMergePreference(base as unknown as Record<string, unknown>, overrides as unknown as Record<string, unknown>) as unknown as UserPreference;
 }
 
+// 提示消息接口
+interface HintMessage {
+  id: string;
+  message: string;
+  type: 'info' | 'warning' | 'success';
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [preference, setPreference] = useState<UserPreference | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>('');
-  const [showRestartHint, setShowRestartHint] = useState(false);
+  const [hints, setHints] = useState<HintMessage[]>([]);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hintIdRef = useRef(0);
 
   const loadPreference = useCallback(async () => {
     setLoading(true);
@@ -76,13 +85,6 @@ export default function SettingsPage() {
       return deepMergePreference(prev, updates);
     });
 
-    // 检测 extraSettings.extraServer.enabled 是否被打开
-    if (
-      updates.extraSettings?.extraServer?.enabled?.value === true
-    ) {
-      setShowRestartHint(true);
-    }
-
     setSaveStatus('保存中...');
     setError(null);
 
@@ -104,6 +106,18 @@ export default function SettingsPage() {
         clientLogger.error('Settings: failed to auto-save', { error: message });
       }
     }, 300);
+  }, []);
+
+  // 处理提示消息
+  const handleHint = useCallback((hint: PreferenceHint) => {
+    const id = `hint-${++hintIdRef.current}`;
+    setHints((prev) => [...prev, { id, message: hint.message, type: hint.type ?? 'info' }]);
+    clientLogger.info('Settings: hint shown', { message: hint.message, type: hint.type });
+  }, []);
+
+  // 关闭提示消息
+  const dismissHint = useCallback((id: string) => {
+    setHints((prev) => prev.filter((h) => h.id !== id));
   }, []);
 
   const handleApply = useCallback(async () => {
@@ -164,15 +178,17 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {showRestartHint && (
-          <div className="restart-hint">
-            <span className="restart-icon">↻</span>
-            更改已保存，重启软件后生效
+        {/* 动态提示消息 */}
+        {hints.map((hint) => (
+          <div key={hint.id} className={`hint-message hint-${hint.type}`}>
+            <span className="hint-icon">{hint.type === 'warning' ? '⚠' : hint.type === 'success' ? '✓' : 'ℹ'}</span>
+            <span className="hint-text">{hint.message}</span>
+            <button className="hint-close" onClick={() => dismissHint(hint.id)}>✕</button>
           </div>
-        )}
+        ))}
 
         {preference && (
-          <PreferenceRenderer preference={preference} onChange={handleChange} />
+          <PreferenceRenderer preference={preference} onChange={handleChange} onHint={handleHint} />
         )}
 
         <div className="settings-actions">

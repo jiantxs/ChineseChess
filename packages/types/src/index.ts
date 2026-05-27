@@ -167,6 +167,19 @@ export interface PreferenceGroup {
 }
 
 /**
+ * 选项变更提示配置
+ * 当选项值改变时显示提示信息
+ */
+export interface PreferenceHint {
+  /** 提示消息内容 */
+  message: string;
+  /** 触发条件 */
+  trigger: 'onChange' | 'onEnable' | 'onDisable';
+  /** 提示类型 */
+  type?: 'info' | 'warning' | 'success';
+}
+
+/**
  * 带可见性的偏好选项 - 包含渲染元数据
  */
 export interface PreferenceOption<T> {
@@ -184,6 +197,8 @@ export interface PreferenceOption<T> {
   range?: { min?: number; max?: number; step?: number };
   /** 下拉选项（string 类型时） */
   options?: string[];
+  /** 变更提示配置 */
+  hint?: PreferenceHint;
 }
 
 /**
@@ -235,7 +250,7 @@ export const defaultUserPreference: UserPreference = {
     label: '额外设置',
     extraServer: {
       label: '额外服务器',
-      enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean' },
+      enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean', hint: { message: '更改已保存，重启软件后生效', trigger: 'onChange', type: 'warning' } },
       textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
     }
   }

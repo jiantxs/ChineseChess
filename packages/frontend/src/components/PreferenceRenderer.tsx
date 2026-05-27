@@ -5,11 +5,12 @@
  *   <PreferenceRenderer
  *     preference={preference}
  *     onChange={(updates) => handleChange(updates)}
+ *     onHint={(hint) => handleHint(hint)}
  *   />
  */
 
 import { useState } from 'react';
-import type { UserPreference, PreferenceOption, PreferenceGroup } from '@chess/types';
+import type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint } from '@chess/types';
 
 // 从 dotted path 获取嵌套对象值
 function getByPath(obj: unknown, path: string): unknown {
@@ -50,6 +51,7 @@ type SchemaItem = {
   readonly?: boolean;
   range?: { min?: number; max?: number; step?: number };
   options?: string[];
+  hint?: PreferenceHint;
 };
 
 // 从 preference 推导 schema（支持三层嵌套结构）
@@ -80,6 +82,7 @@ function deriveSchema(preference: UserPreference): SchemaCategory[] {
               readonly: opt.readonly,
               range: opt.range,
               options: opt.options,
+              hint: opt.hint,
             }],
           });
         }
@@ -100,6 +103,7 @@ function deriveSchema(preference: UserPreference): SchemaCategory[] {
             readonly: itemValue.readonly,
             range: itemValue.range,
             options: itemValue.options,
+            hint: itemValue.hint,
           });
         }
 
@@ -121,9 +125,24 @@ function deriveSchema(preference: UserPreference): SchemaCategory[] {
   return categories;
 }
 
+// 检查是否应该触发提示
+function shouldTriggerHint(hint: PreferenceHint, oldValue: unknown, newValue: unknown): boolean {
+  switch (hint.trigger) {
+    case 'onChange':
+      return oldValue !== newValue;
+    case 'onEnable':
+      return oldValue === false && newValue === true;
+    case 'onDisable':
+      return oldValue === true && newValue === false;
+    default:
+      return false;
+  }
+}
+
 interface PreferenceRendererProps {
   preference: UserPreference;
   onChange: (updates: Partial<UserPreference>) => void;
+  onHint?: (hint: PreferenceHint) => void;
 }
 
 function PreferenceControl({ item, value, onChange }: { item: SchemaItem; value: unknown; onChange: (path: string, value: unknown) => void }) {
@@ -216,13 +235,21 @@ function PreferenceControl({ item, value, onChange }: { item: SchemaItem; value:
   return null;
 }
 
-export function PreferenceRenderer({ preference, onChange }: PreferenceRendererProps) {
+export function PreferenceRenderer({ preference, onChange, onHint }: PreferenceRendererProps) {
   const schema = deriveSchema(preference);
   const [activeCategory, setActiveCategory] = useState<string>(schema[0]?.key ?? '');
 
   const handleItemChange = (path: string, newValue: unknown) => {
     const current = getByPath(preference, path);
     if (!isPreferenceOption(current)) return;
+    
+    // 检查是否需要触发提示
+    if (current.hint && onHint) {
+      if (shouldTriggerHint(current.hint, current.value, newValue)) {
+        onHint(current.hint);
+      }
+    }
+    
     // 只构造被修改的路径部分，避免携带未改动的 sibling 属性
     const keys = path.split('.');
     let partial: Record<string, unknown> = {};
