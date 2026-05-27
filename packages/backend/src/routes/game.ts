@@ -12,7 +12,7 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import type { LoggerService } from '../services/logger';
+import type { LoggerInstance } from '@chess/logger';
 
 interface ClientLogPayload {
   level: string;
@@ -27,7 +27,7 @@ interface ClientLogPayload {
  * @param loggerService - 可选的日志服务实例
  * @returns Express Router
  */
-export function createGameRoutes(loggerService?: LoggerService): ExpressRouter {
+export function createGameRoutes(logger?: LoggerInstance): ExpressRouter {
   const router: ExpressRouter = Router();
 
   /**
@@ -81,8 +81,8 @@ export function createGameRoutes(loggerService?: LoggerService): ExpressRouter {
           gameServer.stop();
         }
       } catch (err) {
-        if (loggerService) {
-          loggerService.logError('Error during server shutdown', err as Error, { context: 'gameServer.stop()' });
+        if (logger) {
+          logger.logError('Error during server shutdown', err as Error, { context: 'gameServer.stop()' });
         }
       }
       process.exit(0);
@@ -108,8 +108,8 @@ export function createGameRoutes(loggerService?: LoggerService): ExpressRouter {
       return;
     }
 
-    if (loggerService) {
-      loggerService.logClientLogEvent(
+    if (logger) {
+      logger.logClientLogEvent(
         payload.level,
         payload.message,
         payload.timestamp || Date.now(),

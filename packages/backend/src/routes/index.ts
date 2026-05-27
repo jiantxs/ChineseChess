@@ -11,7 +11,7 @@ import express from 'express';
 import session from 'express-session';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
-import type { LoggerService } from '../services/logger';
+import type { LoggerInstance } from '@chess/logger';
 import { GameManager } from '@chess/core';
 import { createGameRoutes } from './game';
 import { createConfigRouter } from './config';
@@ -34,18 +34,34 @@ export function createAppRouter(
   customPublicPath: string | undefined,
   config: ChessConfig,
   gameManager?: GameManager,
-  loggerService?: LoggerService
+  logger?: LoggerInstance
 ): Router {
   const router = Router();
   const gm = gameManager || new GameManager();
-  const logger = loggerService;
 
   // 中间件：解析 JSON 请求体
   router.use(express.json());
 
   // 中间件：使用 Winston 记录所有 HTTP 请求
   if (logger) {
-    router.use(logger.requestLogMiddleware());
+    router.use((req, res, next) => {
+      const start = Date.now();
+      res.on('finish', () => {
+        const duration = Date.now() - start;
+        const playerId = (req.session as any)?.playerId || null;
+        logger.logHttpRequest(
+          req.method,
+          req.url,
+          req.path,
+          res.statusCode,
+          duration,
+          req.ip || req.socket.remoteAddress,
+          req.get('user-agent'),
+          playerId
+        );
+      });
+      next();
+    });
   }
 
   // 中间件：会话管理，用于玩家身份识别

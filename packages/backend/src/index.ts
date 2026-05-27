@@ -16,7 +16,6 @@ import { LoggerFactory, type LoggerInstance } from '@chess/logger';
 import { GameServer } from './services/gameServer';
 import { GameManager } from '@chess/core';
 import { createAppRouter } from './routes';
-import { createLoggerService, type LoggerService } from './services/logger';
 
 /**
  * 启动服务器的可选参数
@@ -45,8 +44,6 @@ export interface StartServerResult {
   stop: () => void;
   /** 日志实例 */
   logger: LoggerInstance;
-  /** 日志服务（包含中间件） */
-  loggerService: LoggerService;
 }
 
 /**
@@ -58,7 +55,7 @@ export interface StartServerResult {
  * @param config - ChessConfig 实例
  * @param options - 可选的服务器配置
  * @param options.publicPath - 前端静态文件目录路径
- * @returns 包含 app、server、gameServer、logger、loggerService 和 stop 函数的结果对象
+ * @returns 包含 app、server、gameServer、logger 和 stop 函数的结果对象
  *
  * @remarks
  * - config 实例必须直接传入，不会有默认值
@@ -68,7 +65,6 @@ export interface StartServerResult {
 export function startServer(config: ChessConfig, options?: StartServerOptions): StartServerResult {
   // 创建日志实例
   const logger = new LoggerFactory().createLogger(config);
-  const loggerService = createLoggerService(logger);
 
   const PORT = config.server.port;
   const HOST = config.server.host;
@@ -79,36 +75,35 @@ export function startServer(config: ChessConfig, options?: StartServerOptions): 
 
   // 将日志实例存入 app.locals，供中间件和路由访问
   app.locals.logger = logger;
-  app.locals.loggerService = loggerService;
 
   const gameManager = new GameManager();
-  const appRouter = createAppRouter(PREFIX, options?.publicPath, config, gameManager, loggerService);
+  const appRouter = createAppRouter(PREFIX, options?.publicPath, config, gameManager, logger);
 
   if (PREFIX) {
     app.use(PREFIX, appRouter);
-    loggerService.logSystemEvent('Routes mounted at prefix', { prefix: PREFIX });
+    logger.logSystemEvent('Routes mounted at prefix', { prefix: PREFIX });
   } else {
     app.use(appRouter);
   }
 
-  const gameServer = new GameServer(server, gameManager, PREFIX, config, loggerService);
+  const gameServer = new GameServer(server, gameManager, PREFIX, config, logger);
 
   app.locals.gameServer = gameServer;
 
   server.listen(PORT, HOST, () => {
-    loggerService.requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
-    loggerService.logSystemEvent('Chinese Chess server started', { host: HOST, port: PORT, url: `http://${HOST}:${PORT}${PREFIX}` });
+    logger.requestLogger.info('server_started', { host: HOST, port: PORT, prefix: PREFIX });
+    logger.logSystemEvent('Chinese Chess server started', { host: HOST, port: PORT, url: `http://${HOST}:${PORT}${PREFIX}` });
   });
 
   const stop = () => {
-    loggerService.logSystemEvent('SIGTERM received, shutting down gracefully');
+    logger.logSystemEvent('SIGTERM received, shutting down gracefully');
     gameServer.stop();
     server.close(() => {
-      loggerService.logSystemEvent('Server closed');
+      logger.logSystemEvent('Server closed');
     });
   };
 
   process.on('SIGTERM', stop);
 
-  return { app, server, gameServer, stop, logger, loggerService };
+  return { app, server, gameServer, stop, logger };
 }
