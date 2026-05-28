@@ -1,21 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { GameState, Piece, Move, Position } from './types';
-import { GameStatus, Side, BOARD_ROWS, BOARD_COLS } from './types';
+import { GameStatus, Side } from './types';
 import { isValidMove, isGeneralCaptured, getValidMoves as getValidMovesLogic } from './gameLogic';
 import { PieceLayout } from './pieceLayout';
 import { gameLogger } from './gameLogger';
 import { AIEngine } from './ai';
-
-/**
- * 将用户偏好难度 (1-10) 转换为 AI 搜索深度
- * 难度越高，搜索深度越大，AI 越强
- */
-function difficultyToDepth(difficulty: number): number {
-  if (difficulty <= 3) return difficulty === 1 ? 1 : 2;
-  if (difficulty <= 6) return difficulty <= 4 ? 3 : 4;
-  if (difficulty <= 9) return difficulty <= 7 ? 5 : 6;
-  return 8;
-}
+import { buildBoard } from './utils/boardUtils';
+import { difficultyToDepth } from './utils/aiUtils';
 
 /**
  * GameManager - 中国象棋内存游戏状态管理器。
@@ -66,7 +57,7 @@ export class GameManager {
     }
 
     const gameId = uuidv4();
-    const board = this.buildBoard(layout.getInitialPieces());
+    const board = buildBoard(layout.getInitialPieces());
 
     const game: GameState = {
       id: gameId,
@@ -420,24 +411,6 @@ return getValidMovesLogic(game.board, piece);
     }
 
     return cleaned;
-  }
-
-  /**
-   * 从棋子数组创建 10x9 的棋盘数组。
-   * 将空单元格初始化为 null，然后将棋子放在其位置上。
-   * @param pieces - 带有位置数据的 Piece 对象数组
-   * @returns 表示棋盘的 2D 数组 (Piece | null)[][]
-   */
-  private buildBoard(pieces: Piece[]): (Piece | null)[][] {
-    const board: (Piece | null)[][] = Array(BOARD_ROWS)
-      .fill(null)
-      .map(() => Array(BOARD_COLS).fill(null));
-
-    for (const piece of pieces) {
-      board[piece.position.row][piece.position.col] = { ...piece };
-    }
-
-    return board;
   }
 
   makeAIMove(

@@ -14,4 +14,6 @@ export * from './gameLogic';
 export * from './pieceLayout';
 export * from './gameLogger';
 export * from './ai';
+export * from './utils/boardUtils';
+export * from './utils/aiUtils';
 export { GameManager } from './gameManager';
