@@ -138,9 +138,6 @@ export default function GameScreen({
 
   return (
     <div className="game-screen">
-      {/* Scanline overlay */}
-      <div className="scanlines" />
-
       {/* Left: Board Area */}
       <div className="board-area">
         <div className="board-wrapper">

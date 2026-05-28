@@ -18,7 +18,6 @@ export default function SplashScreen() {
 
   return (
     <div className={`splash-overlay ${fading ? 'splash-fade-out' : ''}`} onClick={handleClick}>
-      <div className="background-layer splash-bg" />
       <span className="splash-text">点击以开始游戏</span>
     </div>
   );

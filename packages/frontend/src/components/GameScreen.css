@@ -9,31 +9,10 @@
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
-  background: #000000;
+  background: transparent;
   position: relative;
   overflow: hidden;
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
-}
-
-/* Scanlines (same as menu) */
-.game-screen .scanlines {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 255, 170, 0.02) 2px,
-    rgba(0, 255, 170, 0.02) 4px
-  );
-  animation: scanlineMove 8s linear infinite;
-}
-
-@keyframes scanlineMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100px; }
 }
 
 /* ---------- Left: Board Area ---------- */

@@ -228,8 +228,6 @@ export default function LogsPage() {
 
   return (
     <div className="logs-page">
-      <div className="background-layer logs-bg" />
-
       <div className="logs-container">
         <div className="logs-header">
           <h1 className="logs-title">日志查看器</h1>

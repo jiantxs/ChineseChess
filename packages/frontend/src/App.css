@@ -10,17 +10,8 @@
 }
 
 /* ============================================================
-   菜单专用：背景图片 + 动态平移动画
+   统一动态背景（由 App.tsx 提供）
    ============================================================ */
-.menu-app {
-  background: #000000;
-  width: 100vw;
-  height: 100vh;
-  min-height: 100vh;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
 
 /* 动态背景图片层 - 显示大部分图片，左侧开始，平移到右下角，再动画回原点 */
 .background-layer {
@@ -34,6 +25,7 @@
   background-repeat: no-repeat;
   animation: backgroundPan 24s ease-in-out infinite;
   will-change: background-position;
+  z-index: 0;
 }
 
 @keyframes backgroundPan {
@@ -66,6 +58,19 @@
 @keyframes scanlineMove {
   0% { background-position: 0 0; }
   100% { background-position: 0 100px; }
+}
+
+/* ============================================================
+   菜单专用样式
+   ============================================================ */
+.menu-app {
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 /* 菜单面板 */

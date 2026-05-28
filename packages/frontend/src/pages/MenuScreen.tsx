@@ -97,8 +97,6 @@ useEffect(() => {
 
   return (
     <div className="app menu-app">
-      <div className="background-layer" />
-      <div className="scanlines" />
       <div className="menu-container">
         <div className="corner corner-tl" />
         <div className="corner corner-tr" />

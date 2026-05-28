@@ -166,7 +166,6 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="settings-page">
-        <div className="background-layer settings-bg" />
         <div className="settings-container">
           <div className="loading">加载中...</div>
         </div>
@@ -176,7 +175,6 @@ export default function SettingsPage() {
 
   return (
     <div className="settings-page">
-      <div className="background-layer settings-bg" />
       <div className="settings-container">
         <div className="settings-header">
           <h1 className="settings-title">设置</h1>

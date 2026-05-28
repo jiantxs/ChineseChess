@@ -1,8 +1,8 @@
 /* ============================================================
-   菜单专用：背景图片 + 动态平移动画
+   菜单专用样式
    ============================================================ */
 .menu-app {
-  background: #000000;
+  background: transparent;
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
@@ -12,52 +12,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-/* 动态背景图片层 - 显示大部分图片，左侧开始，平移到右下角，再动画回原点 */
-.background-layer {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background-image: url('/assets/png/main_background.png');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  animation: backgroundPan 24s ease-in-out infinite;
-  will-change: background-position;
-}
-
-@keyframes backgroundPan {
-  0%, 100% {
-    /* 显示大部分图片，从中心稍左偏移开始 */
-    background-position: 30% 50%;
-  }
-  50% {
-    /* 滑到右下角，显示原本未显示的部分 */
-    background-position: 70% 30%;
-  }
-}
-
-/* 扫描线效果 */
-.scanlines {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 255, 170, 0.02) 2px,
-    rgba(0, 255, 170, 0.02) 4px
-  );
-  animation: scanlineMove 8s linear infinite;
-}
-
-@keyframes scanlineMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100px; }
 }
 
 /* 菜单面板 */

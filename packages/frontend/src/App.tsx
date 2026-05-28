@@ -9,6 +9,15 @@ import { assetPath } from './utils/api';
 import { clientLogger } from './utils/clientLogger';
 import './App.css';
 
+function DynamicBackground() {
+  return (
+    <>
+      <div className="background-layer" />
+      <div className="scanlines" />
+    </>
+  );
+}
+
 const BGM_PATH = assetPath('/assets/music/main_bgm.mp3');
 
 function getBasename() {
@@ -74,6 +83,7 @@ function App() {
   clientLogger.info('App mounted', { basename: getBasename() });
   return (
     <BrowserRouter basename={getBasename()}>
+      <DynamicBackground />
       <Routes>
         <Route path="/" element={<SplashScreen />} />
         <Route path="/menu" element={<MenuScreen pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />

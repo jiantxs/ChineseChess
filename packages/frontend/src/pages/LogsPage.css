@@ -2,7 +2,7 @@
    日志查看器页面
    ============================================================ */
 .logs-page {
-  background: #000000;
+  background: transparent;
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
@@ -12,14 +12,6 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-}
-
-.logs-bg {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  background: radial-gradient(ellipse at center, rgba(10, 20, 15, 0.8) 0%, #000000 70%);
 }
 
 /* 容器 */
