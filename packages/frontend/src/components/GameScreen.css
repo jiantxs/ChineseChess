@@ -553,9 +553,146 @@
 }
 
 /* ============================================================
-   Responsive: stack vertically on narrow screens
+   Responsive: 横屏手机 / 小屏幕适配
    ============================================================ */
-@media (max-width: 900px) {
+
+/* 横屏手机（高度较小但宽度足够） */
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-screen {
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  .board-area {
+    padding: 8px;
+    flex: 1;
+  }
+
+  .board-wrapper {
+    padding: 8px;
+  }
+
+  .info-panel {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    height: 100vh;
+    padding: 12px 10px;
+  }
+
+  .panel-header {
+    margin-bottom: 8px;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    margin: 0 0 6px 0;
+    letter-spacing: 2px;
+  }
+
+  .turn-section,
+  .players-section,
+  .connection-section,
+  .room-section {
+    margin-bottom: 8px;
+  }
+
+  .turn-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .player-badge {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+
+  .player-vs {
+    font-size: 9px;
+  }
+
+  .your-side {
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  .connection-badge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+
+  .room-id-text {
+    font-size: 11px;
+  }
+
+  .room-copy-btn {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .history-section {
+    margin-bottom: 8px;
+  }
+
+  .history-list {
+    max-height: 80px;
+    padding: 4px 6px;
+  }
+
+  .history-item {
+    font-size: 10px;
+    padding: 2px 0;
+  }
+
+  .history-empty {
+    font-size: 10px;
+    padding: 8px 0;
+  }
+
+  .move-count {
+    font-size: 9px;
+  }
+
+  .status-section {
+    margin-bottom: 8px;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .controls-section {
+    margin-bottom: 8px;
+  }
+
+  .gs-btn {
+    padding: 8px 0;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .gs-error-message {
+    margin-top: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .panel-corner {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* 竖屏手机或窄屏幕 */
+@media (max-width: 900px) and (orientation: portrait) {
   .game-screen {
     flex-direction: column;
     overflow-y: auto;
@@ -564,6 +701,7 @@
   .board-area {
     padding: 16px;
     min-height: auto;
+    flex: none;
   }
 
   .info-panel {

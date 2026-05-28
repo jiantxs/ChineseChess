@@ -11,10 +11,7 @@ import './App.css';
 
 function DynamicBackground() {
   return (
-    <>
-      <div className="background-layer" />
-      <div className="scanlines" />
-    </>
+    <div className="background-layer" />
   );
 }
 

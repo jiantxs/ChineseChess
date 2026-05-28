@@ -39,27 +39,6 @@
   }
 }
 
-/* 扫描线效果 */
-.scanlines {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 255, 170, 0.02) 2px,
-    rgba(0, 255, 170, 0.02) 4px
-  );
-  animation: scanlineMove 8s linear infinite;
-}
-
-@keyframes scanlineMove {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100px; }
-}
-
 /* ============================================================
    菜单专用样式
    ============================================================ */

@@ -14,11 +14,12 @@
   align-items: center;
 }
 
-/* 菜单面板 */
+/* 菜单面板 - PC端基准尺寸 */
 .menu-container {
   position: relative;
   width: 420px;
   max-width: 90vw;
+  max-height: 80vh;
   padding: 56px 48px;
   background: rgba(10, 10, 12, 0.6);
   border: 1px solid rgba(0, 255, 170, 0.15);
@@ -26,6 +27,13 @@
   z-index: 20;
   backdrop-filter: blur(4px);
   animation: menuFadeIn 0.8s ease-out forwards;
+  /* 禁止滚动，通过缩放适配 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* 确保缩放时从中心点缩放 */
+  transform-origin: center center;
 }
 
 @keyframes menuFadeIn {
@@ -276,20 +284,22 @@
 }
 
 /* ============================================================
-   响应式
+   响应式 - 等比例缩放方案
    ============================================================ */
+
+/* 
+  核心思路：
+  1. PC端保持原始尺寸（420px宽，固定padding）
+  2. 当屏幕较小时，通过transform: scale()整体缩放菜单
+  3. 计算缩放比例：取宽度和高度方向的较小值
+  
+  PC端基准尺寸：
+  - 宽度：420px + 48px*2(padding) = 516px
+  - 高度：约560px（根据内容估算）
+*/
+
+/* 竖屏手机 */
 @media (max-width: 768px) {
-  .menu-container {
-    width: 90vw;
-    padding: 40px 24px;
-  }
-
-  .game-title {
-    font-size: 40px;
-    letter-spacing: 16px;
-    text-indent: 16px;
-  }
-
   .join-section {
     flex-direction: column;
     gap: 8px;

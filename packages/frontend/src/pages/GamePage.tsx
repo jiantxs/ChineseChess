@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import GameScreen from '../components/GameScreen';
 import { useGameSocket } from '../hooks/useGameSocket';
@@ -112,7 +112,42 @@ export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePagePr
     }
   }, []);
 
-  const boardSize = { cellSize: 62, padding: 35 };
+  // 根据屏幕尺寸动态计算棋盘大小
+  const getBoardSize = () => {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const isSmallScreen = window.innerHeight <= 500 || window.innerWidth <= 900;
+
+    if (isSmallScreen && isLandscape) {
+      // 横屏手机：缩小棋盘以适应小屏幕
+      const availableHeight = window.innerHeight - 32; // 减去padding
+      const availableWidth = window.innerWidth - 240; // 减去侧边栏
+      const cellSizeByHeight = Math.floor((availableHeight - 70) / 9);
+      const cellSizeByWidth = Math.floor((availableWidth - 70) / 8);
+      const cellSize = Math.min(cellSizeByHeight, cellSizeByWidth, 45);
+      return { cellSize, padding: Math.max(20, Math.floor(cellSize * 0.6)) };
+    }
+
+    if (isSmallScreen && !isLandscape) {
+      // 竖屏手机
+      const availableWidth = window.innerWidth - 32;
+      const cellSize = Math.floor((availableWidth - 70) / 8);
+      return { cellSize: Math.min(cellSize, 52), padding: Math.max(18, Math.floor(cellSize * 0.5)) };
+    }
+
+    // 桌面端默认
+    return { cellSize: 62, padding: 35 };
+  };
+
+  const [boardSize, setBoardSize] = useState(() => getBoardSize());
+
+  useEffect(() => {
+    const handleResize = () => {
+      setBoardSize(getBoardSize());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <GameScreen

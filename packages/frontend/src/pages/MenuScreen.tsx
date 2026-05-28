@@ -8,6 +8,7 @@ import './MenuScreen.css';
 
 export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
   const [platform, setPlatform] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadConfig() {
@@ -48,6 +49,56 @@ useEffect(() => {
 
   const navigate = useNavigate();
   const gameIdInputRef = useRef<HTMLInputElement>(null);
+
+  // 动态计算缩放比例，保持PC端布局等比例缩放
+  useEffect(() => {
+    const calculateScale = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      // 获取容器在 scale(1) 时的实际尺寸
+      // 临时移除 transform 以获取原始尺寸
+      const originalTransform = container.style.transform;
+      container.style.transform = 'none';
+      const rect = container.getBoundingClientRect();
+      const actualWidth = rect.width;
+      const actualHeight = rect.height;
+      container.style.transform = originalTransform;
+
+      // 可用空间：使用视口高度的 80% 作为最大高度（与 CSS max-height: 80vh 一致）
+      const availableWidth = window.innerWidth * 0.96;
+      const availableHeight = window.innerHeight * 0.80;
+
+      // 计算需要的缩放比例
+      const scaleX = availableWidth / actualWidth;
+      const scaleY = availableHeight / actualHeight;
+      const scale = Math.min(scaleX, scaleY, 1); // 不超过原始尺寸
+
+      // 应用缩放
+      if (scale >= 1) {
+        container.style.transform = '';
+      } else {
+        container.style.transform = `scale(${scale})`;
+      }
+    };
+
+    // 延迟执行，确保 DOM 已渲染
+    const timer = setTimeout(() => {
+      calculateScale();
+    }, 100);
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', calculateScale);
+    
+    // 监听屏幕方向变化（移动端横竖屏切换）
+    window.addEventListener('orientationchange', calculateScale);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', calculateScale);
+      window.removeEventListener('orientationchange', calculateScale);
+    };
+  }, []);
 
   const handleStartAI = useCallback(() => {
     clientLogger.info('Menu: start AI game');
@@ -97,7 +148,7 @@ useEffect(() => {
 
   return (
     <div className="app menu-app">
-      <div className="menu-container">
+      <div ref={containerRef} className="menu-container">
         <div className="corner corner-tl" />
         <div className="corner corner-tr" />
         <div className="corner corner-bl" />
