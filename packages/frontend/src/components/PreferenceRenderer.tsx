@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint, Platform } from '@chess/types';
+import type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint, Platform } from '@chess/preference';
 
 // 从 dotted path 获取嵌套对象值
 function getByPath(obj: unknown, path: string): unknown {

@@ -18,7 +18,8 @@
   "dependencies": {
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "@chess/types": "workspace:*"
+    "@chess/types": "workspace:*",
+    "@chess/preference": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",

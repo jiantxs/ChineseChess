@@ -432,6 +432,26 @@
   box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
 }
 
+.reset-btn {
+  padding: 12px 48px;
+  background: transparent;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  color: rgba(255, 100, 100, 0.8);
+  font-size: 15px;
+  letter-spacing: 4px;
+  cursor: pointer;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  transition: all 0.3s ease;
+  margin-left: 16px;
+}
+
+.reset-btn:hover {
+  background: rgba(255, 100, 100, 0.1);
+  border-color: rgba(255, 100, 100, 0.6);
+  color: rgba(255, 100, 100, 0.95);
+  box-shadow: 0 0 12px rgba(255, 100, 100, 0.15);
+}
+
 /* 加载中 */
 .loading {
   display: flex;

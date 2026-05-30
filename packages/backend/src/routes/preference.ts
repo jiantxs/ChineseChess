@@ -13,7 +13,7 @@
 
 import { Router } from 'express';
 import type { ChessConfig } from '@chess/config';
-import type { UserPreference } from '@chess/types';
+import type { UserPreference } from '@chess/preference';
 import { createPreferenceManager } from '@chess/preference';
 
 /**

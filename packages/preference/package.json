@@ -16,8 +16,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@chess/config": "workspace:*",
-    "@chess/types": "workspace:*"
+    "@chess/config": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",

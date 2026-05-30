@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPreference, updatePreference, type UserPreference } from '../utils/preferenceApi';
+import { getPreference, updatePreference, resetPreference, type UserPreference } from '../utils/preferenceApi';
 import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath, assetPath } from '../utils/api';
-import type { PreferenceHint, Platform } from '@chess/types';
+import type { PreferenceHint, Platform } from '@chess/preference';
 import './SettingsPage.css';
 
 // 立即更新本地状态
@@ -144,6 +144,23 @@ export default function SettingsPage() {
     }
   }, [preference]);
 
+  const handleReset = useCallback(async () => {
+    setSaveStatus('重置中...');
+    setError(null);
+    try {
+      const reset = await resetPreference();
+      setPreference(reset);
+      setSaveStatus('已重置');
+      clientLogger.info('Settings: preference reset');
+      setTimeout(() => setSaveStatus(''), 2000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '重置偏好设置失败';
+      setError(message);
+      setSaveStatus('重置失败');
+      clientLogger.error('Settings: failed to reset preference', { error: message });
+    }
+  }, []);
+
   const handleBack = useCallback(() => {
     navigate('/menu');
   }, [navigate]);
@@ -226,6 +243,7 @@ export default function SettingsPage() {
 
         <div className="settings-actions">
           <button className="apply-btn" onClick={handleApply}>应用</button>
+          <button className="reset-btn" onClick={handleReset}>重置设置</button>
         </div>
       </div>
     </div>

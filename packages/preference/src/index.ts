@@ -20,14 +20,15 @@
 import fs from 'fs';
 import path from 'path';
 import type { ChessConfig } from '@chess/config';
-import type { UserPreference } from '@chess/types';
-import { defaultUserPreference } from '@chess/types';
+import type { UserPreference } from './types';
+import { defaultUserPreference } from './types';
 
 // 重新导出共享类型，便于其他包使用
-export type { UserPreference, PreferenceOption } from '@chess/types';
+export type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint, PreferenceHintLink } from './types';
+export type { Platform } from './types';
 
 // 重新导出默认偏好设置（别名，便于其他包使用）
-export { defaultUserPreference as defaultPreference, defaultUserPreference } from '@chess/types';
+export { defaultUserPreference as defaultPreference, defaultUserPreference } from './types';
 
 /**
  * 创建偏好管理器实例

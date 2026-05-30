@@ -13,10 +13,10 @@
  */
 
 import { apiPath } from './api';
-import type { UserPreference } from '@chess/types';
+import type { UserPreference } from '@chess/preference';
 
 // 重新导出共享类型
-export type { UserPreference, PreferenceOption } from '@chess/types';
+export type { UserPreference, PreferenceOption } from '@chess/preference';
 
 /**
  * API 响应接口
