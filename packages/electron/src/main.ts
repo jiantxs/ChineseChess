@@ -58,6 +58,21 @@ function findAvailablePort(): Promise<number> {
   });
 }
 
+/**
+ * 检查指定端口是否可用
+ */
+function checkPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.listen(port, '0.0.0.0', () => {
+      server.close(() => resolve(true));
+    });
+    server.on('error', () => {
+      resolve(false);
+    });
+  });
+}
+
 let mainWindow: BrowserWindow | null = null;
 let stopServer: (() => void) | null = null;
 let stopMobileServer: (() => void) | null = null;
@@ -110,16 +125,16 @@ async function main(): Promise<void> {
     const basePrefix = `/${randomUUID()}`;
     console.log(`Generated base prefix: ${basePrefix}`);
 
-  // Determine the correct public path for static assets
-  // In packaged app, public files are in dist/public relative to main.js
-  // In development, they are in packages/backend/public
-  const isPackaged = app.isPackaged;
-  const publicPath = isPackaged
-    ? path.resolve(app.getAppPath(), 'dist', 'public')
-    : path.resolve(__dirname, '../../backend/public');
-  console.log(`Public path: ${publicPath} (isPackaged: ${isPackaged})`);
+    // Determine the correct public path for static assets
+    // In packaged app, public files are in dist/public relative to main.js
+    // In development, they are in packages/backend/public
+    const isPackaged = app.isPackaged;
+    const publicPath = isPackaged
+      ? path.resolve(app.getAppPath(), 'dist', 'public')
+      : path.resolve(__dirname, '../../backend/public');
+    console.log(`Public path: ${publicPath} (isPackaged: ${isPackaged})`);
 
-// Start backend server directly in the same process
+    // Start backend server directly in the same process
     console.log('Starting backend server...');
 
     const config = createChessConfig({
@@ -143,8 +158,59 @@ async function main(): Promise<void> {
     // Handle extra mobile server
     const prefs = mainPreferenceManager.getPreference();
     if (prefs.extraSettings?.extraServer?.enabled?.value === true) {
-      const mobilePort = await findAvailablePort();
-      const mobilePrefix = `/${randomUUID()}`;
+      // 判断是否启用"记住服务器地址编码"
+      const rememberCode = prefs.extraSettings.extraServer.rememberServerCode?.value !== false;
+
+      let mobilePort: number;
+      let mobilePrefix: string;
+
+      if (rememberCode) {
+        // 优先从隐藏属性读取之前保存的 port 和 prefix
+        const savedPort = prefs.extraSettings.extraServer._port?.value;
+        const savedPrefix = prefs.extraSettings.extraServer._prefix?.value;
+
+        if (savedPort && savedPrefix) {
+          // 验证保存的端口是否仍可用
+          const isAvailable = await checkPortAvailable(savedPort);
+          if (isAvailable) {
+            mobilePort = savedPort;
+            mobilePrefix = savedPrefix;
+            console.log(`Using remembered server address: port=${mobilePort}, prefix=${mobilePrefix}`);
+          } else {
+            // 端口被占用，重新生成
+            mobilePort = await findAvailablePort();
+            mobilePrefix = `/${randomUUID()}`;
+            mainPreferenceManager.updatePreference({
+              extraSettings: {
+                extraServer: {
+                  _port: { value: mobilePort },
+                  _prefix: { value: mobilePrefix }
+                }
+              }
+            });
+            console.log(`Saved port unavailable, generated new: port=${mobilePort}, prefix=${mobilePrefix}`);
+          }
+        } else {
+          // 首次启动，生成新的并保存
+          mobilePort = await findAvailablePort();
+          mobilePrefix = `/${randomUUID()}`;
+          mainPreferenceManager.updatePreference({
+            extraSettings: {
+              extraServer: {
+                _port: { value: mobilePort },
+                _prefix: { value: mobilePrefix }
+              }
+            }
+          });
+          console.log(`First launch, generated and saved: port=${mobilePort}, prefix=${mobilePrefix}`);
+        }
+      } else {
+        // 不记住地址编码，每次随机生成
+        mobilePort = await findAvailablePort();
+        mobilePrefix = `/${randomUUID()}`;
+        console.log(`Remember server code disabled, using random: port=${mobilePort}, prefix=${mobilePrefix}`);
+      }
+
       const mobileMonorepoRoot = path.join(config.log.monorepoRoot, 'mobile');
 
       const mobileConfig = createChessConfig({
@@ -192,11 +258,13 @@ async function main(): Promise<void> {
       });
       console.log('Mobile server code saved to preference');
     } else {
-      // Clear textCode if extra server is disabled
+      // Clear textCode and hidden properties if extra server is disabled
       mainPreferenceManager.updatePreference({
         extraSettings: {
           extraServer: {
-            textCode: { value: '' }
+            textCode: { value: '' },
+            _port: { value: 0 },
+            _prefix: { value: '' }
           }
         }
       });

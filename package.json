@@ -6,8 +6,6 @@
   "description": "Chinese Chess (Xiangqi) pnpm workspace monorepo",
   "scripts": {
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "dev:backend": "pnpm --filter @chess/backend dev",
-    "dev:frontend": "pnpm --filter @chess/frontend dev",
     "build": "pnpm run build:types && pnpm run build:config && pnpm run build:logger && pnpm run build:preference && pnpm run build:game-records && pnpm run build:core && pnpm run build:backend && pnpm run build:frontend",
     "build:types": "pnpm --filter @chess/types build",
     "build:config": "pnpm --filter @chess/config build",

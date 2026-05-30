@@ -237,7 +237,13 @@ export interface UserPreference {
   extraSettings: PreferenceGroup & {
     extraServer: PreferenceGroup & {
       enabled: PreferenceOption<boolean>;
+      /** 是否记住当前服务器地址编码，重启后保持地址不变 */
+      rememberServerCode: PreferenceOption<boolean>;
       textCode: PreferenceOption<string>;
+      /** 隐藏属性：存储额外服务器的端口，保证重启后地址编码不变 */
+      _port: PreferenceOption<number>;
+      /** 隐藏属性：存储额外服务器的 URL prefix，保证重启后地址编码不变 */
+      _prefix: PreferenceOption<string>;
     }
   }
 }
@@ -258,12 +264,15 @@ export const defaultUserPreference: UserPreference = {
     label: 'AI 设置',
     difficulty: { value: 5, visible: true, label: 'AI难度', valueType: 'number', range: { min: 1, max: 10, step: 1 } },
   },
-  extraSettings: {
+    extraSettings: {
     label: '额外设置',
     extraServer: {
       label: '额外服务器',
       enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean', hint: { message: '更改已保存，重启软件后生效', trigger: 'onEnable', type: 'warning', link: { text: '请点此获取安卓应用程序', path: '/assets/app.apk' } } },
+      rememberServerCode: { value: true, visible: true, label: '记住当前服务器地址编码', valueType: 'boolean', hint: { message: '开启后重启软件将保持服务器地址编码不变，方便安卓端持续连接', trigger: 'onChange', type: 'info' } },
       textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
+      _port: { value: 0, visible: false, label: '', valueType: 'number' },
+      _prefix: { value: '', visible: false, label: '', valueType: 'string' },
     }
   }
 };

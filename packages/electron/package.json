@@ -9,7 +9,6 @@
   "scripts": {
     "build": "node build.js",
     "dist": "node build.js && electron-builder",
-    "dev": "node build.js && electron .",
     "clean": "rm -rf dist"
   },
   "build": {
