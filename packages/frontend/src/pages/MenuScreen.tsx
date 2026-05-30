@@ -200,10 +200,7 @@ useEffect(() => {
             </button>
           </div>
 
-          <button className="menu-btn" onClick={handleViewLogs}>
-            <span className="btn-line" />
-            <span className="btn-text">查看日志</span>
-          </button>
+
 
           <button className="menu-btn" onClick={handleSettings}>
             <span className="btn-line" />

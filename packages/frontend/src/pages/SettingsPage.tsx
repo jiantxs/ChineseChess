@@ -165,6 +165,11 @@ export default function SettingsPage() {
     navigate('/menu');
   }, [navigate]);
 
+  const handleViewLogs = useCallback(() => {
+    clientLogger.info('Settings: view logs');
+    navigate('/logs');
+  }, [navigate]);
+
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
@@ -242,6 +247,7 @@ export default function SettingsPage() {
         )}
 
         <div className="settings-actions">
+          <button className="apply-btn" onClick={handleViewLogs}>查看日志</button>
           <button className="apply-btn" onClick={handleApply}>应用</button>
           <button className="reset-btn" onClick={handleReset}>重置设置</button>
         </div>

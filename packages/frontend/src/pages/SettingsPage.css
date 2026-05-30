@@ -407,6 +407,8 @@
 .settings-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 16px;
   padding-top: 24px;
   border-top: 1px solid rgba(0, 255, 170, 0.1);
   margin-top: auto;
@@ -414,7 +416,7 @@
 }
 
 .apply-btn {
-  padding: 12px 48px;
+  padding: 12px 36px;
   background: transparent;
   border: 1px solid rgba(0, 255, 170, 0.3);
   color: rgba(0, 255, 170, 0.8);
@@ -433,7 +435,7 @@
 }
 
 .reset-btn {
-  padding: 12px 48px;
+  padding: 12px 36px;
   background: transparent;
   border: 1px solid rgba(255, 100, 100, 0.3);
   color: rgba(255, 100, 100, 0.8);
@@ -442,7 +444,6 @@
   cursor: pointer;
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
   transition: all 0.3s ease;
-  margin-left: 16px;
 }
 
 .reset-btn:hover {
@@ -684,7 +685,18 @@
     width: 120px;
   }
 
-  .apply-btn {
+  .settings-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .view-logs-btn,
+  .apply-btn,
+  .reset-btn {
     width: 100%;
+  }
+
+  .view-logs-btn:first-child {
+    margin-top: 0;
   }
 }
