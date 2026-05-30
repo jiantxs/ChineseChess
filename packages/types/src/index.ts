@@ -159,11 +159,18 @@ export const BOARD_ROWS = 10;
 export const BOARD_COLS = 9;
 
 /**
+ * 支持的平台类型，与 config 包中的 platform 定义保持一致
+ */
+export type Platform = 'web' | 'win' | 'android';
+
+/**
  * 偏好设置分组描述 - 用于存放分类的显示名称
  */
 export interface PreferenceGroup {
   /** 分组显示名称 */
   label: string;
+  /** 该分类支持展示的平台，不填则所有平台都展示 */
+  platforms?: Platform[];
 }
 
 /**
@@ -245,7 +252,7 @@ export interface UserPreference {
       /** 隐藏属性：存储额外服务器的 URL prefix，保证重启后地址编码不变 */
       _prefix: PreferenceOption<string>;
     }
-  }
+  };
 }
 
 /**
@@ -266,6 +273,7 @@ export const defaultUserPreference: UserPreference = {
   },
     extraSettings: {
     label: '额外设置',
+    platforms: ['win'],
     extraServer: {
       label: '额外服务器',
       enabled: { value: false, visible: true, label: '启用为安卓平台准备的额外服务器', valueType: 'boolean', hint: { message: '更改已保存，重启软件后生效', trigger: 'onEnable', type: 'warning', link: { text: '请点此获取安卓应用程序', path: '/assets/app.apk' } } },

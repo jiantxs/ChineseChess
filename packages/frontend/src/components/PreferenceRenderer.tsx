@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint } from '@chess/types';
+import type { UserPreference, PreferenceOption, PreferenceGroup, PreferenceHint, Platform } from '@chess/types';
 
 // 从 dotted path 获取嵌套对象值
 function getByPath(obj: unknown, path: string): unknown {
@@ -55,12 +55,20 @@ type SchemaItem = {
 };
 
 // 从 preference 推导 schema（支持三层嵌套结构）
-function deriveSchema(preference: UserPreference): SchemaCategory[] {
+function deriveSchema(preference: UserPreference, currentPlatform: Platform): SchemaCategory[] {
   const categories: SchemaCategory[] = [];
 
   for (const [categoryKey, categoryValue] of Object.entries(preference)) {
     if (!categoryValue || typeof categoryValue !== 'object') continue;
-    
+
+    // 检查平台过滤：如果定义了 platforms，则当前平台必须在列表中
+    if (isPreferenceGroup(categoryValue)) {
+      const platforms = (categoryValue as PreferenceGroup).platforms;
+      if (platforms && platforms.length > 0 && !platforms.includes(currentPlatform)) {
+        continue; // 跳过不适用于当前平台的分类
+      }
+    }
+
     const categoryLabel = isPreferenceGroup(categoryValue) ? categoryValue.label : categoryKey;
     const groups: SchemaGroup[] = [];
 
@@ -141,6 +149,7 @@ function shouldTriggerHint(hint: PreferenceHint, oldValue: unknown, newValue: un
 
 interface PreferenceRendererProps {
   preference: UserPreference;
+  currentPlatform: Platform;
   onChange: (updates: Partial<UserPreference>) => void;
   onHint?: (hint: PreferenceHint) => void;
 }
@@ -235,8 +244,8 @@ function PreferenceControl({ item, value, onChange }: { item: SchemaItem; value:
   return null;
 }
 
-export function PreferenceRenderer({ preference, onChange, onHint }: PreferenceRendererProps) {
-  const schema = deriveSchema(preference);
+export function PreferenceRenderer({ preference, currentPlatform, onChange, onHint }: PreferenceRendererProps) {
+  const schema = deriveSchema(preference, currentPlatform);
   const [activeCategory, setActiveCategory] = useState<string>(schema[0]?.key ?? '');
 
   const handleItemChange = (path: string, newValue: unknown) => {

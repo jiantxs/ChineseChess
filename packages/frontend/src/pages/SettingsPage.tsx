@@ -4,7 +4,7 @@ import { getPreference, updatePreference, type UserPreference } from '../utils/p
 import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath, assetPath } from '../utils/api';
-import type { PreferenceHint } from '@chess/types';
+import type { PreferenceHint, Platform } from '@chess/types';
 import './SettingsPage.css';
 
 // 立即更新本地状态
@@ -37,6 +37,7 @@ interface HintMessage {
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [preference, setPreference] = useState<UserPreference | null>(null);
+  const [currentPlatform, setCurrentPlatform] = useState<Platform>('web');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>('');
@@ -53,19 +54,11 @@ export default function SettingsPage() {
         fetch(apiPath('/api/config')).then((r) => r.json()).catch(() => null),
       ]);
 
-      // 根据 server.platform 控制 extraSettings 的可见性
-      const shouldShowExtra = configRes?.server?.platform === 'win';
-      const toggledExtraSettings: UserPreference['extraSettings'] = JSON.parse(JSON.stringify(prefs.extraSettings));
-      for (const group of Object.values(toggledExtraSettings)) {
-        for (const item of Object.values(group)) {
-          if (item && typeof item === 'object' && 'visible' in item) {
-            (item as { visible: boolean }).visible = shouldShowExtra;
-          }
-        }
-      }
-      const updated = await updatePreference({ extraSettings: toggledExtraSettings });
-      setPreference(updated);
-      clientLogger.info(`Settings: extraSettings ${shouldShowExtra ? 'shown' : 'hidden'} (platform: ${configRes?.server?.platform})`);
+      // 从后端获取当前平台，并保存到状态中供 PreferenceRenderer 使用
+      const platform: Platform = configRes?.server?.platform ?? 'web';
+      setCurrentPlatform(platform);
+      setPreference(prefs);
+      clientLogger.info(`Settings: loaded preference (platform: ${platform})`);
     } catch (err) {
       const message = err instanceof Error ? err.message : '加载偏好设置失败';
       setError(message);
@@ -228,7 +221,7 @@ export default function SettingsPage() {
         ))}
 
         {preference && (
-          <PreferenceRenderer preference={preference} onChange={handleChange} onHint={handleHint} />
+          <PreferenceRenderer preference={preference} currentPlatform={currentPlatform} onChange={handleChange} onHint={handleHint} />
         )}
 
         <div className="settings-actions">
