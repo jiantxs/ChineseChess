@@ -1,0 +1,597 @@
+/**
+ * @file 通用组件样式
+ * 科幻风格 UI 组件的共享样式
+ */
+
+/* ========== 面板容器 ========== */
+.sf-panel {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--color-primary-faint);
+  z-index: var(--z-panel);
+}
+
+.sf-panel--fullscreen {
+  width: calc(100vw - var(--panel-margin) * 2);
+  height: calc(100vh - var(--panel-margin) * 2);
+  margin: var(--panel-margin);
+  padding: var(--panel-padding);
+}
+
+.sf-panel--center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sf-panel--column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 四角装饰 ========== */
+.sf-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--color-primary-weak);
+  pointer-events: none;
+}
+
+.sf-corner--sm {
+  width: 16px;
+  height: 16px;
+}
+
+.sf-corner--tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+.sf-corner--tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+.sf-corner--bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+.sf-corner--br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* 面板用的小号四角 */
+.sf-panel-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(0, 255, 170, 0.35);
+  pointer-events: none;
+}
+
+.sf-panel-corner--tl { top: 0; left: 0; border-top: 1px solid; border-left: 1px solid; }
+.sf-panel-corner--tr { top: 0; right: 0; border-top: 1px solid; border-right: 1px solid; }
+.sf-panel-corner--bl { bottom: 0; left: 0; border-bottom: 1px solid; border-left: 1px solid; }
+.sf-panel-corner--br { bottom: 0; right: 0; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* ========== 科幻按钮 ========== */
+.sf-btn {
+  position: relative;
+  width: 100%;
+  padding: 18px 0;
+  margin-bottom: 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-indent: 6px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: color var(--transition-slow);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.sf-btn:last-child {
+  margin-bottom: 0;
+}
+
+.sf-btn__line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width var(--transition-slow), left var(--transition-slow);
+}
+
+.sf-btn:hover {
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.sf-btn:hover .sf-btn__line {
+  width: 100%;
+  left: 0;
+}
+
+.sf-btn:active {
+  color: var(--color-text-white);
+  transform: scale(0.98);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+/* 按钮变体 */
+.sf-btn--danger {
+  color: rgba(180, 100, 100, 0.5);
+}
+
+.sf-btn--danger:hover {
+  color: rgba(255, 100, 100, 0.9);
+}
+
+.sf-btn--danger .sf-btn__line {
+  background: rgba(255, 100, 100, 0.5);
+}
+
+.sf-btn--compact {
+  width: auto;
+  padding: 14px 24px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.sf-btn--small {
+  padding: 10px 20px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-indent: 2px;
+}
+
+/* ========== 输入框 ========== */
+.sf-input {
+  flex: 1;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 15px;
+  letter-spacing: 2px;
+  outline: none;
+  font-family: var(--font-chinese);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.sf-input::placeholder {
+  color: var(--color-text-faint);
+  letter-spacing: 2px;
+}
+
+.sf-input:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 错误提示 ========== */
+.sf-error {
+  margin-top: 24px;
+  padding: 12px 16px;
+  color: var(--color-danger);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid var(--color-danger-faint);
+  background: rgba(255, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+.sf-error__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-danger-weak);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes errorPulse {
+  0%, 100% { border-color: var(--color-danger-faint); }
+  50% { border-color: rgba(255, 100, 100, 0.4); }
+}
+
+/* ========== 滚动条 ========== */
+.sf-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sf-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sf-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 2px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 4px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 170, 0.3);
+}
+
+/* ========== 标签 ========== */
+.sf-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ========== 徽章 ========== */
+.sf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+  letter-spacing: 1px;
+}
+
+.sf-badge--success {
+  color: rgba(0, 255, 170, 0.8);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.sf-badge--warning {
+  color: var(--color-warning-dim);
+  border-color: var(--color-warning-weak);
+}
+
+.sf-badge--danger {
+  color: rgba(255, 100, 100, 0.7);
+  border-color: rgba(255, 100, 100, 0.2);
+}
+
+.sf-badge--info {
+  color: var(--color-info-dim);
+  border-color: var(--color-info-faint);
+}
+
+.sf-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: connectionPulse 2s ease-in-out infinite;
+}
+
+.sf-badge--success .sf-badge__dot {
+  background: rgba(0, 255, 170, 0.8);
+}
+
+.sf-badge--warning .sf-badge__dot {
+  background: var(--color-warning-dim);
+}
+
+.sf-badge--danger .sf-badge__dot {
+  background: rgba(255, 100, 100, 0.7);
+  animation: none;
+}
+
+@keyframes connectionPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ========== 分隔线 ========== */
+.sf-divider {
+  width: 60%;
+  height: 1px;
+  margin: 0 auto 32px auto;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 170, 0.4), transparent);
+}
+
+.sf-divider--full {
+  width: 100%;
+  margin: 0 0 12px 0;
+  background: linear-gradient(90deg, rgba(0, 255, 170, 0.3), rgba(0, 255, 170, 0.1) 60%, transparent);
+}
+
+/* ========== 标题 ========== */
+.sf-title {
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 24px 0;
+  letter-spacing: 24px;
+  text-indent: 24px;
+  font-family: var(--font-serif);
+  text-shadow: 0 0 10px rgba(0, 255, 170, 0.3), 0 0 40px rgba(0, 255, 170, 0.1);
+  animation: titlePulse 4s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(0, 255, 170, 0.3), 0 0 40px rgba(0, 255, 170, 0.1);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 255, 170, 0.5), 0 0 60px rgba(0, 255, 170, 0.2);
+  }
+}
+
+/* ========== 返回按钮 ========== */
+.sf-back-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.7);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+}
+
+.sf-back-btn:hover {
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+}
+
+/* ========== 操作按钮组 ========== */
+.sf-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color-divider);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sf-action-btn {
+  padding: 12px 36px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 15px;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+}
+
+.sf-action-btn:hover {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+}
+
+.sf-action-btn--danger {
+  border-color: rgba(255, 100, 100, 0.3);
+  color: rgba(255, 100, 100, 0.8);
+}
+
+.sf-action-btn--danger:hover {
+  background: rgba(255, 100, 100, 0.1);
+  border-color: rgba(255, 100, 100, 0.6);
+  color: rgba(255, 100, 100, 0.95);
+  box-shadow: 0 0 12px rgba(255, 100, 100, 0.15);
+}
+
+/* ========== 加载中 ========== */
+.sf-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+/* ========== 提示消息 ========== */
+.sf-hint {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: hintSlideIn 0.3s ease-out forwards;
+  flex-shrink: 0;
+  border-radius: var(--border-radius-sm);
+}
+
+@keyframes hintSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sf-hint__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sf-hint__text {
+  flex: 1;
+}
+
+.sf-hint__close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.sf-hint__close:hover {
+  opacity: 1;
+}
+
+.sf-hint--warning {
+  color: rgba(255, 200, 80, 0.95);
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  background: rgba(255, 160, 0, 0.08);
+}
+
+.sf-hint--warning .sf-hint__icon {
+  border: 1px solid rgba(255, 200, 80, 0.5);
+}
+
+.sf-hint--info {
+  color: rgba(100, 180, 255, 0.95);
+  border: 1px solid rgba(100, 180, 255, 0.25);
+  background: rgba(100, 180, 255, 0.08);
+}
+
+.sf-hint--info .sf-hint__icon {
+  border: 1px solid rgba(100, 180, 255, 0.5);
+}
+
+.sf-hint--success {
+  color: rgba(80, 220, 160, 0.95);
+  border: 1px solid rgba(80, 220, 160, 0.25);
+  background: rgba(80, 220, 160, 0.08);
+}
+
+.sf-hint--success .sf-hint__icon {
+  border: 1px solid rgba(80, 220, 160, 0.5);
+}
+
+/* ========== 标签页 ========== */
+.sf-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.sf-tab {
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.sf-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width var(--transition-normal), left var(--transition-normal);
+}
+
+.sf-tab:hover {
+  color: rgba(0, 255, 170, 0.8);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.sf-tab--active {
+  color: rgba(0, 255, 170, 0.95);
+  border-color: rgba(0, 255, 170, 0.5);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+.sf-tab--active::after {
+  width: 100%;
+  left: 0;
+}
+
+/* ========== 选择器 ========== */
+.sf-select {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-chinese);
+  cursor: pointer;
+  transition: border-color var(--transition-normal);
+  min-width: 140px;
+}
+
+.sf-select:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 搜索输入框 ========== */
+.sf-search {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-chinese);
+  transition: border-color var(--transition-normal);
+}
+
+.sf-search::placeholder {
+  color: var(--color-text-faint);
+}
+
+.sf-search:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 导出按钮 ========== */
+.sf-export-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.sf-export-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.sf-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

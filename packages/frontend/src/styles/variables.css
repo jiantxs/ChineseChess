@@ -1,0 +1,97 @@
+/**
+ * @file CSS 变量系统
+ * 统一管理颜色、字体、尺寸、动画等设计令牌
+ */
+
+:root {
+  /* ========== 颜色系统 ========== */
+  /* 主色 - 青色 */
+  --color-primary: rgba(0, 255, 170, 0.9);
+  --color-primary-dim: rgba(0, 255, 170, 0.7);
+  --color-primary-weak: rgba(0, 255, 170, 0.5);
+  --color-primary-faint: rgba(0, 255, 170, 0.15);
+  --color-primary-glow: rgba(0, 255, 170, 0.3);
+  --color-primary-glow-strong: rgba(0, 255, 170, 0.5);
+
+  /* 危险色 - 红色 */
+  --color-danger: rgba(255, 100, 100, 0.9);
+  --color-danger-dim: rgba(255, 100, 100, 0.7);
+  --color-danger-weak: rgba(255, 100, 100, 0.5);
+  --color-danger-faint: rgba(255, 100, 100, 0.2);
+
+  /* 警告色 - 橙色 */
+  --color-warning: rgba(237, 137, 54, 0.9);
+  --color-warning-dim: rgba(237, 137, 54, 0.8);
+  --color-warning-weak: rgba(237, 137, 54, 0.3);
+
+  /* 成功色 - 绿色 */
+  --color-success: rgba(72, 187, 120, 0.9);
+
+  /* 信息色 - 蓝色 */
+  --color-info: rgba(100, 200, 255, 0.9);
+  --color-info-dim: rgba(100, 200, 255, 0.7);
+  --color-info-faint: rgba(100, 200, 255, 0.25);
+
+  /* 文字颜色 */
+  --color-text-primary: rgba(160, 170, 180, 0.9);
+  --color-text-secondary: rgba(160, 170, 180, 0.7);
+  --color-text-muted: rgba(160, 170, 180, 0.5);
+  --color-text-faint: rgba(160, 170, 180, 0.3);
+  --color-text-white: #ffffff;
+
+  /* 棋子颜色 */
+  --color-red-piece: rgba(220, 60, 60, 0.9);
+  --color-red-piece-dim: rgba(220, 60, 60, 0.7);
+  --color-red-piece-weak: rgba(220, 60, 60, 0.5);
+  --color-red-piece-faint: rgba(220, 60, 60, 0.4);
+
+  --color-black-piece: rgba(180, 180, 180, 0.9);
+  --color-black-piece-dim: rgba(180, 180, 180, 0.7);
+  --color-black-piece-weak: rgba(180, 180, 180, 0.5);
+  --color-black-piece-faint: rgba(180, 180, 180, 0.4);
+
+  /* 背景色 */
+  --bg-panel: rgba(10, 10, 12, 0.7);
+  --bg-panel-transparent: rgba(10, 10, 12, 0.6);
+  --bg-input: rgba(0, 0, 0, 0.4);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-dark: rgba(0, 0, 0, 0.3);
+
+  /* 边框 */
+  --border-color-primary: rgba(0, 255, 170, 0.12);
+  --border-color-faint: rgba(100, 100, 100, 0.2);
+  --border-color-divider: rgba(0, 255, 170, 0.1);
+
+  /* ========== 字体系统 ========== */
+  --font-chinese: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --font-serif: 'KaiTi', 'STKaiti', 'SimSun', serif;
+  --font-mono: 'Consolas', 'Monaco', monospace;
+
+  /* ========== 尺寸系统 ========== */
+  --panel-padding: 32px;
+  --panel-margin: 24px;
+  --panel-padding-mobile: 20px;
+  --panel-margin-mobile: 16px;
+
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+
+  /* ========== 动画系统 ========== */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.4s ease;
+
+  --animation-duration-fast: 0.6s;
+  --animation-duration-normal: 0.8s;
+  --animation-duration-slow: 1.5s;
+  --animation-duration-bg: 24s;
+
+  /* ========== z-index 层级 ========== */
+  --z-background: 0;
+  --z-content: 5;
+  --z-panel: 10;
+  --z-modal: 20;
+  --z-overlay: 9999;
+}

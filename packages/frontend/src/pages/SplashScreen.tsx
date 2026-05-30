@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientLogger } from '../utils/clientLogger';
-import './SplashScreen.css';
 
 export default function SplashScreen() {
   const [fading, setFading] = useState(false);
@@ -17,7 +16,10 @@ export default function SplashScreen() {
   }, [fading, navigate]);
 
   return (
-    <div className={`splash-overlay ${fading ? 'splash-fade-out' : ''}`} onClick={handleClick}>
+    <div
+      className={`splash-overlay ${fading ? 'splash-overlay--fade-out' : ''}`}
+      onClick={handleClick}
+    >
       <span className="splash-text">点击以开始游戏</span>
     </div>
   );

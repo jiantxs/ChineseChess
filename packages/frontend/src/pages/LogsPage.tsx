@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiPath } from '../utils/api';
-import './LogsPage.css';
+import { ErrorMessage } from '../components/common';
 
 type LogType = 'requests' | 'errors' | 'events' | 'games';
 
@@ -23,6 +23,49 @@ interface LogsResponse {
 
 const LOGS_PER_PAGE = 100;
 const REFRESH_INTERVAL = 5000;
+
+const tabLabels: Record<LogType, string> = {
+  requests: '请求日志',
+  errors: '错误日志',
+  events: '事件日志',
+  games: '游戏日志',
+};
+
+function getLevelClass(level: string): string {
+  switch (level.toLowerCase()) {
+    case 'error':
+      return 'log-level-error';
+    case 'warn':
+      return 'log-level-warn';
+    case 'info':
+      return 'log-level-info';
+    case 'debug':
+      return 'log-level-debug';
+    default:
+      return 'log-level-default';
+  }
+}
+
+function getLogDetails(log: LogEntry): Record<string, unknown> {
+  const { timestamp, level, message, ...rest } = log;
+  return rest;
+}
+
+function hasDetails(log: LogEntry): boolean {
+  return Object.keys(getLogDetails(log)).length > 0;
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
 
 export default function LogsPage() {
   const navigate = useNavigate();
@@ -182,53 +225,9 @@ export default function LogsPage() {
     );
   });
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-  };
-
-  const getLevelClass = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'error':
-        return 'log-level-error';
-      case 'warn':
-        return 'log-level-warn';
-      case 'info':
-        return 'log-level-info';
-      case 'debug':
-        return 'log-level-debug';
-      default:
-        return 'log-level-default';
-    }
-  };
-
-  const getLogDetails = (log: LogEntry): Record<string, unknown> => {
-    const { timestamp, level, message, ...rest } = log;
-    return rest;
-  };
-
-  const hasDetails = (log: LogEntry): boolean => {
-    const details = getLogDetails(log);
-    return Object.keys(details).length > 0;
-  };
-
-  const tabLabels: Record<LogType, string> = {
-    requests: '请求日志',
-    errors: '错误日志',
-    events: '事件日志',
-    games: '游戏日志',
-  };
-
   return (
-    <div className="logs-page">
-      <div className="logs-container">
+    <div className="page-fullscreen">
+      <div className="sf-panel sf-panel--fullscreen sf-panel--column">
         <div className="logs-header">
           <h1 className="logs-title">日志查看器</h1>
           <div className="header-actions">
@@ -245,18 +244,18 @@ export default function LogsPage() {
                 上次更新: {lastRefresh.toLocaleTimeString('zh-CN')}
               </span>
             </div>
-            <button className="back-btn" onClick={() => navigate('/menu')}>
+            <button className="sf-back-btn" onClick={() => navigate('/menu')}>
               返回菜单
             </button>
           </div>
         </div>
 
         <div className="logs-controls">
-          <div className="tabs">
+          <div className="sf-tabs">
             {(Object.keys(tabLabels) as LogType[]).map((tab) => (
               <button
                 key={tab}
-                className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+                className={`sf-tab ${activeTab === tab ? 'sf-tab--active' : ''}`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tabLabels[tab]}
@@ -269,7 +268,7 @@ export default function LogsPage() {
               <select
                 value={selectedGameId}
                 onChange={(e) => setSelectedGameId(e.target.value)}
-                className="date-select"
+                className="sf-select"
               >
                 <option value="">选择游戏</option>
                 {availableGames.map((gameId) => (
@@ -283,7 +282,7 @@ export default function LogsPage() {
             <select
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="date-select"
+              className="sf-select"
             >
               <option value="">所有日期</option>
               {availableDates.map((date) => (
@@ -298,11 +297,11 @@ export default function LogsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索日志..."
-              className="search-input"
+              className="sf-search"
             />
 
             <button
-              className="refresh-btn"
+              className="sf-export-btn"
               onClick={() => fetchLogs(0, false)}
               disabled={loading}
             >
@@ -310,7 +309,7 @@ export default function LogsPage() {
             </button>
 
             <button
-              className="export-btn"
+              className="sf-export-btn"
               onClick={handleExportAll}
               disabled={loading}
             >
@@ -326,18 +325,13 @@ export default function LogsPage() {
           )}
         </div>
 
-        {error && (
-          <div className="error-message">
-            <span className="error-icon">!</span>
-            {error}
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
 
-        <div className="logs-table-container" ref={tableContainerRef}>
+        <div className="logs-table-container sf-scrollbar--wide" ref={tableContainerRef}>
           {loading && logs.length === 0 ? (
-            <div className="loading">加载中...</div>
+            <div className="sf-loading">加载中...</div>
           ) : filteredLogs.length === 0 ? (
-            <div className="no-logs">暂无日志</div>
+            <div className="sf-loading">暂无日志</div>
           ) : (
             <>
               <table className="logs-table">
@@ -351,8 +345,8 @@ export default function LogsPage() {
                 </thead>
                 <tbody>
                   {filteredLogs.map((log, index) => (
-                    <>
-                      <tr key={index} className="log-row">
+                    <Fragment key={index}>
+                      <tr className="log-row">
                         <td className="col-expand">
                           {hasDetails(log) && (
                             <button
@@ -376,7 +370,7 @@ export default function LogsPage() {
                         </td>
                       </tr>
                       {expandedRows.has(index) && hasDetails(log) && (
-                        <tr key={`${index}-detail`} className="log-detail-row">
+                        <tr className="log-detail-row">
                           <td colSpan={4}>
                             <pre className="log-detail">
                               {JSON.stringify(getLogDetails(log), null, 2)}
@@ -384,7 +378,7 @@ export default function LogsPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

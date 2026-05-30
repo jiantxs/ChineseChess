@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import ChessBoard, { ChessBoardSize } from './ChessBoard';
 import { GameState, Side, Position, GameStatus, PieceType } from '@chess/types';
+import { StatusBadge, ErrorMessage } from './common';
 import './GameScreen.css';
 
-/** {@link GameScreen} 组件的属性。 */
 export interface GameScreenProps {
   gameMode: 'local' | 'online' | 'ai';
   gameState: GameState | null;
@@ -18,7 +18,6 @@ export interface GameScreenProps {
   error?: string | null;
 }
 
-/** 棋子类型到中文字符的映射。 */
 const PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.GENERAL]: '将',
   [PieceType.ADVISOR]: '士',
@@ -29,7 +28,6 @@ const PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.SOLDIER]: '卒',
 };
 
-/** 棋子类型到红方中文字符的映射。 */
 const RED_PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.GENERAL]: '帅',
   [PieceType.ADVISOR]: '仕',
@@ -40,21 +38,13 @@ const RED_PIECE_CHAR: Record<PieceType, string> = {
   [PieceType.SOLDIER]: '兵',
 };
 
-/** 步法记录的列标签（中文约定）。 */
 const COL_LABELS = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
-/**
- * 将单步移动格式化为中文记法。
- * 示例："炮二平五" 或 "马8进7"
- */
 function formatMove(move: { from: Position; to: Position; piece: { type: PieceType; side: Side } }, index: number): string {
   const { from, to, piece } = move;
   const isRed = piece.side === Side.RED;
   const pieceChar = isRed ? RED_PIECE_CHAR[piece.type] : PIECE_CHAR[piece.type];
 
-  // 对于红方：从红方视角，列从右（一）到左（九）编号
-  // 但我们的棋盘 col 0 在左边。红方在底部（row 9）。
-  // 中文记法中，红方使用中文数字从右到左。
   const fromColLabel = isRed
     ? COL_LABELS[8 - from.col]
     : String(from.col + 1);
@@ -67,15 +57,12 @@ function formatMove(move: { from: Position; to: Position; piece: { type: PieceTy
 
   let action: string;
   if (colDiff === 0) {
-    // 垂直移动
     const steps = Math.abs(rowDiff);
     const stepLabel = isRed ? COL_LABELS[steps - 1] : String(steps);
     action = rowDiff < 0 ? `进${stepLabel}` : `退${stepLabel}`;
   } else if (rowDiff === 0) {
-    // 横向移动
     action = '平' + toColLabel;
   } else {
-    // 对角线移动（马、象、士）
     const steps = Math.abs(rowDiff);
     const stepLabel = isRed ? COL_LABELS[steps - 1] : String(steps);
     action = rowDiff < 0 ? `进${toColLabel}` : `退${toColLabel}`;
@@ -87,18 +74,6 @@ function formatMove(move: { from: Position; to: Position; piece: { type: PieceTy
   return `${prefix}${pieceChar}${fromColLabel}${action}`;
 }
 
-/**
- * 桌面风格的游戏界面，左侧棋盘 + 右侧信息面板。
- *
- * 功能：
- * - 左侧居中的单个棋盘
- * - 右侧信息面板，包含回合指示器、玩家信息、步法记录、控制器
- * - 科幻线条艺术设计，与菜单风格一致
- * - 在线模式：显示连接状态和房间 ID
- *
- * @param props - {@link GameScreenProps}
- * @returns 渲染的 GameScreen 组件。
- */
 export default function GameScreen({
   gameMode,
   gameState,
@@ -127,7 +102,6 @@ export default function GameScreen({
     }
   }, [gameState?.id]);
 
-  // Build move history pairs for display
   const moveHistory = gameState?.moves || [];
   const historyRows: string[] = [];
   for (let i = 0; i < moveHistory.length; i += 2) {
@@ -136,11 +110,24 @@ export default function GameScreen({
     historyRows.push(`${redMove}${blackMove ? '  ' + blackMove : ''}`);
   }
 
+  const getConnectionStatus = () => {
+    switch (connectionStatus) {
+      case 'connected': return { status: 'success' as const, text: '已连接' };
+      case 'connecting': return { status: 'warning' as const, text: '连接中...' };
+      default: return { status: 'danger' as const, text: '未连接' };
+    }
+  };
+
+  const getTurnStatus = () => {
+    if (currentTurn === Side.RED) return { status: 'danger' as const, text: '红方' };
+    if (currentTurn === Side.BLACK) return { status: 'info' as const, text: '黑方' };
+    return { status: 'info' as const, text: '—' };
+  };
+
   return (
-    <div className="game-screen">
-      {/* Left: Board Area */}
-      <div className="board-area">
-        <div className="board-wrapper">
+    <div className="game-layout">
+      <div className="game-layout__board">
+        <div className="game-layout__board-wrapper">
           <ChessBoard
             id="board-primary"
             gameState={gameState}
@@ -157,31 +144,26 @@ export default function GameScreen({
         </div>
       </div>
 
-      {/* Right: Info Panel */}
-      <div className="info-panel">
-        {/* Panel corner decorations */}
-        <div className="panel-corner panel-corner-tl" />
-        <div className="panel-corner panel-corner-tr" />
-        <div className="panel-corner panel-corner-bl" />
-        <div className="panel-corner panel-corner-br" />
+      <div className="game-layout__panel sf-scrollbar">
+        <div className="sf-panel-corner sf-panel-corner--tl" />
+        <div className="sf-panel-corner sf-panel-corner--tr" />
+        <div className="sf-panel-corner sf-panel-corner--bl" />
+        <div className="sf-panel-corner sf-panel-corner--br" />
 
-        {/* Game Title */}
         <div className="panel-header">
           <h2 className="panel-title">对局信息</h2>
-          <div className="panel-divider" />
+          <div className="sf-divider--full" />
         </div>
 
-        {/* Turn Indicator */}
         <div className="turn-section">
-          <div className="section-label">当前回合</div>
-          <div className={`turn-badge ${currentTurn === Side.RED ? 'turn-red' : currentTurn === Side.BLACK ? 'turn-black' : ''}`}>
-            {currentTurn === Side.RED ? '红方' : currentTurn === Side.BLACK ? '黑方' : '—'}
-          </div>
+          <div className="sf-label">当前回合</div>
+          <StatusBadge status={getTurnStatus().status} showDot={false}>
+            {getTurnStatus().text}
+          </StatusBadge>
         </div>
 
-        {/* Players */}
         <div className="players-section">
-          <div className="section-label">双方</div>
+          <div className="sf-label">双方</div>
           <div className="player-row">
             <div className={`player-badge player-red ${currentTurn === Side.RED ? 'player-active' : ''}`}>
               <span className="player-dot" />
@@ -207,27 +189,18 @@ export default function GameScreen({
           )}
         </div>
 
-        {/* Connection Status (online only) */}
         {gameMode === 'online' && (
           <div className="connection-section">
-            <div className="section-label">连接状态</div>
-            <div className={`connection-badge ${connectionStatus}`}>
-              <span className="connection-dot" />
-              <span>
-                {connectionStatus === 'connected'
-                  ? '已连接'
-                  : connectionStatus === 'connecting'
-                  ? '连接中...'
-                  : '未连接'}
-              </span>
-            </div>
+            <div className="sf-label">连接状态</div>
+            <StatusBadge status={getConnectionStatus().status}>
+              {getConnectionStatus().text}
+            </StatusBadge>
           </div>
         )}
 
-        {/* Room ID (online only) */}
         {gameMode === 'online' && gameState && (
           <div className="room-section">
-            <div className="section-label">房间号</div>
+            <div className="sf-label">房间号</div>
             <div className="room-id-row">
               <span className="room-id-text">{gameState.id}</span>
               <button className="room-copy-btn" onClick={handleCopyRoomId}>
@@ -237,13 +210,12 @@ export default function GameScreen({
           </div>
         )}
 
-        {/* Move History */}
         <div className="history-section">
-          <div className="section-label">
+          <div className="sf-label">
             步数记录
             <span className="move-count">{moveCount} 步</span>
           </div>
-          <div className="history-list">
+          <div className="history-list sf-scrollbar">
             {historyRows.length === 0 ? (
               <div className="history-empty">暂无记录</div>
             ) : (
@@ -256,39 +228,32 @@ export default function GameScreen({
           </div>
         </div>
 
-        {/* Game Status */}
         <div className="status-section">
           {isWaiting && gameMode === 'online' && (
-            <div className="status-badge status-waiting">
-              <span className="status-pulse" />
+            <StatusBadge status="warning">
               等待对手加入...
-            </div>
+            </StatusBadge>
           )}
           {isGameOver && (
-            <div className="status-badge status-gameover">
+            <StatusBadge status="danger" showDot={false}>
               游戏结束 — {gameState?.winner === Side.RED ? '红方' : '黑方'}胜利
-            </div>
+            </StatusBadge>
           )}
           {!isWaiting && !isGameOver && gameState && (
-            <div className="status-badge status-playing">对局进行中</div>
+            <StatusBadge status="success" showDot={false}>
+              对局进行中
+            </StatusBadge>
           )}
         </div>
 
-        {/* Control Buttons */}
         <div className="controls-section">
-          <button className="gs-btn gs-btn-primary" onClick={onReset}>
+          <button className="gs-btn" onClick={onReset}>
             <span className="gs-btn-line" />
             <span className="gs-btn-text">{isGameOver ? '再来一局' : '返回菜单'}</span>
           </button>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="gs-error-message">
-            <span className="gs-error-icon">!</span>
-            {error}
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
       </div>
     </div>
   );

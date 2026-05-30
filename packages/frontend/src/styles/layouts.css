@@ -1,0 +1,276 @@
+/**
+ * @file 页面布局样式
+ * 全屏页面、游戏布局、菜单布局等
+ */
+
+/* ========== 全屏页面布局 ========== */
+.page-fullscreen {
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ========== 游戏屏幕布局 ========== */
+.game-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-chinese);
+}
+
+.game-layout__board {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  z-index: var(--z-content);
+}
+
+.game-layout__board-wrapper {
+  position: relative;
+  padding: 16px;
+  background: rgba(10, 10, 12, 0.4);
+  border: 1px solid rgba(0, 255, 170, 0.1);
+}
+
+/* Board wrapper corner decorations */
+.game-layout__board-wrapper::before,
+.game-layout__board-wrapper::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(0, 255, 170, 0.3);
+  pointer-events: none;
+}
+
+.game-layout__board-wrapper::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.game-layout__board-wrapper::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+.game-layout__panel {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 100vh;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-color-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+  position: relative;
+  z-index: var(--z-content);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 170, 0.2) transparent;
+}
+
+/* ========== 菜单布局 ========== */
+.menu-layout {
+  background: transparent;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-layout__container {
+  position: relative;
+  width: 420px;
+  max-width: 90vw;
+  max-height: 80vh;
+  padding: 56px 48px;
+  background: var(--bg-panel-transparent);
+  border: 1px solid var(--color-primary-faint);
+  text-align: center;
+  z-index: var(--z-panel);
+  backdrop-filter: blur(4px);
+  animation: menuFadeIn var(--animation-duration-normal) ease-out forwards;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transform-origin: center center;
+}
+
+/* ========== 动态背景 ========== */
+.background-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/assets/png/main_background.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  animation: backgroundPan var(--animation-duration-bg) ease-in-out infinite;
+  will-change: background-position;
+  z-index: var(--z-background);
+}
+
+@keyframes backgroundPan {
+  0%, 100% { background-position: 30% 50%; }
+  50% { background-position: 70% 30%; }
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes containerFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 闪屏 ========== */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 1s ease-out;
+}
+
+.splash-overlay--fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+.splash-text {
+  color: var(--color-text-white);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 8px;
+  text-indent: 8px;
+  font-family: var(--font-chinese);
+  animation: splashBlink var(--animation-duration-slow) ease-in-out infinite;
+  background: var(--bg-overlay);
+  padding: 16px 32px;
+  border-radius: var(--border-radius-sm);
+}
+
+@keyframes splashBlink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ========== 标题字符动画 ========== */
+.title-char {
+  display: inline-block;
+  animation: charFloat 3s ease-in-out infinite;
+}
+
+.title-char:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes charFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .menu-layout__container {
+    width: 90vw;
+    padding: 40px 24px;
+  }
+
+  .sf-title {
+    font-size: 40px;
+    letter-spacing: 16px;
+    text-indent: 16px;
+  }
+
+  .page-fullscreen .sf-panel--fullscreen {
+    margin: var(--panel-margin-mobile);
+    padding: var(--panel-padding-mobile);
+    width: calc(100vw - var(--panel-margin-mobile) * 2);
+    height: calc(100vh - var(--panel-margin-mobile) * 2);
+  }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  .game-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .game-layout__board {
+    padding: 16px;
+    min-height: auto;
+    flex: none;
+  }
+
+  .game-layout__panel {
+    width: 100%;
+    min-width: auto;
+    max-width: none;
+    height: auto;
+    min-height: auto;
+    border-left: none;
+    border-top: 1px solid var(--border-color-primary);
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-layout {
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  .game-layout__board {
+    padding: 8px;
+    flex: 1;
+  }
+
+  .game-layout__board-wrapper {
+    padding: 8px;
+  }
+
+  .game-layout__panel {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    height: 100vh;
+    padding: 12px 10px;
+  }
+}

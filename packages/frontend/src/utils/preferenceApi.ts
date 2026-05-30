@@ -15,8 +15,7 @@
 import { apiPath } from './api';
 import type { UserPreference } from '@chess/preference';
 
-// 重新导出共享类型
-export type { UserPreference, PreferenceOption } from '@chess/preference';
+export type { UserPreference } from '@chess/preference';
 
 /**
  * API 响应接口

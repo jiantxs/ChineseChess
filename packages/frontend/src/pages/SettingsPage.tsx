@@ -5,9 +5,8 @@ import { PreferenceRenderer } from '../components/PreferenceRenderer';
 import { clientLogger } from '../utils/clientLogger';
 import { apiPath, assetPath } from '../utils/api';
 import type { PreferenceHint, Platform } from '@chess/preference';
-import './SettingsPage.css';
+import { ErrorMessage } from '../components/common';
 
-// 立即更新本地状态
 function shallowMergePreference(base: Record<string, unknown>, overrides: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(overrides)) {
@@ -26,7 +25,6 @@ function deepMergePreference(base: UserPreference, overrides: Partial<UserPrefer
   return shallowMergePreference(base as unknown as Record<string, unknown>, overrides as unknown as Record<string, unknown>) as unknown as UserPreference;
 }
 
-// 提示消息接口
 interface HintMessage {
   id: string;
   message: string;
@@ -54,7 +52,6 @@ export default function SettingsPage() {
         fetch(apiPath('/api/config')).then((r) => r.json()).catch(() => null),
       ]);
 
-      // 从后端获取当前平台，并保存到状态中供 PreferenceRenderer 使用
       const platform: Platform = configRes?.server?.platform ?? 'web';
       setCurrentPlatform(platform);
       setPreference(prefs);
@@ -73,7 +70,6 @@ export default function SettingsPage() {
   }, [loadPreference]);
 
   const handleChange = useCallback((updates: Partial<UserPreference>) => {
-    // 立即更新本地状态，滑动条不用等上传
     setPreference((prev) => {
       if (!prev) return prev;
       return deepMergePreference(prev, updates);
@@ -102,7 +98,6 @@ export default function SettingsPage() {
     }, 300);
   }, []);
 
-  // 处理提示消息
   const handleHint = useCallback((hint: PreferenceHint) => {
     const id = `hint-${++hintIdRef.current}`;
     const hintMessage: HintMessage = {
@@ -110,20 +105,18 @@ export default function SettingsPage() {
       message: hint.message,
       type: hint.type ?? 'info',
     };
-    
-    // 如果包含链接，使用 assetPath 转换路径
+
     if (hint.link) {
       hintMessage.link = {
         text: hint.link.text,
         url: assetPath(hint.link.path),
       };
     }
-    
+
     setHints((prev) => [...prev, hintMessage]);
     clientLogger.info('Settings: hint shown', { message: hint.message, type: hint.type, link: hint.link });
   }, []);
 
-  // 关闭提示消息
   const dismissHint = useCallback((id: string) => {
     setHints((prev) => prev.filter((h) => h.id !== id));
   }, []);
@@ -180,48 +173,43 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="settings-page">
-        <div className="settings-container">
-          <div className="loading">加载中...</div>
+      <div className="page-fullscreen">
+        <div className="sf-panel sf-panel--fullscreen sf-panel--center">
+          <div className="sf-loading">加载中...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="settings-page">
-      <div className="settings-container">
+    <div className="page-fullscreen">
+      <div className="sf-panel sf-panel--fullscreen sf-panel--column">
         <div className="settings-header">
           <h1 className="settings-title">设置</h1>
           <div className="header-actions">
             {saveStatus && <span className="save-status">{saveStatus}</span>}
-            <button className="back-btn" onClick={handleBack}>返回菜单</button>
+            <button className="sf-back-btn" onClick={handleBack}>返回菜单</button>
           </div>
         </div>
 
-        {error && (
-          <div className="error-message">
-            <span className="error-icon">!</span>
-            {error}
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
 
-        {/* 动态提示消息 */}
         {hints.map((hint) => (
-          <div key={hint.id} className={`hint-message hint-${hint.type}`}>
-            <span className="hint-icon">{hint.type === 'warning' ? '⚠' : hint.type === 'success' ? '✓' : 'ℹ'}</span>
-            <span className="hint-text">
+          <div key={hint.id} className={`sf-hint sf-hint--${hint.type}`}>
+            <span className="sf-hint__icon">
+              {hint.type === 'warning' ? '⚠' : hint.type === 'success' ? '✓' : 'ℹ'}
+            </span>
+            <span className="sf-hint__text">
               {hint.message}
               {hint.link && (
                 <>
                   {' '}
-                  <a 
-                    href={hint.link.url} 
-                    className="hint-link" 
-                    target="_blank" 
+                  <a
+                    href={hint.link.url}
+                    className="hint-link"
+                    target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
-                      // 如果是 APK 文件，阻止默认行为并使用下载
                       if (hint.link!.url.endsWith('.apk')) {
                         e.preventDefault();
                         const a = document.createElement('a');
@@ -238,7 +226,7 @@ export default function SettingsPage() {
                 </>
               )}
             </span>
-            <button className="hint-close" onClick={() => dismissHint(hint.id)}>✕</button>
+            <button className="sf-hint__close" onClick={() => dismissHint(hint.id)}>✕</button>
           </div>
         ))}
 
@@ -246,10 +234,10 @@ export default function SettingsPage() {
           <PreferenceRenderer preference={preference} currentPlatform={currentPlatform} onChange={handleChange} onHint={handleHint} />
         )}
 
-        <div className="settings-actions">
-          <button className="apply-btn" onClick={handleViewLogs}>查看日志</button>
-          <button className="apply-btn" onClick={handleApply}>应用</button>
-          <button className="reset-btn" onClick={handleReset}>重置设置</button>
+        <div className="sf-actions">
+          <button className="sf-action-btn" onClick={handleViewLogs}>查看日志</button>
+          <button className="sf-action-btn" onClick={handleApply}>应用</button>
+          <button className="sf-action-btn sf-action-btn--danger" onClick={handleReset}>重置设置</button>
         </div>
       </div>
     </div>

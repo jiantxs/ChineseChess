@@ -1,3 +1,8 @@
+@import './styles/variables.css';
+@import './styles/components.css';
+@import './styles/layouts.css';
+@import './styles/animations.css';
+
 * {
   margin: 0;
   padding: 0;
