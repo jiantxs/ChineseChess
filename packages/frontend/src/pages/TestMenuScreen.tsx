@@ -5,7 +5,7 @@ import { clientLogger } from '../utils/clientLogger';
 import { BgmControls } from '../types/GamePageProps';
 import { SciFiButton } from '../components/common';
 
-export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
+export default function TestMenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
   const [platform, setPlatform] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -16,7 +16,7 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
         const data = await res.json();
         setPlatform(data.server?.platform ?? '');
       } catch (err) {
-        clientLogger.error('Menu: failed to load config', {
+        clientLogger.error('TestMenu: failed to load config', {
           error: err instanceof Error ? err.message : String(err)
         });
       }
@@ -120,41 +120,46 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
   }, []);
 
   const handleStartAI = useCallback(() => {
-    clientLogger.info('Menu: start AI game');
+    clientLogger.info('TestMenu: start AI game');
     navigate('/gameTestServer/ai');
   }, [navigate]);
 
   const handleStartLocal = useCallback(() => {
-    clientLogger.info('Menu: start local game');
+    clientLogger.info('TestMenu: start local game');
     navigate('/gameTestServer/local');
   }, [navigate]);
 
   const handleStartLocal3D = useCallback(() => {
-    clientLogger.info('Menu: start local 3D game');
+    clientLogger.info('TestMenu: start local 3D game');
     navigate('/gameTestServer/local3d');
   }, [navigate]);
 
   const handleStartOnline = useCallback(() => {
-    clientLogger.info('Menu: start online game');
+    clientLogger.info('TestMenu: start online game');
     navigate('/gameTestServer/online');
   }, [navigate]);
 
   const handleJoinGame = useCallback(() => {
     const input = gameIdInputRef.current;
     if (input?.value) {
-      clientLogger.info('Menu: join game', { gameId: input.value });
+      clientLogger.info('TestMenu: join game', { gameId: input.value });
       navigate(`/gameTestServer/join/${input.value}`);
     }
   }, [navigate]);
 
   const handleViewLogs = useCallback(() => {
-    clientLogger.info('Menu: view logs');
+    clientLogger.info('TestMenu: view logs');
     navigate('/logs');
   }, [navigate]);
 
   const handleSettings = useCallback(() => {
-    clientLogger.info('Menu: open settings');
+    clientLogger.info('TestMenu: open settings');
     navigate('/settings');
+  }, [navigate]);
+
+  const handleBackToMain = useCallback(() => {
+    clientLogger.info('TestMenu: back to main menu');
+    navigate('/menu');
   }, [navigate]);
 
   const handleExit = useCallback(async () => {
@@ -181,7 +186,10 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
         <div className="sf-divider" />
 
         <div className="menu-buttons">
+          <SciFiButton onClick={handleStartLocal}>单机对战</SciFiButton>
           <SciFiButton onClick={handleStartAI}>人机对战</SciFiButton>
+          <SciFiButton variant="primary" onClick={handleBackToMain}>返回主菜单</SciFiButton>
+          <SciFiButton onClick={handleStartLocal3D}>3D 单机对战</SciFiButton>
           <SciFiButton onClick={handleStartOnline}>开始联机</SciFiButton>
 
           <div className="join-section">
@@ -202,6 +210,7 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
           </div>
 
           <SciFiButton onClick={handleSettings}>设置</SciFiButton>
+          <SciFiButton onClick={handleViewLogs}>查看日志</SciFiButton>
 
           {platform === 'win' && (
             <SciFiButton variant="danger" onClick={handleExit}>

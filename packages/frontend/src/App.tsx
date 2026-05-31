@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useRef, useCallback } from 'react';
 import SplashScreen from './pages/SplashScreen';
 import MenuScreen from './pages/MenuScreen';
+import TestMenuScreen from './pages/TestMenuScreen';
 import GamePage from './pages/GamePage';
 import LogsPage from './pages/LogsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -84,6 +85,7 @@ function App() {
       <Routes>
         <Route path="/" element={<SplashScreen />} />
         <Route path="/menu" element={<MenuScreen pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />
+        <Route path="/test-menu" element={<TestMenuScreen pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />
         <Route path="/gameTestServer/:mode/:gameId?" element={<GamePage pauseBgm={pauseBgm} resumeBgm={resumeBgm} restartBgm={restartBgm} />} />
         <Route path="/logs" element={<LogsPage />} />
         <Route path="/settings" element={<SettingsPage />} />

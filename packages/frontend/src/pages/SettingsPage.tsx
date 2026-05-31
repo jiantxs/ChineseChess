@@ -237,6 +237,7 @@ export default function SettingsPage() {
         <div className="sf-actions">
           <button className="sf-action-btn" onClick={handleViewLogs}>查看日志</button>
           <button className="sf-action-btn" onClick={handleApply}>应用</button>
+          <button className="sf-action-btn" onClick={() => navigate('/test-menu')}>加载测试菜单</button>
           <button className="sf-action-btn sf-action-btn--danger" onClick={handleReset}>重置设置</button>
         </div>
       </div>
