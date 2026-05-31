@@ -8,6 +8,7 @@
  */
 import { PieceLayout, PieceLayoutData } from '@chess/core';
 import { standardLayout, standardLayoutData } from './layouts/standard.js';
+import { soldierLayout } from './layouts/soldier.js';
 
 /**
  * 表示带有元数据的单个棋盘布局记录。
@@ -37,6 +38,14 @@ const registry: LayoutRegistry = {
     createdAt: Date.now(),
     tags: ['official', 'classic', 'full-set'],
   },
+  soldier:{
+    id: 'soldier',
+    name: 'Soldier',
+    description: 'A custom layout with only soldier',
+    layout: soldierLayout,
+    createdAt: Date.now(),
+    tags: ['custom', 'soldier-only'],
+  }
 };
 
 /**

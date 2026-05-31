@@ -124,6 +124,11 @@ export default function TestMenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmC
     navigate('/gameTestServer/ai');
   }, [navigate]);
 
+  const handleStartAISoldier = useCallback(() => {
+    clientLogger.info('TestMenu: start AI soldier game');
+    navigate('/gameTestServer/ai?layout=soldier');
+  }, [navigate]);
+
   const handleStartLocal = useCallback(() => {
     clientLogger.info('TestMenu: start local game');
     navigate('/gameTestServer/local');
@@ -188,6 +193,7 @@ export default function TestMenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmC
         <div className="menu-buttons">
           <SciFiButton onClick={handleStartLocal}>单机对战</SciFiButton>
           <SciFiButton onClick={handleStartAI}>人机对战</SciFiButton>
+          <SciFiButton onClick={handleStartAISoldier}>士兵残棋</SciFiButton>
           <SciFiButton variant="primary" onClick={handleBackToMain}>返回主菜单</SciFiButton>
           <SciFiButton onClick={handleStartLocal3D}>3D 单机对战</SciFiButton>
           <SciFiButton onClick={handleStartOnline}>开始联机</SciFiButton>

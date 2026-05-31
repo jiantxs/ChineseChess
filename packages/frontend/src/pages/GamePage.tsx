@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import GameScreen from '../components/GameScreen';
 import { useGameSocket } from '../hooks/useGameSocket';
 import { useLocalGame } from '../hooks/useLocalGame';
@@ -12,6 +12,8 @@ import { GamePageProps } from '../types/GamePageProps';
 export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePageProps) {
   const { mode, gameId } = useParams<{ mode: string; gameId?: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const layoutName = searchParams.get('layout') || undefined;
 
   const onlineGame = useGameSocket();
   const localGame = useLocalGame();
@@ -89,7 +91,7 @@ export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePagePr
     } else if (mode === 'local' || mode === 'local3d') {
       localGame.resetGame();
     } else if (mode === 'ai') {
-      onlineGame.createGame(false, undefined, true);
+      onlineGame.createGame(false, layoutName, true);
     } else if (mode === 'join' && gameId) {
       clientLogger.info('Joining game', { gameId });
       onlineGame.joinGame(gameId);
