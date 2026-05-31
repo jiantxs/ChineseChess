@@ -43,11 +43,20 @@ async function main(): Promise<void> {
       ? path.resolve(app.getAppPath(), 'dist', 'public')
       : path.resolve(__dirname, '../../backend/public');
 
-    // Start backend server directly in the same process
-    const { stop, config } = startMainServer(port, basePrefix, publicPath, logger!);
-    stopServer = stop;
+    // Create config first (needed for logger initialization)
+    const { createChessConfig } = await import('@chess/config');
+    const config = createChessConfig({
+      server: {
+        port,
+        host: '127.0.0.1',
+        prefix: basePrefix,
+        sessionSecret: 'electron-session-secret',
+        sessionMaxAgeMs: 24 * 60 * 60 * 1000,
+        platform: 'win'
+      }
+    });
 
-    // Initialize logger after config is available
+    // Initialize logger first
     const loggerFactory = new LoggerFactory();
     logger = loggerFactory.createLogger(config);
 
@@ -55,6 +64,10 @@ async function main(): Promise<void> {
     logger.logSystemEvent('Generated base prefix', { basePrefix });
     logger.logSystemEvent('Public path resolved', { publicPath, isPackaged });
     logger.logSystemEvent('Starting backend server');
+
+    // Start backend server directly in the same process
+    const { stop } = startMainServer(config, publicPath, logger);
+    stopServer = stop;
 
     // Create preference manager instance bound to main config
     mainPreferenceManager = createPreferenceManager(config);

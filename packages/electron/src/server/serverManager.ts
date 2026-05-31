@@ -20,26 +20,14 @@ export interface ServerHandles {
  * 启动主服务器
  */
 export function startMainServer(
-  port: number,
-  basePrefix: string,
+  config: ChessConfig,
   publicPath: string,
   logger: LoggerInstance
-): { stop: () => void; config: ChessConfig } {
-  const config = createChessConfig({
-    server: {
-      port,
-      host: '127.0.0.1',
-      prefix: basePrefix,
-      sessionSecret: 'electron-session-secret',
-      sessionMaxAgeMs: 24 * 60 * 60 * 1000,
-      platform: 'win'
-    }
-  });
-
+): { stop: () => void } {
   const result = startServer(config, { publicPath });
-  logger.logSystemEvent('Backend server started', { url: `http://127.0.0.1:${port}${basePrefix}` });
+  logger.logSystemEvent('Backend server started', { url: `http://127.0.0.1:${config.server.port}${config.server.prefix}` });
 
-  return { stop: result.stop, config };
+  return { stop: result.stop };
 }
 
 /**
