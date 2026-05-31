@@ -1,0 +1,50 @@
+/**
+ * @file 标签页和操作按钮样式
+ * 标签页、选择器等导航和操作组件
+ */
+
+/* ========== 标签页 ========== */
+.sf-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.sf-tab {
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.sf-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width var(--transition-normal), left var(--transition-normal);
+}
+
+.sf-tab:hover {
+  color: rgba(0, 255, 170, 0.8);
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.sf-tab--active {
+  color: rgba(0, 255, 170, 0.95);
+  border-color: rgba(0, 255, 170, 0.5);
+  background: rgba(0, 255, 170, 0.05);
+}
+
+.sf-tab--active::after {
+  width: 100%;
+  left: 0;
+}

@@ -1,0 +1,180 @@
+/**
+ * @file 按钮样式
+ * 科幻风格的各类按钮组件
+ */
+
+/* ========== 科幻按钮 ========== */
+.sf-btn {
+  position: relative;
+  width: 100%;
+  padding: 18px 0;
+  margin-bottom: 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 6px;
+  text-indent: 6px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: color var(--transition-slow);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.sf-btn:last-child {
+  margin-bottom: 0;
+}
+
+.sf-btn__line {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: rgba(0, 255, 170, 0.6);
+  transition: width var(--transition-slow), left var(--transition-slow);
+}
+
+.sf-btn:hover {
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.sf-btn:hover .sf-btn__line {
+  width: 100%;
+  left: 0;
+}
+
+.sf-btn:active {
+  color: var(--color-text-white);
+  transform: scale(0.98);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+/* 按钮变体 */
+.sf-btn--danger {
+  color: rgba(180, 100, 100, 0.5);
+}
+
+.sf-btn--danger:hover {
+  color: rgba(255, 100, 100, 0.9);
+}
+
+.sf-btn--danger .sf-btn__line {
+  background: rgba(255, 100, 100, 0.5);
+}
+
+.sf-btn--compact {
+  width: auto;
+  padding: 14px 24px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  font-size: 15px;
+}
+
+.sf-btn--small {
+  padding: 10px 20px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-indent: 2px;
+}
+
+/* ========== 返回按钮 ========== */
+.sf-back-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.7);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+}
+
+.sf-back-btn:hover {
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+}
+
+/* ========== 操作按钮组 ========== */
+.sf-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color-divider);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sf-action-btn {
+  padding: 12px 36px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 15px;
+  letter-spacing: 4px;
+  text-indent: 4px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+}
+
+.sf-action-btn:hover {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+  box-shadow: 0 0 12px rgba(0, 255, 170, 0.15);
+}
+
+.sf-action-btn--danger {
+  border-color: rgba(255, 100, 100, 0.3);
+  color: rgba(255, 100, 100, 0.8);
+}
+
+.sf-action-btn--danger:hover {
+  background: rgba(255, 100, 100, 0.1);
+  border-color: rgba(255, 100, 100, 0.6);
+  color: rgba(255, 100, 100, 0.95);
+  box-shadow: 0 0 12px rgba(255, 100, 100, 0.15);
+}
+
+/* ========== 导出按钮 ========== */
+.sf-export-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+}
+
+.sf-export-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.sf-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== 加载中 ========== */
+.sf-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  letter-spacing: 2px;
+}

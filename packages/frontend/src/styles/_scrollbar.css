@@ -1,0 +1,31 @@
+/**
+ * @file 滚动条样式
+ * 自定义滚动条样式
+ */
+
+/* ========== 滚动条 ========== */
+.sf-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sf-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sf-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 2px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 4px;
+}
+
+.sf-scrollbar--wide::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 170, 0.3);
+}

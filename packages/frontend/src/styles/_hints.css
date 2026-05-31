@@ -1,0 +1,143 @@
+/**
+ * @file 提示消息样式
+ * 各类提示消息、警告、信息提示组件
+ */
+
+/* ========== 提示消息 ========== */
+.sf-hint {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: hintSlideIn 0.3s ease-out forwards;
+  flex-shrink: 0;
+  border-radius: var(--border-radius-sm);
+}
+
+@keyframes hintSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sf-hint__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sf-hint__text {
+  flex: 1;
+}
+
+.sf-hint__close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.sf-hint__close:hover {
+  opacity: 1;
+}
+
+.sf-hint--warning {
+  color: rgba(255, 200, 80, 0.95);
+  border: 1px solid rgba(255, 200, 80, 0.25);
+  background: rgba(255, 160, 0, 0.08);
+}
+
+.sf-hint--warning .sf-hint__icon {
+  border: 1px solid rgba(255, 200, 80, 0.5);
+}
+
+.sf-hint--info {
+  color: rgba(100, 180, 255, 0.95);
+  border: 1px solid rgba(100, 180, 255, 0.25);
+  background: rgba(100, 180, 255, 0.08);
+}
+
+.sf-hint--info .sf-hint__icon {
+  border: 1px solid rgba(100, 180, 255, 0.5);
+}
+
+.sf-hint--success {
+  color: rgba(80, 220, 160, 0.95);
+  border: 1px solid rgba(80, 220, 160, 0.25);
+  background: rgba(80, 220, 160, 0.08);
+}
+
+.sf-hint--success .sf-hint__icon {
+  border: 1px solid rgba(80, 220, 160, 0.5);
+}
+
+.hint-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.hint-link:hover {
+  opacity: 0.8;
+}
+
+.sf-hint--warning .hint-link {
+  color: rgba(255, 220, 100, 0.95);
+}
+
+.sf-hint--info .hint-link {
+  color: rgba(140, 200, 255, 0.95);
+}
+
+.sf-hint--success .hint-link {
+  color: rgba(120, 240, 180, 0.95);
+}
+
+/* ========== 错误提示 ========== */
+.sf-error {
+  margin-top: 24px;
+  padding: 12px 16px;
+  color: var(--color-danger);
+  font-size: 14px;
+  letter-spacing: 1px;
+  border: 1px solid var(--color-danger-faint);
+  background: rgba(255, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+.sf-error__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-danger-weak);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@keyframes errorPulse {
+  0%, 100% { border-color: var(--color-danger-faint); }
+  50% { border-color: rgba(255, 100, 100, 0.4); }
+}

@@ -1,0 +1,101 @@
+/**
+ * @file 表单元素样式
+ * 输入框、选择器、搜索框等表单组件
+ */
+
+/* ========== 输入框 ========== */
+.sf-input {
+  flex: 1;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 15px;
+  letter-spacing: 2px;
+  outline: none;
+  font-family: var(--font-chinese);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.sf-input::placeholder {
+  color: var(--color-text-faint);
+  letter-spacing: 2px;
+}
+
+.sf-input:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 搜索输入框 ========== */
+.sf-search {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-chinese);
+  transition: border-color var(--transition-normal);
+}
+
+.sf-search::placeholder {
+  color: var(--color-text-faint);
+}
+
+.sf-search:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 选择器 ========== */
+.sf-select {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-chinese);
+  cursor: pointer;
+  transition: border-color var(--transition-normal);
+  min-width: 140px;
+}
+
+.sf-select:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 设置页选择器 ========== */
+.setting-select {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-primary-faint);
+  color: var(--color-primary-dim);
+  font-size: 14px;
+  outline: none;
+  font-family: var(--font-chinese);
+  cursor: pointer;
+  transition: border-color var(--transition-normal);
+  min-width: 140px;
+}
+
+.setting-select:focus {
+  border-color: var(--color-primary-weak);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+/* ========== 标签 ========== */
+.sf-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

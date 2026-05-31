@@ -1,0 +1,63 @@
+/**
+ * @file 面板和角落装饰样式
+ * 科幻风格 UI 的面板容器和装饰性角落
+ */
+
+/* ========== 面板容器 ========== */
+.sf-panel {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--color-primary-faint);
+  z-index: var(--z-panel);
+}
+
+.sf-panel--fullscreen {
+  width: calc(100vw - var(--panel-margin) * 2);
+  height: calc(100vh - var(--panel-margin) * 2);
+  margin: var(--panel-margin);
+  padding: var(--panel-padding);
+}
+
+.sf-panel--center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sf-panel--column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 四角装饰 ========== */
+.sf-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--color-primary-weak);
+  pointer-events: none;
+}
+
+.sf-corner--sm {
+  width: 16px;
+  height: 16px;
+}
+
+.sf-corner--tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+.sf-corner--tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+.sf-corner--bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+.sf-corner--br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* 面板用的小号四角 */
+.sf-panel-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(0, 255, 170, 0.35);
+  pointer-events: none;
+}
+
+.sf-panel-corner--tl { top: 0; left: 0; border-top: 1px solid; border-left: 1px solid; }
+.sf-panel-corner--tr { top: 0; right: 0; border-top: 1px solid; border-right: 1px solid; }
+.sf-panel-corner--bl { bottom: 0; left: 0; border-bottom: 1px solid; border-left: 1px solid; }
+.sf-panel-corner--br { bottom: 0; right: 0; border-bottom: 1px solid; border-right: 1px solid; }

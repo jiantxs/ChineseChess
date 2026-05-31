@@ -1,0 +1,242 @@
+/**
+ * @file 日志页布局样式
+ * 日志页的布局、表格、筛选器等组件
+ */
+
+/* ========== 日志页布局 ========== */
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color-divider);
+  flex-shrink: 0;
+}
+
+.logs-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0;
+  letter-spacing: 4px;
+  font-family: var(--font-chinese);
+  text-shadow: 0 0 10px var(--color-primary-glow);
+}
+
+.refresh-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.auto-refresh-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--color-primary-dim);
+}
+
+.auto-refresh-label input[type="checkbox"] {
+  accent-color: var(--color-primary-dim);
+}
+
+.last-refresh {
+  font-size: 11px;
+  color: var(--color-text-faint);
+}
+
+.logs-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logs-stats {
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.has-more-indicator {
+  color: var(--color-primary-dim);
+  margin-left: 8px;
+}
+
+.logs-table-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--border-color-divider);
+  background: var(--bg-dark);
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.logs-table th {
+  position: sticky;
+  top: 0;
+  padding: 12px 16px;
+  text-align: left;
+  color: rgba(0, 255, 170, 0.7);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 1px;
+  background: rgba(10, 10, 12, 0.9);
+  border-bottom: 1px solid rgba(0, 255, 170, 0.2);
+}
+
+.col-expand {
+  width: 40px;
+  text-align: center;
+}
+
+.col-time {
+  width: 180px;
+}
+
+.col-level {
+  width: 80px;
+}
+
+.col-message {
+  min-width: 400px;
+  max-width: 600px;
+}
+
+.log-row {
+  transition: background 0.2s ease;
+}
+
+.log-row:hover {
+  background: rgba(0, 255, 170, 0.03);
+}
+
+.log-row td {
+  padding: 10px 16px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(0, 255, 170, 0.05);
+  vertical-align: middle;
+}
+
+.expand-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: rgba(0, 255, 170, 0.5);
+  cursor: pointer;
+  font-size: 10px;
+  transition: color 0.2s ease;
+}
+
+.expand-btn:hover {
+  color: rgba(0, 255, 170, 0.9);
+}
+
+.level-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 2px;
+}
+
+.log-level-error {
+  color: rgba(255, 100, 100, 0.9);
+  background: rgba(255, 100, 100, 0.1);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+}
+
+.log-level-warn {
+  color: rgba(255, 200, 100, 0.9);
+  background: rgba(255, 200, 100, 0.1);
+  border: 1px solid rgba(255, 200, 100, 0.3);
+}
+
+.log-level-info {
+  color: rgba(100, 200, 255, 0.9);
+  background: rgba(100, 200, 255, 0.1);
+  border: 1px solid rgba(100, 200, 255, 0.3);
+}
+
+.log-level-debug {
+  color: rgba(180, 160, 255, 0.9);
+  background: rgba(180, 160, 255, 0.1);
+  border: 1px solid rgba(180, 160, 255, 0.3);
+}
+
+.log-level-default {
+  color: var(--color-text-secondary);
+  background: rgba(160, 170, 180, 0.1);
+  border: 1px solid rgba(160, 170, 180, 0.2);
+}
+
+.log-detail-row td {
+  padding: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.log-detail {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.message-content {
+  max-width: 600px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.load-more-container {
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid rgba(0, 255, 170, 0.05);
+}
+
+.load-more-btn {
+  padding: 12px 32px;
+  background: transparent;
+  border: 1px solid rgba(0, 255, 170, 0.3);
+  color: rgba(0, 255, 170, 0.8);
+  font-size: 14px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: var(--font-chinese);
+  transition: all var(--transition-normal);
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.6);
+  color: rgba(0, 255, 170, 0.95);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
