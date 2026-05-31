@@ -6,6 +6,7 @@
 import { BoardStyle } from './types';
 import { cyberStyle } from './cyber';
 import { cyber3dStyle } from './cyber3d';
+import { commonStyle } from './common';
 import { clientLogger } from '../../utils/clientLogger';
 
 /**
@@ -46,3 +47,4 @@ export function getRegisteredStyleNames(): string[] {
 // 注册内置风格
 registerStyle(cyberStyle);
 registerStyle(cyber3dStyle);
+registerStyle(commonStyle);

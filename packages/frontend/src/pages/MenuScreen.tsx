@@ -109,24 +109,6 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
 
         <div className="menu-buttons">
           <SciFiButton onClick={handleStartAI}>人机对战</SciFiButton>
-          <SciFiButton onClick={handleStartOnline}>开始联机</SciFiButton>
-
-          <div className="join-section">
-            <input
-              ref={gameIdInputRef}
-              type="text"
-              placeholder="输入房间号"
-              className="sf-input"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleJoinGame();
-                }
-              }}
-            />
-            <SciFiButton size="compact" onClick={handleJoinGame}>
-              加入房间
-            </SciFiButton>
-          </div>
 
           <SciFiButton onClick={handleSettings}>设置</SciFiButton>
 

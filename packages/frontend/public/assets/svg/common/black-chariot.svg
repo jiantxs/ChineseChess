@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" width="60" height="60">
+  <defs>
+    <radialGradient id="blackWoodGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#f5d0a9" />
+      <stop offset="40%" stop-color="#d4a574" />
+      <stop offset="100%" stop-color="#8b5a2b" />
+    </radialGradient>
+    <filter id="woodGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.15 0.02" numOctaves="3" result="noise"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.15 0" in="noise" result="coloredNoise"/>
+      <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="composite"/>
+      <feBlend mode="multiply" in="composite" in2="SourceGraphic"/>
+    </filter>
+    <filter id="dropShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="2" dy="3" stdDeviation="2" flood-color="#3d2314" flood-opacity="0.5"/>
+    </filter>
+    <filter id="innerShadow">
+      <feOffset dx="0" dy="1"/>
+      <feGaussianBlur stdDeviation="1" result="offset-blur"/>
+      <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse"/>
+      <feFlood flood-color="#5c3a1e" flood-opacity="0.4" result="color"/>
+      <feComposite operator="in" in="color" in2="inverse" result="shadow"/>
+      <feComposite operator="over" in="shadow" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+  
+  <circle cx="30" cy="30" r="26" fill="url(#blackWoodGrad)" filter="url(#dropShadow)" />
+  <circle cx="30" cy="30" r="26" fill="url(#blackWoodGrad)" filter="url(#woodGrain)" opacity="0.7"/>
+  <circle cx="30" cy="30" r="24" fill="none" stroke="#f5d0a9" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="30" cy="30" r="22" fill="none" stroke="#8b5a2b" stroke-width="1" opacity="0.4"/>
+  
+  <text x="30" y="40" font-family="SimSun, STSong, serif" font-size="28" font-weight="bold" 
+        text-anchor="middle" fill="#1a1a1a" filter="url(#innerShadow)">车</text>
+  <text x="30" y="39" font-family="SimSun, STSong, serif" font-size="28" font-weight="bold" 
+        text-anchor="middle" fill="#4a4a4a" opacity="0.7">车</text>
+</svg>

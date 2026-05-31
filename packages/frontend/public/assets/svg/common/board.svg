@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 566 631" width="566" height="631">
+  <defs>
+    <!-- 木纹背景 -->
+    <filter id="boardWoodGrain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.08 0.015" numOctaves="4" result="noise"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.08 0" in="noise" result="coloredNoise"/>
+      <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="composite"/>
+      <feBlend mode="multiply" in="composite" in2="SourceGraphic"/>
+    </filter>
+    
+    <!-- 棋盘阴影 -->
+    <filter id="boardShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="4" dy="6" stdDeviation="5" flood-color="#2a1a0f" flood-opacity="0.4"/>
+    </filter>
+    
+    <!-- 边框渐变 -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c9a86c"/>
+      <stop offset="50%" stop-color="#8b6914"/>
+      <stop offset="100%" stop-color="#5c3a1e"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 外边框 -->
+  <rect x="10" y="10" width="546" height="611" rx="6" fill="url(#borderGrad)" filter="url(#boardShadow)"/>
+  
+  <!-- 棋盘主体 -->
+  <rect x="25" y="25" width="516" height="581" fill="#e8d5b5" filter="url(#boardWoodGrain)"/>
+  
+  <!-- 棋盘内边框线 -->
+  <rect x="35" y="35" width="496" height="561" fill="none" stroke="#8b5a2b" stroke-width="2"/>
+  
+  <!-- 横线 (10条，间距62) -->
+  <g stroke="#5c3a1e" stroke-width="1.5" stroke-linecap="round">
+    <line x1="35" y1="35" x2="531" y2="35"/>
+    <line x1="35" y1="97" x2="531" y2="97"/>
+    <line x1="35" y1="159" x2="531" y2="159"/>
+    <line x1="35" y1="221" x2="531" y2="221"/>
+    <line x1="35" y1="283" x2="531" y2="283"/>
+    <line x1="35" y1="345" x2="531" y2="345"/>
+    <line x1="35" y1="407" x2="531" y2="407"/>
+    <line x1="35" y1="469" x2="531" y2="469"/>
+    <line x1="35" y1="531" x2="531" y2="531"/>
+    <line x1="35" y1="593" x2="531" y2="593"/>
+  </g>
+  
+  <!-- 竖线 (9条，中间断开) -->
+  <g stroke="#5c3a1e" stroke-width="1.5" stroke-linecap="round">
+    <!-- 上半部分竖线 -->
+    <line x1="35" y1="35" x2="35" y2="283"/>
+    <line x1="97" y1="35" x2="97" y2="283"/>
+    <line x1="159" y1="35" x2="159" y2="283"/>
+    <line x1="221" y1="35" x2="221" y2="283"/>
+    <line x1="283" y1="35" x2="283" y2="283"/>
+    <line x1="345" y1="35" x2="345" y2="283"/>
+    <line x1="407" y1="35" x2="407" y2="283"/>
+    <line x1="469" y1="35" x2="469" y2="283"/>
+    <line x1="531" y1="35" x2="531" y2="283"/>
+    
+    <!-- 下半部分竖线 -->
+    <line x1="35" y1="345" x2="35" y2="593"/>
+    <line x1="97" y1="345" x2="97" y2="593"/>
+    <line x1="159" y1="345" x2="159" y2="593"/>
+    <line x1="221" y1="345" x2="221" y2="593"/>
+    <line x1="283" y1="345" x2="283" y2="593"/>
+    <line x1="345" y1="345" x2="345" y2="593"/>
+    <line x1="407" y1="345" x2="407" y2="593"/>
+    <line x1="469" y1="345" x2="469" y2="593"/>
+    <line x1="531" y1="345" x2="531" y2="593"/>
+  </g>
+  
+  <!-- 楚河汉界文字区域背景 -->
+  <rect x="35" y="283" width="496" height="62" fill="#e8d5b5" opacity="0.8"/>
+  
+  <!-- 楚河汉界文字 -->
+  <text x="165" y="325" font-family="SimSun, STSong, serif" font-size="32" font-weight="bold" 
+        fill="#8b5a2b" text-anchor="middle" opacity="0.85">楚 河</text>
+  <text x="401" y="325" font-family="SimSun, STSong, serif" font-size="32" font-weight="bold" 
+        fill="#8b5a2b" text-anchor="middle" opacity="0.85">汉 界</text>
+  
+  <!-- 九宫格斜线 (上方) -->
+  <g stroke="#5c3a1e" stroke-width="1.5" stroke-linecap="round">
+    <line x1="221" y1="35" x2="345" y2="159"/>
+    <line x1="345" y1="35" x2="221" y2="159"/>
+  </g>
+  
+  <!-- 九宫格斜线 (下方) -->
+  <g stroke="#5c3a1e" stroke-width="1.5" stroke-linecap="round">
+    <line x1="221" y1="469" x2="345" y2="593"/>
+    <line x1="345" y1="469" x2="221" y2="593"/>
+  </g>
+  
+  <!-- 炮位标记点 (上方) -->
+  <g fill="#5c3a1e">
+    <circle cx="97" cy="159" r="3"/>
+    <circle cx="469" cy="159" r="3"/>
+  </g>
+  
+  <!-- 炮位标记点 (下方) -->
+  <g fill="#5c3a1e">
+    <circle cx="97" cy="469" r="3"/>
+    <circle cx="469" cy="469" r="3"/>
+  </g>
+  
+  <!-- 兵位标记点 (上方) -->
+  <g fill="#5c3a1e">
+    <circle cx="35" cy="221" r="3"/>
+    <circle cx="159" cy="221" r="3"/>
+    <circle cx="283" cy="221" r="3"/>
+    <circle cx="407" cy="221" r="3"/>
+    <circle cx="531" cy="221" r="3"/>
+  </g>
+  
+  <!-- 兵位标记点 (下方) -->
+  <g fill="#5c3a1e">
+    <circle cx="35" cy="407" r="3"/>
+    <circle cx="159" cy="407" r="3"/>
+    <circle cx="283" cy="407" r="3"/>
+    <circle cx="407" cy="407" r="3"/>
+    <circle cx="531" cy="407" r="3"/>
+  </g>
+  
+  <!-- 四角装饰 -->
+  <g fill="none" stroke="#8b5a2b" stroke-width="1.5" opacity="0.6">
+    <!-- 左上角 -->
+    <path d="M35,50 L35,35 L50,35"/>
+    <!-- 右上角 -->
+    <path d="M516,35 L531,35 L531,50"/>
+    <!-- 左下角 -->
+    <path d="M35,578 L35,593 L50,593"/>
+    <!-- 右下角 -->
+    <path d="M516,593 L531,593 L531,578"/>
+  </g>
+</svg>

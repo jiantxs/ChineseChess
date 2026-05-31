@@ -21,7 +21,7 @@ export default function GamePage({ pauseBgm, resumeBgm, restartBgm }: GamePagePr
   const isAI = mode === 'ai';
   const isLocal = mode === 'local' || mode === 'local3d';
   const is3D = mode === 'local3d';
-  let boardStyle = (is3D || isAI) ? 'cyber3d' : 'cyber';
+  let boardStyle = is3D ? 'cyber3d' : (isAI ? 'common' : 'cyber');
 
   const activeGame = isLocal ? localGame : onlineGame;
   const gameState = activeGame.gameState;
