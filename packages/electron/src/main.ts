@@ -79,6 +79,7 @@ let mainWindow: BrowserWindow | null = null;
 let stopServer: (() => void) | null = null;
 let stopMobileServer: (() => void) | null = null;
 let messageBusSubscriber: MessageBusSubscriber | null = null;
+let mainPreferenceManager: ReturnType<typeof createPreferenceManager> | null = null;
 
 /**
  * Creates the main application window.
@@ -181,7 +182,7 @@ function setupMessageBus(window: BrowserWindow): void {
         });
       } else {
         // 恢复普通窗口模式
-        const prefs = mainPreferenceManager?.getPreference();
+        const prefs = mainPreferenceManager!.getPreference();
         const res = prefs?.display?.resolution?.value;
         if (res && res !== 'fullscreen') {
           const [w, h] = res.split('x').map(Number);
@@ -245,7 +246,7 @@ async function main(): Promise<void> {
     console.log(`Backend server started at http://127.0.0.1:${port}${basePrefix}`);
 
     // Create preference manager instance bound to main config
-    const mainPreferenceManager = createPreferenceManager(config);
+    mainPreferenceManager = createPreferenceManager(config);
 
     // 检测屏幕分辨率并计算可用选项
     const resolutionOptions = calculateResolutionOptions();
@@ -268,8 +269,9 @@ async function main(): Promise<void> {
     }
 
     // 更新 preference 中的可用选项
-    mainPreferenceManager.updatePreference({
+    mainPreferenceManager!.updatePreference({
       display: {
+        label: '显示设置',
         resolution: {
           value: newResolutionValue || resolutionOptions[0].value,
           visible: true,
@@ -281,7 +283,7 @@ async function main(): Promise<void> {
     });
 
     // Handle extra mobile server
-    const prefs = mainPreferenceManager.getPreference();
+    const prefs = mainPreferenceManager!.getPreference();
     if (prefs.extraSettings?.extraServer?.enabled?.value === true) {
       // 判断是否启用"记住服务器地址编码"
       const rememberCode = prefs.extraSettings.extraServer.rememberServerCode?.value !== false;
@@ -305,11 +307,13 @@ async function main(): Promise<void> {
             // 端口被占用，重新生成
             mobilePort = await findAvailablePort();
             mobilePrefix = `/${randomUUID()}`;
-            mainPreferenceManager.updatePreference({
+            mainPreferenceManager!.updatePreference({
               extraSettings: {
+                label: '额外设置',
                 extraServer: {
-                  _port: { value: mobilePort },
-                  _prefix: { value: mobilePrefix }
+                  label: '额外服务器',
+                  _port: { value: mobilePort, visible: false, label: '', valueType: 'number' },
+                  _prefix: { value: mobilePrefix, visible: false, label: '', valueType: 'string' }
                 }
               }
             });
@@ -319,11 +323,13 @@ async function main(): Promise<void> {
           // 首次启动，生成新的并保存
           mobilePort = await findAvailablePort();
           mobilePrefix = `/${randomUUID()}`;
-          mainPreferenceManager.updatePreference({
+          mainPreferenceManager!.updatePreference({
             extraSettings: {
+              label: '额外设置',
               extraServer: {
-                _port: { value: mobilePort },
-                _prefix: { value: mobilePrefix }
+                label: '额外服务器',
+                _port: { value: mobilePort, visible: false, label: '', valueType: 'number' },
+                _prefix: { value: mobilePrefix, visible: false, label: '', valueType: 'string' }
               }
             }
           });
@@ -374,22 +380,26 @@ async function main(): Promise<void> {
 
       // Encode port, prefix and addresses as base64 JSON
       const mobileCode = Buffer.from(JSON.stringify({ port: mobilePort, prefix: mobilePrefix, addresses })).toString('base64');
-      mainPreferenceManager.updatePreference({
+      mainPreferenceManager!.updatePreference({
         extraSettings: {
+          label: '额外设置',
           extraServer: {
-            textCode: { value: mobileCode }
+            label: '额外服务器',
+            textCode: { value: mobileCode, visible: true, label: '服务器地址编码', valueType: 'string', readonly: true }
           }
         }
       });
       console.log('Mobile server code saved to preference');
     } else {
       // Clear textCode and hidden properties if extra server is disabled
-      mainPreferenceManager.updatePreference({
+      mainPreferenceManager!.updatePreference({
         extraSettings: {
+          label: '额外设置',
           extraServer: {
-            textCode: { value: '' },
-            _port: { value: 0 },
-            _prefix: { value: '' }
+            label: '额外服务器',
+            textCode: { value: '', visible: true, label: '服务器地址编码', valueType: 'string', readonly: true },
+            _port: { value: 0, visible: false, label: '', valueType: 'number' },
+            _prefix: { value: '', visible: false, label: '', valueType: 'string' }
           }
         }
       });
@@ -398,7 +408,7 @@ async function main(): Promise<void> {
 
     // Create the window with prefix URL and display preferences
     createWindow(port, basePrefix, {
-      resolution: currentPrefs.display?.resolution?.value
+      resolution: prefs.display?.resolution?.value
     });
   } catch (error) {
     console.error('Failed to start application:', error);
