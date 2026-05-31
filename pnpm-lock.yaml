@@ -33,6 +33,9 @@ importers:
       '@chess/logger':
         specifier: workspace:*
         version: link:../logger
+      '@chess/messagebus':
+        specifier: workspace:*
+        version: link:../messagebus
       '@chess/preference':
         specifier: workspace:*
         version: link:../preference
@@ -128,6 +131,9 @@ importers:
       '@chess/config':
         specifier: workspace:*
         version: link:../config
+      '@chess/messagebus':
+        specifier: workspace:*
+        version: link:../messagebus
       '@chess/preference':
         specifier: workspace:*
         version: link:../preference
@@ -206,6 +212,15 @@ importers:
       winston-daily-rotate-file:
         specifier: ^5.0.0
         version: 5.0.0(winston@3.19.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.5
+        version: 20.19.41
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
+
+  packages/messagebus:
     devDependencies:
       '@types/node':
         specifier: ^20.10.5

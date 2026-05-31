@@ -16,6 +16,7 @@ import { LoggerFactory, type LoggerInstance } from '@chess/logger';
 import { GameServer } from './services/gameServer';
 import { GameManager } from '@chess/core';
 import { createAppRouter } from './routes';
+import { MessageBusPublisher } from '@chess/messagebus';
 
 /**
  * 启动服务器的可选参数
@@ -77,7 +78,14 @@ export function startServer(config: ChessConfig, options?: StartServerOptions): 
   app.locals.logger = logger;
 
   const gameManager = new GameManager();
-  const appRouter = createAppRouter(PREFIX, options?.publicPath, config, gameManager, logger);
+  
+  // 创建 MessageBus 发布者（仅在 win 平台激活）
+  const messageBusPublisher = new MessageBusPublisher(config.server.platform);
+  if (messageBusPublisher.isAvailable()) {
+    logger.logSystemEvent('MessageBus publisher activated', { platform: config.server.platform });
+  }
+  
+  const appRouter = createAppRouter(PREFIX, options?.publicPath, config, gameManager, logger, messageBusPublisher);
 
   if (PREFIX) {
     app.use(PREFIX, appRouter);

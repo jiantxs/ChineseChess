@@ -17,6 +17,7 @@ import { createGameRoutes } from './game';
 import { createConfigRouter } from './config';
 import { createAdminRouter } from './admin';
 import { createPreferenceRouter } from './preference';
+import type { MessageBusPublisher } from '@chess/messagebus';
 
 /**
  * 创建并配置带有所有中间件和路由的主应用路由器。
@@ -27,6 +28,7 @@ import { createPreferenceRouter } from './preference';
  * @param config - ChessConfig 实例
  * @param gameManager - 可选的游戏管理器实例
  * @param loggerService - 日志服务实例（必填，用于中间件）
+ * @param messageBusPublisher - MessageBus 发布者实例
  * @returns 配置好的 Express Router 实例
  */
 export function createAppRouter(
@@ -34,7 +36,8 @@ export function createAppRouter(
   customPublicPath: string | undefined,
   config: ChessConfig,
   gameManager?: GameManager,
-  logger?: LoggerInstance
+  logger?: LoggerInstance,
+  messageBusPublisher?: MessageBusPublisher
 ): Router {
   const router = Router();
   const gm = gameManager || new GameManager();
@@ -89,7 +92,7 @@ export function createAppRouter(
   router.use('/api/admin', createAdminRouter(config));
 
   // 在 /api 挂载偏好设置路由 - 用户偏好管理
-  router.use('/api', createPreferenceRouter(config));
+  router.use('/api', createPreferenceRouter(config, messageBusPublisher));
 
   // 在路由器的 locals 中存储游戏管理器引用，以便路由访问
   router.use((req, res, next) => {

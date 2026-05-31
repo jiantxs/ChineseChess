@@ -8,10 +8,12 @@
  * - Manages process lifecycle (cleanup on exit)
  */
 
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import { startServer } from '@chess/backend';
 import { createChessConfig } from '@chess/config';
 import { createPreferenceManager } from '@chess/preference';
+import { MessageBusSubscriber } from '@chess/messagebus';
+import { calculateResolutionOptions } from './utils/screenResolutions.js';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
@@ -76,6 +78,7 @@ function checkPortAvailable(port: number): Promise<boolean> {
 let mainWindow: BrowserWindow | null = null;
 let stopServer: (() => void) | null = null;
 let stopMobileServer: (() => void) | null = null;
+let messageBusSubscriber: MessageBusSubscriber | null = null;
 
 /**
  * Creates the main application window.
@@ -83,8 +86,8 @@ let stopMobileServer: (() => void) | null = null;
  * @param port - The port the backend is running on
  * @param prefix - The URL prefix (e.g., '/uuid')
  */
-function createWindow(port: number, prefix: string = ''): void {
-  mainWindow = new BrowserWindow({
+function createWindow(port: number, prefix: string = '', displayPrefs?: { resolution?: string }): void {
+  let windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1600,
     height: 900,
     webPreferences: {
@@ -95,7 +98,28 @@ function createWindow(port: number, prefix: string = ''): void {
     title: '象棋',
     icon: path.resolve(__dirname, '../assets/icon.png'),
     resizable: false,
-  });
+  };
+
+  // 应用保存的分辨率设置
+  if (displayPrefs?.resolution) {
+    if (displayPrefs.resolution === 'borderless') {
+      // 无边框模式：使用屏幕大小，无边框
+      const primaryDisplay = screen.getPrimaryDisplay();
+      windowOptions.width = primaryDisplay.workAreaSize.width;
+      windowOptions.height = primaryDisplay.workAreaSize.height;
+      windowOptions.frame = false;
+      windowOptions.fullscreen = false;
+    } else {
+      // 普通窗口模式
+      const [width, height] = displayPrefs.resolution.split('x').map(Number);
+      if (width && height) {
+        windowOptions.width = width;
+        windowOptions.height = height;
+      }
+    }
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   // Load the frontend from the backend server with prefix
   const url = `http://127.0.0.1:${port}${prefix}`;
@@ -110,6 +134,67 @@ function createWindow(port: number, prefix: string = ''): void {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  // 设置 MessageBus 订阅
+  setupMessageBus(mainWindow);
+}
+
+/**
+ * 设置 MessageBus 订阅，监听后端发来的窗口控制命令
+ */
+function setupMessageBus(window: BrowserWindow): void {
+  messageBusSubscriber = new MessageBusSubscriber();
+
+  // 监听窗口大小调整
+  messageBusSubscriber.on('WINDOW_RESIZE', (payload: { width: number; height: number }) => {
+    if (!window.isDestroyed()) {
+      // 先确保不是无边框模式
+      window.setBounds({
+        x: Math.round((screen.getPrimaryDisplay().workAreaSize.width - payload.width) / 2),
+        y: Math.round((screen.getPrimaryDisplay().workAreaSize.height - payload.height) / 2),
+        width: payload.width,
+        height: payload.height
+      });
+      window.setMenuBarVisibility(true);
+      console.log(`Window resized to ${payload.width}x${payload.height}`);
+    }
+  });
+
+  // 监听无边框模式切换
+  messageBusSubscriber.on('WINDOW_BORDERLESS', (payload: { enabled: boolean }) => {
+    if (!window.isDestroyed()) {
+      if (payload.enabled) {
+        // 切换到无边框模式
+        const primaryDisplay = screen.getPrimaryDisplay();
+        window.setBounds({
+          x: 0,
+          y: 0,
+          width: primaryDisplay.workAreaSize.width,
+          height: primaryDisplay.workAreaSize.height
+        });
+        window.setMenuBarVisibility(false);
+        console.log('Window switched to borderless mode');
+      } else {
+        // 恢复普通窗口模式
+        const prefs = mainPreferenceManager?.getPreference();
+        const res = prefs?.display?.resolution?.value;
+        if (res && res !== 'borderless') {
+          const [w, h] = res.split('x').map(Number);
+          window.setSize(w, h);
+          window.setBounds({
+            x: Math.round((screen.getPrimaryDisplay().workAreaSize.width - w) / 2),
+            y: Math.round((screen.getPrimaryDisplay().workAreaSize.height - h) / 2),
+            width: w,
+            height: h
+          });
+          window.setMenuBarVisibility(true);
+          console.log(`Window restored to ${w}x${h}`);
+        }
+      }
+    }
+  });
+
+  console.log('MessageBus subscriber setup complete');
 }
 
 /**
@@ -154,6 +239,39 @@ async function main(): Promise<void> {
 
     // Create preference manager instance bound to main config
     const mainPreferenceManager = createPreferenceManager(config);
+
+    // 检测屏幕分辨率并计算可用选项
+    const resolutionOptions = calculateResolutionOptions();
+    const optionValues = resolutionOptions.map(opt => opt.value);
+    console.log(`Screen detected resolutions: ${optionValues.join(', ')}`);
+
+    // 检查当前保存的分辨率是否在新选项中
+    const currentPrefs = mainPreferenceManager.getPreference();
+    const currentResolution = currentPrefs.display?.resolution?.value;
+
+    // 如果当前分辨率不在可用选项中，重置为最接近的选项
+    let newResolutionValue = currentResolution;
+    if (currentResolution && !optionValues.includes(currentResolution)) {
+      const currentWidth = parseInt(currentResolution.split('x')[0]);
+      newResolutionValue = resolutionOptions
+        .filter(opt => opt.width <= currentWidth)
+        .sort((a, b) => b.width - a.width)[0]?.value
+        || resolutionOptions[0].value;
+      console.log(`Current resolution ${currentResolution} not available, adjusted to ${newResolutionValue}`);
+    }
+
+    // 更新 preference 中的可用选项
+    mainPreferenceManager.updatePreference({
+      display: {
+        resolution: {
+          value: newResolutionValue || resolutionOptions[0].value,
+          visible: true,
+          label: '窗口分辨率',
+          valueType: 'string',
+          options: optionValues
+        }
+      }
+    });
 
     // Handle extra mobile server
     const prefs = mainPreferenceManager.getPreference();
@@ -271,8 +389,10 @@ async function main(): Promise<void> {
       console.log('Mobile server code cleared');
     }
 
-    // Create the window with prefix URL
-    createWindow(port, basePrefix);
+    // Create the window with prefix URL and display preferences
+    createWindow(port, basePrefix, {
+      resolution: currentPrefs.display?.resolution?.value
+    });
   } catch (error) {
     console.error('Failed to start application:', error);
     app.quit();
@@ -289,6 +409,9 @@ app.on('window-all-closed', () => {
   }
   if (stopMobileServer) {
     stopMobileServer();
+  }
+  if (messageBusSubscriber) {
+    messageBusSubscriber.dispose();
   }
   if (process.platform !== 'darwin') {
     app.quit();

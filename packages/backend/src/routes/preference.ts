@@ -15,13 +15,15 @@ import { Router } from 'express';
 import type { ChessConfig } from '@chess/config';
 import type { UserPreference } from '@chess/preference';
 import { createPreferenceManager } from '@chess/preference';
+import { MessageBusPublisher } from '@chess/messagebus';
 
 /**
  * 创建用户偏好设置路由器
  * @param config - ChessConfig 实例
+ * @param messageBusPublisher - MessageBus 发布者实例
  * @returns 配置好的 Express Router 实例
  */
-export function createPreferenceRouter(config: ChessConfig): Router {
+export function createPreferenceRouter(config: ChessConfig, messageBusPublisher?: MessageBusPublisher): Router {
   const preferenceManager = createPreferenceManager(config);
   const router = Router();
 
@@ -109,6 +111,31 @@ export function createPreferenceRouter(config: ChessConfig): Router {
       }
 
       const updated = preferenceManager.updatePreference(updates);
+
+      // 验证 display 设置
+      const display = updates.display;
+      if (display?.resolution?.value !== undefined) {
+        const validResolutions = updated.display?.resolution?.options || [];
+        if (validResolutions.length > 0 && !validResolutions.includes(display.resolution.value as string)) {
+          res.status(400).json({
+            success: false,
+            error: '无效的分辨率选项',
+          });
+          return;
+        }
+      }
+
+      // 通过 MessageBus 通知 Electron 调整窗口
+      if (messageBusPublisher?.isAvailable() && updates.display?.resolution?.value !== undefined) {
+        const resolutionValue = updates.display.resolution.value as string;
+        if (resolutionValue === 'borderless') {
+          messageBusPublisher.publish('WINDOW_BORDERLESS', { enabled: true });
+        } else {
+          const [width, height] = resolutionValue.split('x').map(Number);
+          messageBusPublisher.publish('WINDOW_RESIZE', { width, height });
+        }
+      }
+
       res.json({
         success: true,
         data: updated,

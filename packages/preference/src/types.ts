@@ -105,6 +105,11 @@ export interface UserPreference {
       _prefix: PreferenceOption<string>;
     }
   };
+  /** 显示设置 */
+  display: PreferenceGroup & {
+    /** 窗口分辨率（包含无边框选项） */
+    resolution: PreferenceOption<string>;
+  };
 }
 
 /**
@@ -123,7 +128,12 @@ export const defaultUserPreference: UserPreference = {
     label: 'AI 设置',
     difficulty: { value: 5, visible: true, label: 'AI难度', valueType: 'number', range: { min: 1, max: 10, step: 1 } },
   },
-    extraSettings: {
+  display: {
+    label: '显示设置',
+    platforms: ['win'],
+    resolution: { value: '1600x900', visible: true, label: '窗口分辨率', valueType: 'string', options: ['1280x720', '1600x900', '1920x1080'] }
+  },
+  extraSettings: {
     label: '额外设置',
     platforms: ['win'],
     extraServer: {
@@ -135,4 +145,4 @@ export const defaultUserPreference: UserPreference = {
       _prefix: { value: '', visible: false, label: '', valueType: 'string' },
     }
   }
-};
+  };
