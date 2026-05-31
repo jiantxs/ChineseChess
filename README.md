@@ -1,4 +1,4 @@
-# 天天象棋 - 中国象棋在线对弈平台
+# 象棋 - 中国象棋在线对弈平台
 
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
 ![React](https://img.shields.io/badge/React-19-blue)
