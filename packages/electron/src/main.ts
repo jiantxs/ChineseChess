@@ -170,8 +170,15 @@ function setupMessageBus(window: BrowserWindow): void {
     if (!window.isDestroyed()) {
       if (payload.enabled) {
         // 切换到真正的全屏模式
+        // 注意：Electron 有 bug，resizable: false 时 setFullScreen 不会调整窗口大小
+        // 需要先临时启用 resizable，进入全屏后再禁用
+        window.setResizable(true);
         window.setFullScreen(true);
-        console.log('Window switched to fullscreen mode');
+        // 进入全屏后恢复不可调整大小（防止用户在全屏模式下调整窗口）
+        window.once('enter-full-screen', () => {
+          window.setResizable(false);
+          console.log('Window switched to fullscreen mode');
+        });
       } else {
         // 恢复普通窗口模式
         const prefs = mainPreferenceManager?.getPreference();
