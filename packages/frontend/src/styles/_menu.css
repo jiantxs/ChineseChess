@@ -19,10 +19,12 @@
   letter-spacing: clamp(12px, 2vw, 24px);
   text-indent: clamp(12px, 2vw, 24px);
   margin: 0 0 clamp(16px, 2.5vh, 24px) 0;
+  flex-shrink: 0;
 }
 
 .menu-layout__container .sf-divider {
   margin: 0 auto clamp(16px, 3vh, 32px) auto;
+  flex-shrink: 0;
 }
 
 .menu-buttons {
@@ -37,6 +39,7 @@
   font-size: clamp(13px, 1.5vw, 17px);
   letter-spacing: clamp(3px, 0.6vw, 6px);
   text-indent: clamp(3px, 0.6vw, 6px);
+  flex-shrink: 0;
 }
 
 .join-section {
@@ -44,6 +47,7 @@
   align-items: center;
   gap: clamp(8px, 1.5vw, 12px);
   margin: clamp(2px, 0.5vh, 4px) 0;
+  flex-shrink: 0;
 }
 
 .join-section .sf-input {
@@ -57,4 +61,87 @@
   padding: clamp(10px, 1.5vh, 14px) clamp(16px, 2.5vw, 24px);
   font-size: clamp(12px, 1.3vw, 15px);
   white-space: nowrap;
+}
+
+/* ========== 小屏幕适配 ========== */
+@media (max-width: 768px) {
+  .menu-layout__container .sf-title {
+    font-size: clamp(28px, 10vw, 40px);
+    letter-spacing: clamp(8px, 3vw, 16px);
+    text-indent: clamp(8px, 3vw, 16px);
+  }
+
+  .menu-buttons .sf-btn {
+    font-size: clamp(14px, 4vw, 17px);
+    padding: clamp(12px, 3vh, 18px) 0;
+  }
+}
+
+/* ========== 超宽屏低高度适配 (高度 500-700px) ========== */
+@media (max-height: 700px) {
+  .menu-layout__container {
+    padding: 20px 32px;
+    justify-content: flex-start;
+  }
+
+  .menu-layout__container .sf-title {
+    font-size: clamp(24px, 7vh, 36px);
+    margin-bottom: 12px;
+  }
+
+  .menu-layout__container .sf-divider {
+    margin-bottom: 16px;
+  }
+
+  .menu-buttons .sf-btn {
+    padding: 10px 0;
+    font-size: clamp(13px, 2.5vh, 15px);
+  }
+
+  .join-section .sf-input {
+    padding: 8px 12px;
+  }
+
+  .join-section .sf-btn--compact {
+    padding: 8px 16px;
+  }
+}
+
+/* ========== 极低高度安全网 (高度 < 500px) ========== */
+@media (max-height: 500px) {
+  .menu-layout__container {
+    padding: 12px 24px;
+  }
+
+  .menu-layout__container .sf-title {
+    font-size: 24px;
+    letter-spacing: 8px;
+    text-indent: 8px;
+    margin-bottom: 8px;
+  }
+
+  .menu-layout__container .sf-divider {
+    margin-bottom: 12px;
+  }
+
+  .menu-buttons .sf-btn {
+    padding: 8px 0;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-indent: 2px;
+  }
+
+  .join-section {
+    margin: 2px 0;
+  }
+
+  .join-section .sf-input {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .join-section .sf-btn--compact {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }

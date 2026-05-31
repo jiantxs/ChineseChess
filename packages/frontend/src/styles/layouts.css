@@ -104,21 +104,58 @@
 
 .menu-layout__container {
   position: relative;
-  width: 420px;
-  max-width: min(90vw, 500px);
-  max-height: 100vh;
-  padding: clamp(32px, 5vh, 56px) clamp(24px, 4vw, 48px);
+  width: min(420px, 90vw);
+  max-width: 90vw;
+  max-height: 96vh;
+  padding: clamp(24px, 5vh, 56px) clamp(24px, 4vw, 48px);
   background: var(--bg-panel-transparent);
   border: 1px solid var(--color-primary-faint);
   text-align: center;
   z-index: var(--z-panel);
   backdrop-filter: blur(4px);
   animation: menuFadeIn var(--animation-duration-normal) ease-out forwards;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
   transform-origin: center center;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 170, 0.2) transparent;
+}
+
+/* 菜单容器滚动条样式 */
+.menu-layout__container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu-layout__container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-layout__container::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.2);
+  border-radius: 2px;
+}
+
+.menu-layout__container {
+  position: relative;
+  width: 420px;
+  max-width: min(90vw, 500px);
+  max-height: 100vh;
+  padding: clamp(24px, 4vh, 56px) clamp(24px, 4vw, 48px);
+  background: var(--bg-panel-transparent);
+  border: 1px solid var(--color-primary-faint);
+  text-align: center;
+  z-index: var(--z-panel);
+  backdrop-filter: blur(4px);
+  animation: menuFadeIn var(--animation-duration-normal) ease-out forwards;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transform-origin: center center;
+  box-sizing: border-box;
 }
 
 /* ========== 动态背景 ========== */

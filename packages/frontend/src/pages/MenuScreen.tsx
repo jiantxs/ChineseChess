@@ -57,7 +57,7 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
   }, [navigate]);
 
   const handleStartLocal3D = useCallback(() => {
-    clientLogger.info('Menu: start local 3D game');
+    clientLogger.info('Menu: start 3D game');
     navigate('/gameTestServer/local3d');
   }, [navigate]);
 

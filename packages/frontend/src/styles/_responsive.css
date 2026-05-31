@@ -108,8 +108,54 @@
   }
 
   .menu-layout__container .sf-title {
-    font-size: 40px;
-    letter-spacing: 16px;
-    text-indent: 16px;
+    font-size: clamp(28px, 10vw, 40px);
+    letter-spacing: clamp(8px, 3vw, 16px);
+    text-indent: clamp(8px, 3vw, 16px);
+  }
+}
+
+/* ========== 超宽屏低高度适配 ========== */
+@media (max-height: 700px) {
+  .sf-panel--fullscreen {
+    padding: clamp(12px, 2vh, 24px);
+  }
+
+  .logs-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .logs-title {
+    font-size: clamp(18px, 4vh, 24px);
+  }
+
+  .logs-controls {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .sf-tabs {
+    gap: 4px;
+  }
+
+  .sf-tab {
+    padding: clamp(6px, 1.5vh, 10px) clamp(10px, 2vw, 16px);
+    font-size: clamp(12px, 2vh, 14px);
+  }
+
+  .filters {
+    gap: 8px;
+  }
+
+  .logs-stats {
+    margin-bottom: 8px;
+  }
+
+  .logs-table th {
+    padding: clamp(6px, 1.5vh, 12px) clamp(8px, 1.5vw, 16px);
+  }
+
+  .log-row td {
+    padding: clamp(6px, 1.5vh, 10px) clamp(8px, 1.5vw, 16px);
   }
 }

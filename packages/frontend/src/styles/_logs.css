@@ -8,20 +8,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: clamp(12px, 2vh, 24px);
+  padding-bottom: clamp(8px, 1.5vh, 16px);
   border-bottom: 1px solid var(--border-color-divider);
   flex-shrink: 0;
+  gap: 16px;
 }
 
 .logs-title {
-  font-size: 28px;
+  font-size: clamp(20px, 4vh, 28px);
   font-weight: 600;
   color: var(--color-primary);
   margin: 0;
   letter-spacing: 4px;
   font-family: var(--font-chinese);
   text-shadow: 0 0 10px var(--color-primary-glow);
+  flex-shrink: 0;
 }
 
 .refresh-status {
@@ -52,8 +54,8 @@
 .logs-controls {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: clamp(8px, 1.5vh, 16px);
+  margin-bottom: clamp(8px, 1.5vh, 20px);
   flex-shrink: 0;
 }
 
@@ -65,8 +67,8 @@
 }
 
 .logs-stats {
-  margin-bottom: 12px;
-  font-size: 12px;
+  margin-bottom: clamp(6px, 1vh, 12px);
+  font-size: clamp(11px, 1.5vh, 12px);
   color: var(--color-text-muted);
   letter-spacing: 1px;
   flex-shrink: 0;
@@ -79,6 +81,7 @@
 
 .logs-table-container {
   flex: 1;
+  min-height: 200px;
   overflow-y: auto;
   overflow-x: auto;
   border: 1px solid var(--border-color-divider);

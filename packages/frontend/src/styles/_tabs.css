@@ -7,19 +7,21 @@
 .sf-tabs {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .sf-tab {
-  padding: 12px 24px;
+  padding: clamp(8px, 1.5vh, 12px) clamp(16px, 2vw, 24px);
   background: transparent;
   border: 1px solid var(--color-primary-faint);
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: clamp(12px, 2vh, 14px);
   letter-spacing: 2px;
   cursor: pointer;
   font-family: var(--font-chinese);
   transition: all var(--transition-normal);
   position: relative;
+  flex-shrink: 0;
 }
 
 .sf-tab::after {
