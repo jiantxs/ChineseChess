@@ -1190,17 +1190,69 @@
 }
 
 /* ========== 菜单布局 ========== */
+.menu-layout__container {
+  /* CSS 变量用于自适应缩放 */
+  --menu-scale: 1;
+  --menu-padding: 56px 48px;
+  --menu-title-size: 52px;
+  --menu-title-spacing: 24px;
+  --menu-btn-padding: 18px 0;
+  --menu-btn-size: 17px;
+  --menu-btn-spacing: 6px;
+  --menu-input-padding: 14px 16px;
+  --menu-input-size: 15px;
+  --menu-compact-padding: 14px 24px;
+  --menu-compact-size: 15px;
+  --menu-divider-margin: 0 auto 32px auto;
+  --menu-corner-size: 24px;
+
+  padding: var(--menu-padding);
+}
+
+.menu-layout__container .sf-corner {
+  width: var(--menu-corner-size);
+  height: var(--menu-corner-size);
+}
+
+.menu-layout__container .sf-title {
+  font-size: var(--menu-title-size);
+  letter-spacing: var(--menu-title-spacing);
+  text-indent: var(--menu-title-spacing);
+  margin: 0 0 calc(24px * var(--menu-scale)) 0;
+}
+
+.menu-layout__container .sf-divider {
+  margin: var(--menu-divider-margin);
+}
+
 .menu-buttons {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
+.menu-buttons .sf-btn {
+  padding: var(--menu-btn-padding);
+  font-size: var(--menu-btn-size);
+  letter-spacing: var(--menu-btn-spacing);
+  text-indent: var(--menu-btn-spacing);
+}
+
 .join-section {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 4px 0;
+  gap: calc(12px * var(--menu-scale));
+  margin: calc(4px * var(--menu-scale)) 0;
+}
+
+.join-section .sf-input {
+  padding: var(--menu-input-padding);
+  font-size: var(--menu-input-size);
+}
+
+.join-section .sf-btn--compact {
+  padding: var(--menu-compact-padding);
+  font-size: var(--menu-compact-size);
 }
 
 /* ========== 响应式 ========== */
@@ -1305,5 +1357,11 @@
 
   .join-section .sf-btn--compact {
     width: 100%;
+  }
+
+  .menu-layout__container .sf-title {
+    font-size: 40px;
+    letter-spacing: 16px;
+    text-indent: 16px;
   }
 }
