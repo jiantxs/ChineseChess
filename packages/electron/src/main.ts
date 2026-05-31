@@ -316,7 +316,7 @@ async function main(): Promise<void> {
                   _prefix: { value: mobilePrefix, visible: false, label: '', valueType: 'string' }
                 }
               }
-            });
+            } as any);
             console.log(`Saved port unavailable, generated new: port=${mobilePort}, prefix=${mobilePrefix}`);
           }
         } else {
@@ -332,7 +332,7 @@ async function main(): Promise<void> {
                 _prefix: { value: mobilePrefix, visible: false, label: '', valueType: 'string' }
               }
             }
-          });
+          } as any);
           console.log(`First launch, generated and saved: port=${mobilePort}, prefix=${mobilePrefix}`);
         }
       } else {
@@ -388,7 +388,7 @@ async function main(): Promise<void> {
             textCode: { value: mobileCode, visible: true, label: '服务器地址编码', valueType: 'string', readonly: true }
           }
         }
-      });
+      } as any);
       console.log('Mobile server code saved to preference');
     } else {
       // Clear textCode and hidden properties if extra server is disabled
@@ -402,7 +402,7 @@ async function main(): Promise<void> {
             _prefix: { value: '', visible: false, label: '', valueType: 'string' }
           }
         }
-      });
+      } as any);
       console.log('Mobile server code cleared');
     }
 
