@@ -128,8 +128,8 @@ export function createPreferenceRouter(config: ChessConfig, messageBusPublisher?
       // 通过 MessageBus 通知 Electron 调整窗口
       if (messageBusPublisher?.isAvailable() && updates.display?.resolution?.value !== undefined) {
         const resolutionValue = updates.display.resolution.value as string;
-        if (resolutionValue === 'borderless') {
-          messageBusPublisher.publish('WINDOW_BORDERLESS', { enabled: true });
+        if (resolutionValue === 'fullscreen') {
+          messageBusPublisher.publish('WINDOW_FULLSCREEN', { enabled: true });
         } else {
           const [width, height] = resolutionValue.split('x').map(Number);
           messageBusPublisher.publish('WINDOW_RESIZE', { width, height });

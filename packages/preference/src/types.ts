@@ -107,7 +107,7 @@ export interface UserPreference {
   };
   /** 显示设置 */
   display: PreferenceGroup & {
-    /** 窗口分辨率（包含无边框选项） */
+    /** 窗口分辨率（包含全屏选项） */
     resolution: PreferenceOption<string>;
   };
 }
@@ -131,7 +131,7 @@ export const defaultUserPreference: UserPreference = {
   display: {
     label: '显示设置',
     platforms: ['win'],
-    resolution: { value: '1600x900', visible: true, label: '窗口分辨率', valueType: 'string', options: ['1280x720', '1600x900', '1920x1080'] }
+    resolution: { value: 'fullscreen', visible: true, label: '窗口分辨率', valueType: 'string', options: ['fullscreen', '1280x720', '1600x900', '1920x1080'] }
   },
   extraSettings: {
     label: '额外设置',

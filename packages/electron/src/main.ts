@@ -8,7 +8,7 @@
  * - Manages process lifecycle (cleanup on exit)
  */
 
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen, Menu } from 'electron';
 import { startServer } from '@chess/backend';
 import { createChessConfig } from '@chess/config';
 import { createPreferenceManager } from '@chess/preference';
@@ -102,13 +102,9 @@ function createWindow(port: number, prefix: string = '', displayPrefs?: { resolu
 
   // 应用保存的分辨率设置
   if (displayPrefs?.resolution) {
-    if (displayPrefs.resolution === 'borderless') {
-      // 无边框模式：使用屏幕大小，无边框
-      const primaryDisplay = screen.getPrimaryDisplay();
-      windowOptions.width = primaryDisplay.workAreaSize.width;
-      windowOptions.height = primaryDisplay.workAreaSize.height;
-      windowOptions.frame = false;
-      windowOptions.fullscreen = false;
+    if (displayPrefs.resolution === 'fullscreen') {
+      // 全屏模式：使用真正的全屏
+      windowOptions.fullscreen = true;
     } else {
       // 普通窗口模式
       const [width, height] = displayPrefs.resolution.split('x').map(Number);
@@ -135,6 +131,9 @@ function createWindow(port: number, prefix: string = '', displayPrefs?: { resolu
     mainWindow = null;
   });
 
+  // 完全禁用菜单栏
+  Menu.setApplicationMenu(null);
+
   // 设置 MessageBus 订阅
   setupMessageBus(mainWindow);
 }
@@ -148,46 +147,47 @@ function setupMessageBus(window: BrowserWindow): void {
   // 监听窗口大小调整
   messageBusSubscriber.on('WINDOW_RESIZE', (payload: { width: number; height: number }) => {
     if (!window.isDestroyed()) {
-      // 先确保不是无边框模式
+      // 先退出全屏模式（如果当前在全屏）
+      if (window.isFullScreen()) {
+        window.setFullScreen(false);
+      }
+      // 恢复窗口边框（如果被隐藏）
+      if (!window.isMenuBarVisible()) {
+        window.setMenuBarVisibility(true);
+      }
       window.setBounds({
         x: Math.round((screen.getPrimaryDisplay().workAreaSize.width - payload.width) / 2),
         y: Math.round((screen.getPrimaryDisplay().workAreaSize.height - payload.height) / 2),
         width: payload.width,
         height: payload.height
       });
-      window.setMenuBarVisibility(true);
       console.log(`Window resized to ${payload.width}x${payload.height}`);
     }
   });
 
-  // 监听无边框模式切换
-  messageBusSubscriber.on('WINDOW_BORDERLESS', (payload: { enabled: boolean }) => {
+  // 监听全屏模式切换
+  messageBusSubscriber.on('WINDOW_FULLSCREEN', (payload: { enabled: boolean }) => {
     if (!window.isDestroyed()) {
       if (payload.enabled) {
-        // 切换到无边框模式
-        const primaryDisplay = screen.getPrimaryDisplay();
-        window.setBounds({
-          x: 0,
-          y: 0,
-          width: primaryDisplay.workAreaSize.width,
-          height: primaryDisplay.workAreaSize.height
-        });
-        window.setMenuBarVisibility(false);
-        console.log('Window switched to borderless mode');
+        // 切换到真正的全屏模式
+        window.setFullScreen(true);
+        console.log('Window switched to fullscreen mode');
       } else {
         // 恢复普通窗口模式
         const prefs = mainPreferenceManager?.getPreference();
         const res = prefs?.display?.resolution?.value;
-        if (res && res !== 'borderless') {
+        if (res && res !== 'fullscreen') {
           const [w, h] = res.split('x').map(Number);
-          window.setSize(w, h);
+          // 先退出全屏
+          window.setFullScreen(false);
+          // 恢复菜单栏可见性（虽然已全局禁用，但保持一致性）
+          window.setMenuBarVisibility(true);
           window.setBounds({
             x: Math.round((screen.getPrimaryDisplay().workAreaSize.width - w) / 2),
             y: Math.round((screen.getPrimaryDisplay().workAreaSize.height - h) / 2),
             width: w,
             height: h
           });
-          window.setMenuBarVisibility(true);
           console.log(`Window restored to ${w}x${h}`);
         }
       }

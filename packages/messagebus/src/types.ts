@@ -21,8 +21,4 @@ export interface WindowFullscreenPayload {
   enabled: boolean;
 }
 
-export interface WindowBorderlessPayload {
-  enabled: boolean;
-}
-
 export type MessageHandler<T = unknown> = (payload: T, message: BusMessage) => void;

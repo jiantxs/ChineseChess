@@ -10,7 +10,7 @@ export interface ResolutionOption {
   width: number;
   height: number;
   scale: number;
-  isBorderless: boolean;
+  isFullscreen: boolean;
 }
 
 /**
@@ -53,18 +53,18 @@ export function calculateResolutionOptions(): ResolutionOption[] {
       width: standardRes.width,
       height: standardRes.height,
       scale,
-      isBorderless: false
+      isFullscreen: false
     });
   }
 
-  // 添加无边框全屏选项（使用屏幕原生分辨率）
+  // 添加全屏选项
   options.unshift({
-    label: `无边框 (${screenWidth} × ${screenHeight})`,
-    value: 'borderless',
+    label: '全屏',
+    value: 'fullscreen',
     width: screenWidth,
     height: screenHeight,
     scale: 1,
-    isBorderless: true
+    isFullscreen: true
   });
 
   // 确保至少有一个普通窗口选项
@@ -75,7 +75,7 @@ export function calculateResolutionOptions(): ResolutionOption[] {
       width: 1280,
       height: 720,
       scale: 0.25,
-      isBorderless: false
+      isFullscreen: false
     });
   }
 

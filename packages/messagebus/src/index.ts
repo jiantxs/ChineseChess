@@ -21,4 +21,4 @@ export { MessageTypes } from './constants.js';
 export type { MessageType } from './constants.js';
 
 // Payload 类型
-export type { WindowResizePayload, WindowFullscreenPayload, WindowBorderlessPayload } from './types.js';
+export type { WindowResizePayload, WindowFullscreenPayload } from './types.js';
