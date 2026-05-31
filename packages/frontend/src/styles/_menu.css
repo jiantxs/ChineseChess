@@ -1,70 +1,60 @@
 /**
  * @file 菜单布局样式
  * 主菜单的布局和响应式样式
+ * CSS-only responsive solution - no JS scaling dependency
  */
 
 /* ========== 菜单布局 ========== */
 .menu-layout__container {
-  /* CSS 变量用于自适应缩放 */
-  --menu-scale: 1;
-  --menu-padding: 56px 48px;
-  --menu-title-size: 52px;
-  --menu-title-spacing: 24px;
-  --menu-btn-padding: 18px 0;
-  --menu-btn-size: 17px;
-  --menu-btn-spacing: 6px;
-  --menu-input-padding: 14px 16px;
-  --menu-input-size: 15px;
-  --menu-compact-padding: 14px 24px;
-  --menu-compact-size: 15px;
-  --menu-divider-margin: 0 auto 32px auto;
-  --menu-corner-size: 24px;
-
-  padding: var(--menu-padding);
+  /* Remove JS-driven scaling variables - using clamp() directly */
 }
 
 .menu-layout__container .sf-corner {
-  width: var(--menu-corner-size);
-  height: var(--menu-corner-size);
+  width: clamp(16px, 2.5vw, 24px);
+  height: clamp(16px, 2.5vw, 24px);
 }
 
 .menu-layout__container .sf-title {
-  font-size: var(--menu-title-size);
-  letter-spacing: var(--menu-title-spacing);
-  text-indent: var(--menu-title-spacing);
-  margin: 0 0 calc(24px * var(--menu-scale)) 0;
+  font-size: clamp(32px, 5vw, 52px);
+  letter-spacing: clamp(12px, 2vw, 24px);
+  text-indent: clamp(12px, 2vw, 24px);
+  margin: 0 0 clamp(16px, 2.5vh, 24px) 0;
 }
 
 .menu-layout__container .sf-divider {
-  margin: var(--menu-divider-margin);
+  margin: 0 auto clamp(16px, 3vh, 32px) auto;
 }
 
 .menu-buttons {
   display: flex;
   flex-direction: column;
   gap: 0;
+  flex-shrink: 0;
 }
 
 .menu-buttons .sf-btn {
-  padding: var(--menu-btn-padding);
-  font-size: var(--menu-btn-size);
-  letter-spacing: var(--menu-btn-spacing);
-  text-indent: var(--menu-btn-spacing);
+  padding: clamp(12px, 2vh, 18px) 0;
+  font-size: clamp(13px, 1.5vw, 17px);
+  letter-spacing: clamp(3px, 0.6vw, 6px);
+  text-indent: clamp(3px, 0.6vw, 6px);
 }
 
 .join-section {
   display: flex;
   align-items: center;
-  gap: calc(12px * var(--menu-scale));
-  margin: calc(4px * var(--menu-scale)) 0;
+  gap: clamp(8px, 1.5vw, 12px);
+  margin: clamp(2px, 0.5vh, 4px) 0;
 }
 
 .join-section .sf-input {
-  padding: var(--menu-input-padding);
-  font-size: var(--menu-input-size);
+  padding: clamp(10px, 1.5vh, 14px) clamp(12px, 2vw, 16px);
+  font-size: clamp(12px, 1.3vw, 15px);
+  flex: 1;
+  min-width: 0;
 }
 
 .join-section .sf-btn--compact {
-  padding: var(--menu-compact-padding);
-  font-size: var(--menu-compact-size);
+  padding: clamp(10px, 1.5vh, 14px) clamp(16px, 2.5vw, 24px);
+  font-size: clamp(12px, 1.3vw, 15px);
+  white-space: nowrap;
 }

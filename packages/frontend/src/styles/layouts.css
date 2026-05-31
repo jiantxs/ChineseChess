@@ -105,9 +105,9 @@
 .menu-layout__container {
   position: relative;
   width: 420px;
-  max-width: 90vw;
-  max-height: 80vh;
-  padding: 56px 48px;
+  max-width: min(90vw, 500px);
+  max-height: 100vh;
+  padding: clamp(32px, 5vh, 56px) clamp(24px, 4vw, 48px);
   background: var(--bg-panel-transparent);
   border: 1px solid var(--color-primary-faint);
   text-align: center;

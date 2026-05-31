@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiPath, assetPath } from '../utils/api';
 import { clientLogger } from '../utils/clientLogger';
@@ -7,7 +7,8 @@ import { SciFiButton } from '../components/common';
 
 export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmControls) {
   const [platform, setPlatform] = useState<string>('');
-  const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const gameIdInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function loadConfig() {
@@ -43,80 +44,6 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
 
     const timer = setTimeout(loadPreference, 100);
     return () => clearTimeout(timer);
-  }, []);
-
-  const navigate = useNavigate();
-  const gameIdInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const calculateAdaptiveLayout = () => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      // 获取菜单内容实际高度（标题 + 分隔线 + 按钮区域）
-      const menuButtons = container.querySelector('.menu-buttons') as HTMLElement;
-      const title = container.querySelector('.sf-title') as HTMLElement;
-      const divider = container.querySelector('.sf-divider') as HTMLElement;
-      
-      if (!menuButtons || !title || !divider) return;
-
-      // 计算内容所需的最小高度
-      const contentHeight = title.offsetHeight + divider.offsetHeight + menuButtons.offsetHeight + 80; // 80px for padding
-      const availableHeight = window.innerHeight * 0.90;
-      const availableWidth = window.innerWidth * 0.96;
-
-      // 计算需要的缩放比例（基于高度）
-      const heightScale = availableHeight / contentHeight;
-      const widthScale = availableWidth / 420; // 420px 是容器基准宽度
-      const scale = Math.min(heightScale, widthScale, 1);
-
-      // 应用 CSS 变量来控制所有元素的大小
-      if (scale >= 1) {
-        // 重置为默认值
-        container.style.setProperty('--menu-scale', '1');
-        container.style.setProperty('--menu-padding', '56px 48px');
-        container.style.setProperty('--menu-title-size', '52px');
-        container.style.setProperty('--menu-title-spacing', '24px');
-        container.style.setProperty('--menu-btn-padding', '18px 0');
-        container.style.setProperty('--menu-btn-size', '17px');
-        container.style.setProperty('--menu-btn-spacing', '6px');
-        container.style.setProperty('--menu-input-padding', '14px 16px');
-        container.style.setProperty('--menu-input-size', '15px');
-        container.style.setProperty('--menu-compact-padding', '14px 24px');
-        container.style.setProperty('--menu-compact-size', '15px');
-        container.style.setProperty('--menu-divider-margin', '0 auto 32px auto');
-        container.style.setProperty('--menu-corner-size', '24px');
-      } else {
-        // 根据缩放比例调整所有元素
-        const clampedScale = Math.max(scale, 0.5); // 最小缩放 0.5，避免太小无法阅读
-        container.style.setProperty('--menu-scale', String(clampedScale));
-        container.style.setProperty('--menu-padding', `${Math.round(56 * clampedScale)}px ${Math.round(48 * clampedScale)}px`);
-        container.style.setProperty('--menu-title-size', `${Math.round(52 * clampedScale)}px`);
-        container.style.setProperty('--menu-title-spacing', `${Math.round(24 * clampedScale)}px`);
-        container.style.setProperty('--menu-btn-padding', `${Math.round(18 * clampedScale)}px 0`);
-        container.style.setProperty('--menu-btn-size', `${Math.max(12, Math.round(17 * clampedScale))}px`);
-        container.style.setProperty('--menu-btn-spacing', `${Math.max(2, Math.round(6 * clampedScale))}px`);
-        container.style.setProperty('--menu-input-padding', `${Math.round(14 * clampedScale)}px ${Math.round(16 * clampedScale)}px`);
-        container.style.setProperty('--menu-input-size', `${Math.max(11, Math.round(15 * clampedScale))}px`);
-        container.style.setProperty('--menu-compact-padding', `${Math.round(14 * clampedScale)}px ${Math.round(24 * clampedScale)}px`);
-        container.style.setProperty('--menu-compact-size', `${Math.max(11, Math.round(15 * clampedScale))}px`);
-        container.style.setProperty('--menu-divider-margin', `0 auto ${Math.round(32 * clampedScale)}px auto`);
-        container.style.setProperty('--menu-corner-size', `${Math.round(24 * clampedScale)}px`);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      calculateAdaptiveLayout();
-    }, 100);
-
-    window.addEventListener('resize', calculateAdaptiveLayout);
-    window.addEventListener('orientationchange', calculateAdaptiveLayout);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', calculateAdaptiveLayout);
-      window.removeEventListener('orientationchange', calculateAdaptiveLayout);
-    };
   }, []);
 
   const handleStartAI = useCallback(() => {
@@ -167,7 +94,7 @@ export default function MenuScreen({ pauseBgm, resumeBgm, restartBgm }: BgmContr
 
   return (
     <div className="app menu-layout">
-      <div ref={containerRef} className="menu-layout__container">
+      <div className="menu-layout__container">
         <div className="sf-corner sf-corner--tl" />
         <div className="sf-corner sf-corner--tr" />
         <div className="sf-corner sf-corner--bl" />
