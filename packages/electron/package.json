@@ -37,6 +37,7 @@
   "dependencies": {
     "@chess/backend": "workspace:*",
     "@chess/config": "workspace:*",
+    "@chess/logger": "workspace:*",
     "@chess/messagebus": "workspace:*",
     "@chess/preference": "workspace:*"
   },

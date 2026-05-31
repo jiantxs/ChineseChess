@@ -131,6 +131,9 @@ importers:
       '@chess/config':
         specifier: workspace:*
         version: link:../config
+      '@chess/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@chess/messagebus':
         specifier: workspace:*
         version: link:../messagebus
